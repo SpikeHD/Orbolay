@@ -14,4 +14,32 @@
   <img src="https://img.shields.io/github/stars/SpikeHD/Orbolay" />
 </div>
 
-Quick and small Discord overlay alternative
+# Features
+
+* Voice channel status (whose in the call, whose speaking/not speaking/muted/etc.)
+* TODO
+
+# Installation
+
+> [!NOTE]
+> This will change. Orbolay is still in early stages!
+
+1. Download the [latest release](https://github.com/SpikeHD/Orbolay/releases/latest) from GitHub
+2. Ensure you are using a compatible bridge plugin ([Shelter](https://github.com/SpikeHD/shelter-plugins?tab=readme-ov-file#orbolay-bridge))
+3. Run the executable!
+
+# TODO
+
+* [ ] Voice states
+  * [x] Usernames
+  * [x] Speaking/not speaking
+  * [ ] Muted/deafened icons beside name
+  * [ ] Proper avatar images
+* [ ] Voice control
+  * [ ] Mute/deafen buttons
+* [ ] Notifications
+  * [ ] Message notifications
+
+## Stretch Goals
+
+* [ ] Stream PiP
