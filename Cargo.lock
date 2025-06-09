@@ -2920,6 +2920,8 @@ dependencies = [
  "flume",
  "freya",
  "gumdrop",
+ "serde",
+ "serde_json",
  "tungstenite 0.26.2",
  "winit",
 ]

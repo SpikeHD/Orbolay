@@ -10,6 +10,7 @@ pub enum UserVoiceState {
 #[derive(Clone, Debug, PartialEq)]
 pub struct User {
   pub name: String,
+  pub id: String,
   pub avatar: Vec<u8>,
   pub voice_state: UserVoiceState,
 }

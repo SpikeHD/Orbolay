@@ -8,12 +8,13 @@ use gumdrop::Options;
 use winit::{dpi::LogicalPosition, window::WindowLevel};
 
 use crate::{
-  components::user_row::user_row,
-  user::{User, UserVoiceState},
+  app_state::AppState, components::user_row::user_row, user::{User, UserVoiceState}
 };
 
+mod app_state;
 mod components;
 mod logger;
+mod payloads;
 mod user;
 mod websocket;
 
@@ -21,18 +22,11 @@ const GIT_HASH: Option<&str> = option_env!("GIT_HASH");
 const APP_NAME: Option<&str> = option_env!("CARGO_PKG_NAME");
 const APP_VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
 
-pub static STATE: GlobalSignal<AppState> = GlobalSignal::new(|| AppState {
-  voice_users: vec![],
-});
-
-#[derive(Debug, Clone)]
-pub struct AppState {
-  pub voice_users: Vec<User>,
-}
+pub static STATE: GlobalSignal<AppState> = GlobalSignal::new(AppState::new);
 
 #[derive(Debug, Clone, Options)]
 pub struct Args {
-  #[options(help = "The port to run the websocket server on", default = "1981")]
+  #[options(help = "The port to run the websocket server on", default = "6888")]
   port: u16,
 
   #[options(help = "Print version information")]
@@ -54,10 +48,6 @@ fn main() {
     );
     std::process::exit(0);
   }
-
-  std::thread::spawn(move || {
-    websocket::create_websocket(args.port).expect("Failed to start websocket server");
-  });
 
   launch_cfg(
     app,
@@ -84,6 +74,14 @@ fn app() -> Element {
     }
   });
 
+  let app_state = use_signal_sync(AppState::new);
+  
+  use_effect(move || {
+    std::thread::spawn(move || {
+      websocket::create_websocket(args.port, app_state).expect("Failed to start websocket server");
+    });
+  });
+
   rsx!(
     rect {
       content: "flex",
@@ -93,27 +91,9 @@ fn app() -> Element {
       height: "600",
       width: "200",
 
-      user_row {
-        user: User {
-          name: "John Doe".to_string(),
-          avatar: vec![1],
-          voice_state: UserVoiceState::Speaking,
-        }
-      }
-
-      user_row {
-        user: User {
-          name: "Jane Doe".to_string(),
-          avatar: vec![1],
-          voice_state: UserVoiceState::NotSpeaking,
-        }
-      }
-
-      user_row {
-        user: User {
-          name: "Jebediah Doe".to_string(),
-          avatar: vec![1],
-          voice_state: UserVoiceState::Muted,
+      for user in app_state().voice_users.iter() {
+        user_row {
+          user: user.clone()
         }
       }
     }
