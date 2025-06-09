@@ -7,6 +7,7 @@ use crate::user::{User, UserVoiceState};
 pub struct VoiceState {
   pub user_id: String,
   pub username: Option<String>,
+  pub avatar_url: Option<String>,
   pub channel_id: Option<String>,
   pub mute: Option<bool>,
   pub deaf: Option<bool>,
@@ -20,8 +21,7 @@ impl From<VoiceState> for User {
     User {
       name: val.username.unwrap_or("Unknown".to_string()),
       id: val.user_id,
-      // TODO implement
-      avatar: vec![],
+      avatar: val.avatar_url.unwrap_or_default(),
       voice_state,
     }
   }

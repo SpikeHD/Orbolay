@@ -3,20 +3,20 @@
   windows_subsystem = "windows"
 )]
 
+use std::collections::HashMap;
+
 use freya::prelude::*;
 use gumdrop::Options;
 use winit::{dpi::LogicalPosition, window::WindowLevel};
 
-use crate::{
-  app_state::AppState,
-  components::user_row::user_row,
-};
+use crate::{app_state::AppState, components::user_row::user_row};
 
 mod app_state;
 mod components;
 mod logger;
 mod payloads;
 mod user;
+mod util;
 mod websocket;
 
 const GIT_HASH: Option<&str> = option_env!("GIT_HASH");
@@ -24,6 +24,7 @@ const APP_NAME: Option<&str> = option_env!("CARGO_PKG_NAME");
 const APP_VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
 
 pub static STATE: GlobalSignal<AppState> = GlobalSignal::new(AppState::new);
+pub static AVATAR_CACHE: GlobalSignal<HashMap<String, Vec<u8>>> = GlobalSignal::new(HashMap::new);
 
 #[derive(Debug, Clone, Options)]
 pub struct Args {

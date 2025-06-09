@@ -16,8 +16,7 @@ freya = "0.3.4"
 gumdrop = "0.8.1"
 serde = "1.0.219"
 serde_json = "1.0.140"
+skia-safe = "0.82.0"
 tungstenite = "0.26.2"
+ureq = "3.0.11"
 winit = "0.30.11"
-
-[profile.dev.freya]
-devtools = true

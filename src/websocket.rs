@@ -8,8 +8,7 @@ use crate::{
   app_state::AppState,
   log,
   payloads::{ChannelJoinPayload, UpdatePayload},
-  success,
-  warn,
+  success, warn,
 };
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
@@ -88,14 +87,16 @@ fn ws_stream(
 
           // If the channel is 0, then they left and we should remove them from the list
           if data.state.channel_id.clone().unwrap_or("1".to_string()) == "0" {
-            app_state.write()
+            app_state
+              .write()
               .voice_users
               .retain(|user| user.id != data.state.user_id);
             continue;
           }
 
           if user_in_list {
-            app_state.write()
+            app_state
+              .write()
               .voice_users
               .iter_mut()
               .find(|user| user.id == data.state.user_id)

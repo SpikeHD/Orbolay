@@ -1,6 +1,10 @@
 use freya::prelude::*;
+use skia_safe::Color;
 
-use crate::user::{User, UserVoiceState};
+use crate::{
+  user::{User, UserVoiceState},
+  util::{image::circular_with_border},
+};
 
 #[derive(Props, Clone, PartialEq)]
 pub struct UserRowProps {
@@ -8,7 +12,6 @@ pub struct UserRowProps {
 }
 
 pub fn user_row(props: UserRowProps) -> Element {
-  println!("{:?}", props.user);
   rsx! {
     rect {
       content: "flex",
@@ -21,11 +24,12 @@ pub fn user_row(props: UserRowProps) -> Element {
       rect {
         width: "25%",
         height: "100%",
+        // 50% of the height
+        corner_radius: "25",
+
         // TODO put actual image here
-        svg {
-          height: "100%",
-          width: "100%",
-          svg_content: avatar_svg(props.user.voice_state, props.user.avatar),
+        image {
+          image_data: dynamic_bytes(avatar(&props.user)),
         }
       }
 
@@ -54,22 +58,12 @@ pub fn user_row(props: UserRowProps) -> Element {
   }
 }
 
-fn avatar_svg(voice_state: UserVoiceState, _image: Vec<u8>) -> String {
-  let border_color = match voice_state {
-    UserVoiceState::Speaking => "#439378",
-    UserVoiceState::Deafened | UserVoiceState::Muted => "#da3e44",
-    _ => "transparent",
+fn avatar(user: &User) -> Vec<u8> {
+  let border_color = match user.voice_state {
+    UserVoiceState::Speaking => Some(Color::from_rgb(67, 147, 120)),
+    UserVoiceState::Deafened | UserVoiceState::Muted => Some(Color::from_rgb(218, 62, 68)),
+    _ => None,
   };
 
-  format!(
-    r#"
-  <svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <!-- Outer border circle -->
-    <circle cx="50" cy="50" r="45" fill="transparent" stroke="{border_color}" stroke-width="4"/>
-    
-    <!-- Inner circle -->
-    <circle cx="50" cy="50" r="40" fill="lightgray"/>
-  </svg>
-  "#
-  )
+  circular_with_border(user.fetch_avatar().unwrap_or_default(), border_color).unwrap_or_default()
 }
