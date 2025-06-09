@@ -9,7 +9,6 @@ use crate::{
   log,
   payloads::{ChannelJoinPayload, UpdatePayload},
   success,
-  user::UserVoiceState,
   warn,
 };
 
@@ -78,7 +77,7 @@ fn ws_stream(
             users.push(voice_state.into());
           }
 
-          (*app_state.write()).voice_users = users;
+          app_state.write().voice_users = users;
         }
         "VOICE_STATE_UPDATE" => {
           let data = serde_json::from_value::<UpdatePayload>(msg.data)?;
@@ -89,14 +88,14 @@ fn ws_stream(
 
           // If the channel is 0, then they left and we should remove them from the list
           if data.state.channel_id.clone().unwrap_or("1".to_string()) == "0" {
-            (*app_state.write())
+            app_state.write()
               .voice_users
               .retain(|user| user.id != data.state.user_id);
             continue;
           }
 
           if user_in_list {
-            (*app_state.write())
+            app_state.write()
               .voice_users
               .iter_mut()
               .find(|user| user.id == data.state.user_id)
@@ -104,12 +103,12 @@ fn ws_stream(
               .voice_state = data.state.clone().into();
           } else {
             // Push them
-            (*app_state.write()).voice_users.push(data.state.into());
+            app_state.write().voice_users.push(data.state.into());
           }
         }
         "CHANNEL_LEFT" => {
           // User left the channel, no more need for list
-          (*app_state.write()).voice_users = vec![];
+          app_state.write().voice_users = vec![];
         }
         _ => {
           warn!("Unknown command: {}", msg.cmd);

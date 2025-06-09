@@ -13,13 +13,13 @@ pub struct VoiceState {
   pub speaking: Option<bool>,
 }
 
-impl Into<User> for VoiceState {
-  fn into(self) -> User {
-    let voice_state = self.clone().into();
+impl From<VoiceState> for User {
+  fn from(val: VoiceState) -> Self {
+    let voice_state = val.clone().into();
 
     User {
-      name: self.username.unwrap_or("Unknown".to_string()),
-      id: self.user_id,
+      name: val.username.unwrap_or("Unknown".to_string()),
+      id: val.user_id,
       // TODO implement
       avatar: vec![],
       voice_state,
@@ -27,9 +27,9 @@ impl Into<User> for VoiceState {
   }
 }
 
-impl Into<UserVoiceState> for VoiceState {
-  fn into(self) -> UserVoiceState {
-    match (self.mute, self.deaf, self.speaking) {
+impl From<VoiceState> for UserVoiceState {
+  fn from(val: VoiceState) -> Self {
+    match (val.mute, val.deaf, val.speaking) {
       (_, Some(true), _) => UserVoiceState::Deafened,
       (Some(true), _, _) => UserVoiceState::Muted,
       (_, _, Some(true)) => UserVoiceState::Speaking,

@@ -10,7 +10,6 @@ use winit::{dpi::LogicalPosition, window::WindowLevel};
 use crate::{
   app_state::AppState,
   components::user_row::user_row,
-  user::{User, UserVoiceState},
 };
 
 mod app_state;
