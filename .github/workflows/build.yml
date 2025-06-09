@@ -1,0 +1,151 @@
+name: build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/build.yml'
+      - 'Cargo.toml'
+      - 'src/**/*'
+  pull_request:
+    paths:
+      - '.github/workflows/build.yml'
+      - 'Cargo.toml'
+      - 'src/**/*'
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ${{ matrix.config.platform }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - platform: ubuntu-latest
+            target: 'x86_64-unknown-linux-gnu'
+          - platform: ubuntu-latest
+            target: 'aarch64-unknown-linux-gnu'
+          - platform: ubuntu-latest
+            target: 'armv7-unknown-linux-gnueabihf'
+
+          - platform: macos-13
+            target: 'x86_64-apple-darwin'
+          - platform: macos-13
+            target: 'aarch64-apple-darwin'
+
+          - platform: windows-latest
+            target: 'x86_64-pc-windows-msvc'
+          - platform: windows-latest
+            target: 'aarch64-pc-windows-msvc'
+    steps:
+      - uses: actions-rust-lang/setup-rust-toolchain@v1.8
+        with:
+          toolchain: stable
+          cache: false
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-${{ matrix.config.target }}-cargo-${{ hashFiles('Cargo.lock') }}
+
+      - uses: actions/checkout@v4
+
+      # if we are linux and an ARM64 target, install the right linker
+      - name: Install ARM linker
+        if: matrix.config.platform == 'ubuntu-latest' && matrix.config.target == 'aarch64-unknown-linux-gnu'
+        run: sudo apt-get install -y gcc-aarch64-linux-gnu
+
+      # if we are linux and an ARMv7 target, install the right linker
+      - name: Install ARMv7 linker
+        if: matrix.config.platform == 'ubuntu-latest' && matrix.config.target == 'armv7-unknown-linux-gnueabihf'
+        run: sudo apt-get install -y gcc-arm-linux-gnueabihf
+
+      - name: Add targets
+        run: rustup target add ${{ matrix.config.target }}
+
+      - name: Define GIT_HASH
+        id: sha
+        run: echo "GIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Define linker if building Linux ARM64
+        if: matrix.config.platform == 'ubuntu-latest' && (matrix.config.target == 'aarch64-unknown-linux-gnu')
+        id: linker_arm64
+        run: echo "LINKER_CONFIG=--config target.aarch64-unknown-linux-gnu.linker=\'aarch64-linux-gnu-gcc\'" >> $GITHUB_OUTPUT
+
+      - name: Define linker if building Linux ARMv7
+        if: matrix.config.platform == 'ubuntu-latest' && (matrix.config.target == 'armv7-unknown-linux-gnueabihf')
+        id: linker_armv7
+        run: echo "LINKER_CONFIG=--config target.armv7-unknown-linux-gnueabihf.linker=\'arm-linux-gnueabihf-gcc\'" >> $GITHUB_OUTPUT
+      
+      - name: Build
+        run: cargo build --release --target ${{ matrix.config.target }} ${{ steps.linker_arm64.outputs.LINKER_CONFIG }} ${{ steps.linker_armv7.outputs.LINKER_CONFIG }}
+        env:
+          GIT_HASH: ${{ steps.sha.outputs.GIT_HASH }}
+          RUSTFLAGS: ${{ matrix.config.platform == 'windows-latest' && '-C target-feature=+crt-static' || '' }}
+
+      - name: Upload
+        if: matrix.config.platform != 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: orbolay-${{ matrix.config.target }}
+          path: target/${{ matrix.config.target }}/release/orbolay
+
+      - name: Upload (Windows)
+        if: matrix.config.platform == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: orbolay-${{ matrix.config.target }}
+          path: target/${{ matrix.config.target }}/release/orbolay.exe
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      # Download all artifacts from the build job
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Rename executables to their folder names
+        run: |
+          # get the folder name
+          folder_name=artifacts
+
+          # get the list of inner folders
+          folders=$(ls $folder_name)
+
+          # loop through the files in each folder
+          for folder in $folders
+          do
+              # get the list of files in the folder
+              files=$(ls $folder_name/$folder)
+              for file in $files
+              do
+                if [[ $file == *.exe ]]
+                then
+                  mv $folder_name/$folder/$file $folder_name/$folder/$folder.exe
+                else
+                  mv $folder_name/$folder/$file $folder_name/$folder/$folder
+                fi
+              done
+          done
+
+      - name: Create release using all artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # Release name is the tag name
+          name: ${{ github.ref_name }}
+          draft: true
+          generate_release_notes: false
+          prerelease: false
