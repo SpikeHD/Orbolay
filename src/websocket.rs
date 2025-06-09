@@ -53,7 +53,7 @@ fn ws_stream(
 ) -> Result<(), Box<dyn std::error::Error>> {
   let mut websocket = accept(stream)?;
 
-  websocket.get_mut().set_nonblocking(true)?;
+  websocket.get_mut().set_nonblocking(false)?;
 
   log!("Stream connected");
 
