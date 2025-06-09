@@ -88,7 +88,7 @@ jobs:
         run: cargo build --release --target ${{ matrix.config.target }} ${{ steps.linker_arm64.outputs.LINKER_CONFIG }} ${{ steps.linker_armv7.outputs.LINKER_CONFIG }}
         env:
           GIT_HASH: ${{ steps.sha.outputs.GIT_HASH }}
-          RUSTFLAGS: ${{ matrix.config.platform == 'windows-latest' && '-C target-feature=+crt-static' || '' }}
+          RUSTFLAGS: -Awarnings
 
       - name: Upload
         if: matrix.config.platform != 'windows-latest'

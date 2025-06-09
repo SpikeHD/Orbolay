@@ -1,0 +1,45 @@
+name: fmt and clippy
+
+on:
+  push:
+    paths:
+      - '.github/workflows/check.yml'
+      - 'Cargo.toml'
+      - 'src/**/*'
+  pull_request:
+    paths:
+      - '.github/workflows/check.yml'
+      - 'Cargo.toml'
+      - 'src/**/*'
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1.12
+        with:
+          components: rustfmt
+
+      - name: Cargo format
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --manifest-path ./Cargo.toml --all -- --check
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1.12
+        with:
+          components: clippy
+
+      - name: Cargo clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --manifest-path ./Cargo.toml --all -- -D warnings
