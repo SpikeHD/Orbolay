@@ -24,11 +24,11 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - platform: ubuntu-latest
+          - platform: ubuntu-22.04
             target: 'x86_64-unknown-linux-gnu'
-          - platform: ubuntu-latest
+          - platform: ubuntu-22.04
             target: 'aarch64-unknown-linux-gnu'
-          - platform: ubuntu-latest
+          - platform: ubuntu-22.04
             target: 'armv7-unknown-linux-gnueabihf'
 
           - platform: macos-13
@@ -73,13 +73,14 @@ jobs:
           echo "deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports/ $(lsb_release -cs)-security main restricted" | sudo tee -a /etc/apt/sources.list
           echo "deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports/ $(lsb_release -cs)-security universe" | sudo tee -a /etc/apt/sources.list
           echo "deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports/ $(lsb_release -cs)-security multiverse" | sudo tee -a /etc/apt/sources.list
-
-          # Also add the dpkg architectures
-          sudo dpkg --add-architecture armhf
+  
+      # ARM-linux related sources and dpkg config and such
+      - name: (Linux) ARM setup
+        if: matrix.config.target == 'aarch64-unknown-linux-gnu' || matrix.config.target == 'armv7-unknown-linux-gnueabihf'
+        run: |
           sudo dpkg --add-architecture arm64
-      
-      - name: Update packages
-        run: sudo apt-get update
+          sudo dpkg --add-architecture armhf
+          sudo apt-get update
 
       - name: Install Dependencies
         if: matrix.config.platform == 'ubuntu-latest'
