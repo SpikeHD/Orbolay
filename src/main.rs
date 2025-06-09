@@ -8,7 +8,9 @@ use gumdrop::Options;
 use winit::{dpi::LogicalPosition, window::WindowLevel};
 
 use crate::{
-  app_state::AppState, components::user_row::user_row, user::{User, UserVoiceState}
+  app_state::AppState,
+  components::user_row::user_row,
+  user::{User, UserVoiceState},
 };
 
 mod app_state;
@@ -75,7 +77,7 @@ fn app() -> Element {
   });
 
   let app_state = use_signal_sync(AppState::new);
-  
+
   use_effect(move || {
     std::thread::spawn(move || {
       websocket::create_websocket(args.port, app_state).expect("Failed to start websocket server");

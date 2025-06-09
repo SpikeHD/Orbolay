@@ -8,6 +8,7 @@ pub struct UserRowProps {
 }
 
 pub fn user_row(props: UserRowProps) -> Element {
+  println!("{:?}", props.user);
   rsx! {
     rect {
       content: "flex",
