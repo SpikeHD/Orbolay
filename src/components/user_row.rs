@@ -1,10 +1,10 @@
 use freya::prelude::*;
 
+use crate::user::{User, UserVoiceState};
+
 #[derive(Props, Clone, PartialEq)]
 pub struct UserRowProps {
-  pub speaking: bool,
-  pub name: String,
-  pub avatar: Vec<u8>,
+  pub user: User,
 }
 
 pub fn user_row(props: UserRowProps) -> Element {
@@ -24,7 +24,7 @@ pub fn user_row(props: UserRowProps) -> Element {
         svg {
           height: "100%",
           width: "100%",
-          svg_content: avatar_svg(props.speaking, props.avatar),
+          svg_content: avatar_svg(props.user.voice_state, props.user.avatar),
         }
       }
 
@@ -44,7 +44,7 @@ pub fn user_row(props: UserRowProps) -> Element {
           label {
             font_size: "14",
             color: "white",
-            "{props.name}"
+            "{props.user.name}"
           }
         }
       }
@@ -53,10 +53,15 @@ pub fn user_row(props: UserRowProps) -> Element {
   }
 }
 
-fn avatar_svg(speaking: bool, _image: Vec<u8>) -> String {
-  let border_color = if speaking { "#439378" } else { "transparent" };
+fn avatar_svg(voice_state: UserVoiceState, _image: Vec<u8>) -> String {
+  let border_color = match voice_state {
+    UserVoiceState::Speaking => "#439378",
+    UserVoiceState::Deafened | UserVoiceState::Muted => "#da3e44",
+    _ => "transparent",
+  };
 
-  format!(r#"
+  format!(
+    r#"
   <svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
     <!-- Outer border circle -->
     <circle cx="50" cy="50" r="45" fill="transparent" stroke="{border_color}" stroke-width="4"/>
@@ -64,5 +69,6 @@ fn avatar_svg(speaking: bool, _image: Vec<u8>) -> String {
     <!-- Inner circle -->
     <circle cx="50" cy="50" r="40" fill="lightgray"/>
   </svg>
-  "#)
+  "#
+  )
 }

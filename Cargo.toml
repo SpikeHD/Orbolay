@@ -8,6 +8,14 @@ lto = true
 strip = "debuginfo"
 
 [dependencies]
+chrono = "0.4.41"
+colored = "3.0.0"
 dioxus = "0.6.3"
+flume = "0.11.1"
 freya = "0.3.4"
+gumdrop = "0.8.1"
+tungstenite = "0.26.2"
 winit = "0.30.11"
+
+[profile.dev.freya]
+devtools = true
