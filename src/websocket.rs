@@ -22,7 +22,7 @@ pub fn create_websocket(
   port: u16,
   app_state: Signal<AppState, SyncStorage>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-  let server = TcpListener::bind(format!("127.0.0.1:{}", port))?;
+  let server = TcpListener::bind(format!("127.0.0.1:{port}"))?;
   success!("Websocket server started on port {}", port);
 
   for stream in server.incoming() {

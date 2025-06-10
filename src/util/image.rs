@@ -1,5 +1,6 @@
 use skia_safe::{
-  sampling_options, surfaces::raster_n32_premul, ClipOp, Color, Data, EncodedImageFormat, FilterMode, Image, MipmapMode, Paint, PaintStyle, Path, Point, Rect, SamplingMode, SamplingOptions
+  ClipOp, Color, Data, EncodedImageFormat, Image, Paint, PaintStyle, Path, Point, Rect,
+  surfaces::raster_n32_premul,
 };
 
 const OUTPUT_RES: (i32, i32) = (256, 256);
