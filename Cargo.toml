@@ -12,7 +12,7 @@ chrono = "0.4.41"
 colored = "3.0.0"
 dioxus = { version = "0.6.3", features = ["hooks"] }
 flume = "0.11.1"
-freya = { version = "0.3.4", features = ["devtools"] }
+freya = "0.3.4"
 gumdrop = "0.8.1"
 serde = "1.0.219"
 serde_json = "1.0.140"
