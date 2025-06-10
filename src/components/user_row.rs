@@ -39,6 +39,7 @@ pub fn user_row(props: UserRowProps) -> Element {
         // 50% of the height
         corner_radius: "25",
         image {
+          sampling: "trilinear",
           image_data: dynamic_bytes(avatar(&props.user)),
         }
       }

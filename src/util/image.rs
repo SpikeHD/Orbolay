@@ -1,9 +1,8 @@
 use skia_safe::{
-  ClipOp, Color, Data, EncodedImageFormat, Image, Paint, PaintStyle, Path, Point, Rect,
-  surfaces::raster_n32_premul,
+  sampling_options, surfaces::raster_n32_premul, ClipOp, Color, Data, EncodedImageFormat, FilterMode, Image, MipmapMode, Paint, PaintStyle, Path, Point, Rect, SamplingMode, SamplingOptions
 };
 
-const SCALE_FACTOR: f32 = 4.;
+const OUTPUT_RES: (i32, i32) = (256, 256);
 
 // Take in a square image, round it out with a border
 pub fn circular_with_border(
@@ -13,10 +12,11 @@ pub fn circular_with_border(
   let original_image =
     Image::from_encoded(Data::new_copy(&image)).ok_or("Failed to decode image")?;
   let (orig_width, orig_height) = (original_image.width(), original_image.height());
+  let scale_factor = OUTPUT_RES.0 as f32 / orig_width as f32;
 
   // Create a new surface for the upscaled image
-  let scaled_width = (orig_width as f32 * SCALE_FACTOR) as i32;
-  let scaled_height = (orig_height as f32 * SCALE_FACTOR) as i32;
+  let scaled_width = (orig_width as f32 * scale_factor) as i32;
+  let scaled_height = (orig_height as f32 * scale_factor) as i32;
 
   let mut scaled_surface =
     raster_n32_premul((scaled_width, scaled_height)).ok_or("Failed to create scaled surface")?;
@@ -51,7 +51,7 @@ pub fn circular_with_border(
   border_paint.set_color(border);
   border_paint.set_anti_alias(true);
   border_paint.set_style(PaintStyle::Stroke);
-  border_paint.set_stroke_width(4.0 * SCALE_FACTOR);
+  border_paint.set_stroke_width(4.0 * scale_factor);
 
   canvas.draw_path(&clip_path, &border_paint);
 
