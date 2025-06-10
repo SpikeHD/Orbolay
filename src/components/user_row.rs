@@ -35,7 +35,7 @@ pub fn user_row(props: UserRowProps) -> Element {
       opacity: if props.user.voice_state == UserVoiceState::Speaking { "1.0" } else { "0.5" },
 
       rect {
-        width: "25%",
+        width: "auto",
         height: "100%",
         // 50% of the height
         corner_radius: "25",

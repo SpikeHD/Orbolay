@@ -5,9 +5,10 @@
 
 use std::collections::HashMap;
 
+use display_info::DisplayInfo;
 use freya::prelude::*;
 use gumdrop::Options;
-use winit::{dpi::LogicalPosition, window::WindowLevel};
+use winit::{dpi::{LogicalPosition, LogicalSize, PhysicalPosition, PhysicalSize}, window::WindowLevel};
 
 use crate::{app_state::AppState, components::user_row::user_row};
 
@@ -51,16 +52,27 @@ fn main() {
     std::process::exit(0);
   }
 
+  let displays = DisplayInfo::all().expect("Failed to get display information");
+  let primary = displays.iter().find(|m| m.is_primary).unwrap_or(displays.first().expect("No displays found"));
+  let monitor_position = (primary.x, primary.y);
+  let monitor_size = (primary.width, primary.height);
+
+  log!("Displays: {:?}", displays);
+  log!("Primary monitor: {:?}", primary);
+  log!("Monitor position: {:?}", monitor_position);
+  log!("Monitor size: {:?}", monitor_size);
+
   launch_cfg(
     app,
     LaunchConfig::<f32>::new()
       .with_decorations(false)
       .with_background("transparent")
       .with_transparency(true)
-      .with_window_attributes(|w| {
+      .with_window_attributes(move |w| {
         w.with_window_level(WindowLevel::AlwaysOnTop)
+          .with_inner_size(LogicalSize::new(monitor_size.0, monitor_size.1))
           .with_resizable(false)
-          .with_position(LogicalPosition::new(0, 0))
+          .with_position(LogicalPosition::new(monitor_position.0, monitor_position.1))
       }),
   );
 }
@@ -85,13 +97,18 @@ fn app() -> Element {
   });
 
   rsx!(
+    // Voice users
     rect {
       content: "flex",
       direction: "vertical",
 
+      position: "absolute",
+      position_top: "0",
+      position_left: "0",
+
       background: "transparent",
-      height: "600",
-      width: "200",
+      height: "100%",
+      width: "30%",
 
       for user in app_state().voice_users.iter() {
         user_row {
