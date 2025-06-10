@@ -1,9 +1,10 @@
+use std::time::Duration;
+
 use freya::prelude::*;
 use skia_safe::Color;
 
 use crate::{
-  user::{User, UserVoiceState},
-  util::image::circular_with_border,
+  user::{User, UserVoiceState}, util::image::circular_with_border
 };
 
 #[derive(Props, Clone, PartialEq)]
@@ -21,13 +22,13 @@ pub fn user_row(props: UserRowProps) -> Element {
       height: "50",
       margin: "6",
 
+      opacity: if props.user.voice_state == UserVoiceState::Speaking { "1.0" } else { "0.5" },
+
       rect {
         width: "25%",
         height: "100%",
         // 50% of the height
         corner_radius: "25",
-
-        // TODO put actual image here
         image {
           image_data: dynamic_bytes(avatar(&props.user)),
         }
