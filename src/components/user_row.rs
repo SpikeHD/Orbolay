@@ -3,7 +3,7 @@ use skia_safe::Color;
 
 use crate::{
   user::{User, UserVoiceState},
-  util::{image::circular_with_border},
+  util::image::circular_with_border,
 };
 
 #[derive(Props, Clone, PartialEq)]
