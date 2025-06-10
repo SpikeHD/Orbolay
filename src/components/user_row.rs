@@ -1,11 +1,20 @@
-use std::time::Duration;
-
 use freya::prelude::*;
 use skia_safe::Color;
 
 use crate::{
   user::{User, UserVoiceState}, util::image::circular_with_border
 };
+
+import_svg!(Deafened, "../../assets/deafened.svg", {
+  height: "16",
+  width: "16",
+  margin: "0 6 0 0",
+});
+import_svg!(Muted, "../../assets/muted.svg", {
+  height: "16",
+  width: "16",
+  margin: "0 6 0 0",
+});
 
 #[derive(Props, Clone, PartialEq)]
 pub struct UserRowProps {
@@ -36,6 +45,7 @@ pub fn user_row(props: UserRowProps) -> Element {
 
       rect {
         content: "flex",
+        direction: "horizontal",
         main_align: "center",
         cross_align: "center",
 
@@ -52,6 +62,12 @@ pub fn user_row(props: UserRowProps) -> Element {
             color: "white",
             "{props.user.name}"
           }
+        }
+
+        if props.user.voice_state == UserVoiceState::Muted {
+          Muted {}
+        } else if props.user.voice_state == UserVoiceState::Deafened {
+          Deafened {}
         }
       }
 
