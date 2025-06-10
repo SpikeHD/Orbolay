@@ -33,8 +33,8 @@
 * [ ] Voice states
   * [x] Usernames
   * [x] Speaking/not speaking
-  * [ ] Muted/deafened icons beside name
-  * [ ] Proper avatar images
+  * [x] Muted/deafened icons beside name
+  * [x] Proper avatar images
 * [ ] Voice control
   * [ ] Mute/deafen buttons
 * [ ] Notifications
