@@ -68,6 +68,10 @@ fn ws_stream(
       log!("Received message: {:?}", msg);
 
       match msg.cmd.as_str() {
+        "REGISTER_CONFIG" => {
+          let data = serde_json::from_value::<Value>(msg.data)?;
+          (*app_state.write()).config = serde_json::from_value(data)?;
+        }
         "CHANNEL_JOINED" => {
           let data = serde_json::from_value::<ChannelJoinPayload>(msg.data)?;
           let mut users = vec![];

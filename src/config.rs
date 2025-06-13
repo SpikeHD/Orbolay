@@ -1,10 +1,12 @@
-#[derive(Debug, Clone)]
+use serde::Deserialize;
+
+#[derive(Debug, Clone, Deserialize)]
 pub struct CornerAlignment {
   pub top: bool,
   pub left: bool,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct Config {
   pub port: u16,
   pub user_id: String,
