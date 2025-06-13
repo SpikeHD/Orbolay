@@ -30,15 +30,15 @@
 
 # TODO
 
-* [ ] Voice states
+* [x] Voice states
   * [x] Usernames
   * [x] Speaking/not speaking
   * [x] Muted/deafened icons beside name
   * [x] Proper avatar images
 * [ ] Voice control
   * [ ] Mute/deafen buttons
-* [ ] Notifications
-  * [ ] Message notifications
+* [x] Notifications
+  * [x] Message notifications
 
 ## Stretch Goals
 
