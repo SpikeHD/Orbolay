@@ -7,6 +7,7 @@ pub struct CornerAlignment {
 #[derive(Debug, Clone)]
 pub struct Config {
   pub port: u16,
+  pub user_id: String,
   pub message_alignment: CornerAlignment,
   pub user_alignment: CornerAlignment,
 }
@@ -15,6 +16,7 @@ impl Default for Config {
   fn default() -> Self {
     Self {
       port: 6888,
+      user_id: String::new(),
       message_alignment: CornerAlignment {
         top: true,
         left: false,
