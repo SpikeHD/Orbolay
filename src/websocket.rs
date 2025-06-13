@@ -7,7 +7,7 @@ use tungstenite::accept;
 use crate::{
   app_state::AppState,
   log,
-  payloads::{ChannelJoinPayload, UpdatePayload},
+  payloads::{ChannelJoinPayload, MessageNotification, MessageNotificationPayload, UpdatePayload},
   success, warn,
 };
 
@@ -110,6 +110,13 @@ fn ws_stream(
         "CHANNEL_LEFT" => {
           // User left the channel, no more need for list
           app_state.write().voice_users = vec![];
+        }
+        "MESSAGE_NOTIFICATION" => {
+          let mut data = serde_json::from_value::<MessageNotificationPayload>(msg.data)?;
+          data.message.timestamp = Some(chrono::Utc::now().timestamp().to_string());
+          data.message.icon = data.message.icon.replace(".webp", ".png");
+
+          app_state.write().messages.push(data.message);
         }
         _ => {
           warn!("Unknown command: {}", msg.cmd);

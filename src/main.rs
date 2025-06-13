@@ -8,9 +8,9 @@ use std::collections::HashMap;
 use display_info::DisplayInfo;
 use freya::prelude::*;
 use gumdrop::Options;
-use winit::{dpi::{LogicalPosition, LogicalSize, PhysicalPosition, PhysicalSize}, window::WindowLevel};
+use winit::{dpi::{LogicalPosition, LogicalSize}, window::WindowLevel};
 
-use crate::{app_state::AppState, components::user_row::user_row};
+use crate::{app_state::AppState, components::{message_row::message_row, user_row::user_row}, payloads::MessageNotification};
 
 mod app_state;
 mod components;
@@ -88,11 +88,29 @@ fn app() -> Element {
     }
   });
 
-  let app_state = use_signal_sync(AppState::new);
+  let mut app_state = use_signal_sync(AppState::new);
 
   use_effect(move || {
     std::thread::spawn(move || {
       websocket::create_websocket(args.port, app_state).expect("Failed to start websocket server");
+    });
+
+    // Check the messages once per second, removing any that are older than 5 seconds
+    std::thread::spawn(move || {
+      loop {
+        std::thread::sleep(std::time::Duration::from_secs(1));
+
+        let current_timestamp = chrono::Utc::now().timestamp();
+        app_state.write().messages.retain(|message| {
+          let msg = message.clone();
+          if let Some(message_timestamp) = msg.timestamp {
+            let timestamp = message_timestamp.parse::<i64>().unwrap_or(0);
+            return current_timestamp - timestamp < 5
+          }
+
+          true
+        });
+      }
     });
   });
 
@@ -108,11 +126,31 @@ fn app() -> Element {
 
       background: "transparent",
       height: "100%",
-      width: "30%",
+      width: "300",
 
       for user in app_state().voice_users.iter() {
         user_row {
           user: user.clone()
+        }
+      }
+    }
+
+    // Messages
+    rect {
+      content: "flex",
+      direction: "vertical",
+
+      position: "absolute",
+      position_top: "0",
+      position_right: "125",
+
+      background: "transparent",
+      height: "100%",
+      width: "300",
+
+      for message in app_state().messages.iter() {
+        message_row {
+          message: message.clone()
         }
       }
     }

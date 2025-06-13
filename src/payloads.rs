@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use crate::user::{User, UserVoiceState};
+use crate::{log, user::{User, UserVoiceState}, AVATAR_CACHE};
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -46,4 +46,36 @@ pub struct ChannelJoinPayload {
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct UpdatePayload {
   pub state: VoiceState,
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+pub struct MessageNotificationPayload {
+  pub message: MessageNotification,
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MessageNotification {
+  pub title: String,
+  pub body: String,
+  pub icon: String,
+  pub channel_id: String,
+  pub timestamp: Option<String>,
+}
+
+impl MessageNotification {
+  pub fn fetch_icon(&self) -> Result<Vec<u8>, ureq::Error> {
+    if AVATAR_CACHE().contains_key(&self.icon) {
+      log!("Cache hit for avatar {}", self.icon);
+      // We can unwrap here because we know the key exists
+      return Ok(AVATAR_CACHE().get(&self.icon).unwrap().clone());
+    }
+
+    log!("Fetching avatar from {}", self.icon);
+    let img = ureq::get(&self.icon).call()?.body_mut().read_to_vec()?;
+
+    (*AVATAR_CACHE.write()).insert(self.icon.clone(), img.clone());
+
+    Ok(img)
+  }
 }
