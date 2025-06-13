@@ -20,6 +20,7 @@ use crate::{
 
 mod app_state;
 mod components;
+mod config;
 mod logger;
 mod payloads;
 mod user;
@@ -131,7 +132,8 @@ fn app() -> Element {
     rect {
       content: "flex",
       direction: "vertical",
-      cross_align: "start",
+      cross_align: if app_state().config.user_alignment.left { "start" } else { "end" },
+      main_align: if app_state().config.user_alignment.top { "start" } else { "end" },
 
       position: "absolute",
       position_top: "0",
@@ -152,7 +154,8 @@ fn app() -> Element {
     rect {
       content: "flex",
       direction: "vertical",
-      cross_align: "end",
+      cross_align: if app_state().config.message_alignment.left { "start" } else { "end" },
+      main_align: if app_state().config.message_alignment.top { "start" } else { "end" },
 
       position: "absolute",
       position_top: "0",
