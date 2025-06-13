@@ -8,9 +8,15 @@ use std::collections::HashMap;
 use display_info::DisplayInfo;
 use freya::prelude::*;
 use gumdrop::Options;
-use winit::{dpi::{LogicalPosition, LogicalSize}, window::WindowLevel};
+use winit::{
+  dpi::{PhysicalPosition, PhysicalSize},
+  window::WindowLevel,
+};
 
-use crate::{app_state::AppState, components::{message_row::message_row, user_row::user_row}, payloads::MessageNotification};
+use crate::{
+  app_state::AppState,
+  components::{message_row::message_row, user_row::user_row},
+};
 
 mod app_state;
 mod components;
@@ -53,7 +59,10 @@ fn main() {
   }
 
   let displays = DisplayInfo::all().expect("Failed to get display information");
-  let primary = displays.iter().find(|m| m.is_primary).unwrap_or(displays.first().expect("No displays found"));
+  let primary = displays
+    .iter()
+    .find(|m| m.is_primary)
+    .unwrap_or(displays.first().expect("No displays found"));
   let monitor_position = (primary.x, primary.y);
   let monitor_size = (primary.width, primary.height);
 
@@ -70,9 +79,12 @@ fn main() {
       .with_transparency(true)
       .with_window_attributes(move |w| {
         w.with_window_level(WindowLevel::AlwaysOnTop)
-          .with_inner_size(LogicalSize::new(monitor_size.0, monitor_size.1))
+          .with_inner_size(PhysicalSize::new(monitor_size.0, monitor_size.1))
           .with_resizable(false)
-          .with_position(LogicalPosition::new(monitor_position.0, monitor_position.1))
+          .with_position(PhysicalPosition::new(
+            monitor_position.0,
+            monitor_position.1,
+          ))
       }),
   );
 }
@@ -105,7 +117,7 @@ fn app() -> Element {
           let msg = message.clone();
           if let Some(message_timestamp) = msg.timestamp {
             let timestamp = message_timestamp.parse::<i64>().unwrap_or(0);
-            return current_timestamp - timestamp < 5
+            return current_timestamp - timestamp < 5;
           }
 
           true
@@ -119,6 +131,7 @@ fn app() -> Element {
     rect {
       content: "flex",
       direction: "vertical",
+      cross_align: "start",
 
       position: "absolute",
       position_top: "0",
@@ -126,7 +139,7 @@ fn app() -> Element {
 
       background: "transparent",
       height: "100%",
-      width: "300",
+      width: "100%",
 
       for user in app_state().voice_users.iter() {
         user_row {
@@ -139,14 +152,15 @@ fn app() -> Element {
     rect {
       content: "flex",
       direction: "vertical",
+      cross_align: "end",
 
       position: "absolute",
       position_top: "0",
-      position_right: "125",
+      position_left: "0",
 
       background: "transparent",
       height: "100%",
-      width: "300",
+      width: "100%",
 
       for message in app_state().messages.iter() {
         message_row {

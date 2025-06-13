@@ -1,6 +1,9 @@
-use freya::prelude::{dioxus_elements::attributes::margin, *};
+use freya::prelude::*;
 
-use crate::{payloads::MessageNotification, util::{truncate, strip, image::circular_with_border}};
+use crate::{
+  payloads::MessageNotification,
+  util::{image::circular_with_border, strip, truncate},
+};
 
 #[derive(Props, Clone, PartialEq)]
 pub struct MessageRowProps {
@@ -15,10 +18,10 @@ pub fn message_row(props: MessageRowProps) -> Element {
       main_align: "start",
       cross_align: "center",
       height: "70",
-      width: "400",
+      max_width: "400",
       margin: "6",
-      corner_radius: "5",
-      
+      corner_radius: "10",
+
       background: "#1e1f23",
 
       rect {
@@ -30,8 +33,8 @@ pub fn message_row(props: MessageRowProps) -> Element {
         height: "100%",
 
         image {
-          width: "auto",
-          height: "80%",
+          width: "54",
+          height: "54",
           margin: "0 0 0 10",
 
           sampling: "trilinear",

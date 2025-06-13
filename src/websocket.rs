@@ -7,7 +7,7 @@ use tungstenite::accept;
 use crate::{
   app_state::AppState,
   log,
-  payloads::{ChannelJoinPayload, MessageNotification, MessageNotificationPayload, UpdatePayload},
+  payloads::{ChannelJoinPayload, MessageNotificationPayload, UpdatePayload},
   success, warn,
 };
 

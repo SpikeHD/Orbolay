@@ -1,6 +1,9 @@
 use serde::Deserialize;
 
-use crate::{log, user::{User, UserVoiceState}, AVATAR_CACHE};
+use crate::{
+  AVATAR_CACHE, log,
+  user::{User, UserVoiceState},
+};
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
