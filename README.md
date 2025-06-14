@@ -20,6 +20,12 @@
 * Custom notifications
 * ~~Mute/deafen/disconnect controls~~
 
+# Compatibility
+
+* **Windows**: 10 and 11 should work fine
+* **MacOS**: Works, but no interactivity (no VC controls through overlay)
+* **Linux**: X11 should be fine, Wayland works but cannot use always-on-top
+
 # Installation
 
 > [!NOTE]
