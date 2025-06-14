@@ -120,6 +120,12 @@ fn ws_stream(
           let mut data = serde_json::from_value::<MessageNotificationPayload>(msg.data)?;
           data.message.timestamp = Some(chrono::Utc::now().timestamp().to_string());
           data.message.icon = data.message.icon.replace(".webp", ".png");
+          let messages_len = app_state.read().messages.len();
+
+          // Keep the last 3 elements
+          if messages_len > 3 {
+            app_state.write().messages.drain(0..messages_len - 3);
+          }
 
           app_state.write().messages.push(data.message);
         }
