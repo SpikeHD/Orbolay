@@ -133,6 +133,18 @@ fn app() -> Element {
   });
 
   rsx!(
+    // Background layer
+    rect {
+      position: "absolute",
+      position_top: "0",
+      position_left: "0",
+
+      background: if app_state().is_open { "#cccccc" } else { "transparent" },
+      width: "100%",
+      height: "100%",
+      opacity: "0.3",
+    }
+
     // Voice users
     rect {
       content: "flex",
@@ -144,8 +156,7 @@ fn app() -> Element {
       position_top: "0",
       position_left: "0",
 
-      background: if app_state().is_open { "#cccccc" } else { "transparent" },
-      opacity: "0.3",
+      background: "transparent",
       height: "100%",
       width: "100%",
 
