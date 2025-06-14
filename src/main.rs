@@ -15,7 +15,7 @@ use winit::{
 
 use crate::{
   app_state::AppState,
-  components::{message_row::message_row, user_row::user_row},
+  components::{message_row::message_row, user_row::user_row, voice_controls::voice_controls},
 };
 
 mod app_state;
@@ -170,6 +170,28 @@ fn app() -> Element {
           message: message.clone()
         }
       }
+    }
+
+    // Voice Controls
+    if app_state().is_open {
+          if let Some(user) = app_state().voice_users.iter().find(|u| u.id == app_state().config.user_id) {
+      rect {
+        position: "absolute",
+        position_top: "0",
+        position_left: "0",
+
+        content: "flex",
+        direction: "horizontal",
+        main_align: "center",
+        cross_align: "end",
+        height: "90%",
+        width: "100%",
+
+        voice_controls {
+          user: user.clone(),
+        }
+      }
+    }
     }
   )
 }

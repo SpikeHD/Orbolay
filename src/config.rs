@@ -7,6 +7,7 @@ pub struct CornerAlignment {
 }
 
 #[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Config {
   pub port: u16,
   pub user_id: String,

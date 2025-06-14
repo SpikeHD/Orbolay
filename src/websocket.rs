@@ -6,6 +6,7 @@ use tungstenite::accept;
 
 use crate::{
   app_state::AppState,
+  config::Config,
   log,
   payloads::{ChannelJoinPayload, MessageNotificationPayload, UpdatePayload},
   success, warn,
@@ -69,8 +70,8 @@ fn ws_stream(
 
       match msg.cmd.as_str() {
         "REGISTER_CONFIG" => {
-          let data = serde_json::from_value::<Value>(msg.data)?;
-          (*app_state.write()).config = serde_json::from_value(data)?;
+          let data = serde_json::from_value::<Config>(msg.data)?;
+          app_state.write().config = data;
         }
         "CHANNEL_JOINED" => {
           let data = serde_json::from_value::<ChannelJoinPayload>(msg.data)?;
