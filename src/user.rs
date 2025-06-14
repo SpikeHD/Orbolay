@@ -1,5 +1,7 @@
 use crate::{AVATAR_CACHE, log};
 
+static DEFAULT_AVATAR: &[u8] = include_bytes!("../assets/discordgrey.png");
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum UserVoiceState {
   Speaking,
@@ -23,6 +25,10 @@ impl User {
       log!("Cache hit for avatar {}", self.avatar);
       // We can unwrap here because we know the key exists
       return Ok(AVATAR_CACHE().get(&self.avatar).unwrap().clone());
+    }
+
+    if self.avatar.is_empty() {
+      return Ok(DEFAULT_AVATAR.to_vec());
     }
 
     let uri = format!(
