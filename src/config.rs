@@ -9,7 +9,7 @@ pub struct CornerAlignment {
 #[derive(Debug, Clone, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Config {
-  pub port: String,
+  pub port: u16,
   pub user_id: String,
   pub message_alignment: CornerAlignment,
   pub user_alignment: CornerAlignment,
@@ -20,7 +20,7 @@ pub struct Config {
 impl Default for Config {
   fn default() -> Self {
     Self {
-      port: "6888".to_string(),
+      port: 6888,
       user_id: String::new(),
       message_alignment: CornerAlignment {
         top: true,
