@@ -1,4 +1,4 @@
-use freya::prelude::{Signal, SyncStorage, Writable};
+use freya::prelude::{Readable, Signal, SyncStorage, Writable};
 use serde::Deserialize;
 use serde_json::Value;
 use std::net::{TcpListener, TcpStream};

@@ -8,11 +8,12 @@ use std::collections::HashMap;
 use display_info::DisplayInfo;
 use freya::prelude::*;
 use gumdrop::Options;
-use winit::{
-  dpi::{PhysicalPosition, PhysicalSize}, window::WindowLevel
-};
 #[cfg(target_os = "windows")]
 use winit::platform::windows::WindowAttributesExtWindows;
+use winit::{
+  dpi::{PhysicalPosition, PhysicalSize},
+  window::WindowLevel,
+};
 
 use crate::{
   app_state::AppState,
@@ -90,7 +91,7 @@ fn main() {
             monitor_position.0,
             monitor_position.1,
           ));
-          
+
         #[cfg(target_os = "windows")]
         {
           w = w.with_skip_taskbar(true);
@@ -103,7 +104,7 @@ fn main() {
 
 fn app() -> Element {
   let args = Args::parse_args_default_or_exit();
-  
+
   use_platform().with_window(move |w| {
     // Disable hittest
     if !args.debug {
@@ -147,7 +148,7 @@ fn app() -> Element {
       position_top: "0",
       position_left: "0",
 
-      background: if app_state().is_open { "#cccccc" } else { "transparent" },
+      background: if app_state.read().is_open { "#cccccc" } else { "transparent" },
       width: "100%",
       height: "100%",
       opacity: "0.3",
@@ -157,8 +158,8 @@ fn app() -> Element {
     rect {
       content: "flex",
       direction: "vertical",
-      cross_align: if app_state().config.user_alignment.left { "start" } else { "end" },
-      main_align: if app_state().config.user_alignment.top { "start" } else { "end" },
+      cross_align: if app_state.read().config.user_alignment.left { "start" } else { "end" },
+      main_align: if app_state.read().config.user_alignment.top { "start" } else { "end" },
 
       position: "absolute",
       position_top: "0",
@@ -168,7 +169,7 @@ fn app() -> Element {
       height: "100%",
       width: "100%",
 
-      for user in app_state().voice_users.iter() {
+      for user in app_state.read().voice_users.iter() {
         user_row {
           user: user.clone()
         }
@@ -179,8 +180,8 @@ fn app() -> Element {
     rect {
       content: "flex",
       direction: "vertical",
-      cross_align: if app_state().config.message_alignment.left { "start" } else { "end" },
-      main_align: if app_state().config.message_alignment.top { "start" } else { "end" },
+      cross_align: if app_state.read().config.message_alignment.left { "start" } else { "end" },
+      main_align: if app_state.read().config.message_alignment.top { "start" } else { "end" },
 
       position: "absolute",
       position_top: "0",
@@ -190,7 +191,7 @@ fn app() -> Element {
       height: "100%",
       width: "100%",
 
-      for message in app_state().messages.iter() {
+      for message in app_state.read().messages.iter() {
         message_row {
           message: message.clone()
         }
@@ -198,8 +199,8 @@ fn app() -> Element {
     }
 
     // Voice Controls
-    if app_state().is_open {
-      if let Some(user) = app_state().voice_users.iter().find(|u| u.id == app_state().config.user_id) {
+    if app_state.read().is_open {
+      if let Some(user) = app_state.read().voice_users.iter().find(|u| u.id == app_state.read().config.user_id) {
         rect {
           position: "absolute",
           position_top: "0",
