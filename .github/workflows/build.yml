@@ -26,10 +26,6 @@ jobs:
         config:
           - platform: ubuntu-22.04
             target: 'x86_64-unknown-linux-gnu'
-          - platform: ubuntu-22.04
-            target: 'aarch64-unknown-linux-gnu'
-          - platform: ubuntu-22.04
-            target: 'armv7-unknown-linux-gnueabihf'
 
           - platform: macos-13
             target: 'x86_64-apple-darwin'
@@ -57,52 +53,9 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      - name: (Linux) ARM sources.list
-        if: matrix.config.target == 'aarch64-unknown-linux-gnu' || matrix.config.target == 'armv7-unknown-linux-gnueabihf'
-        run: |
-          # Add [arch=amd64] to the initial entries of the sources.list
-          sudo sed -i 's/^deb /deb [arch=amd64] /' /etc/apt/sources.list
-  
-          echo "deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports/ $(lsb_release -cs) main restricted" | sudo tee -a /etc/apt/sources.list
-          echo "deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports/ $(lsb_release -cs)-updates main restricted" | sudo tee -a /etc/apt/sources.list
-          echo "deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports/ $(lsb_release -cs) universe" | sudo tee -a /etc/apt/sources.list
-          echo "deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports/ $(lsb_release -cs)-updates universe" | sudo tee -a /etc/apt/sources.list
-          echo "deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports/ $(lsb_release -cs) multiverse" | sudo tee -a /etc/apt/sources.list
-          echo "deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports/ $(lsb_release -cs)-updates multiverse" | sudo tee -a /etc/apt/sources.list
-          echo "deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports/ $(lsb_release -cs)-backports main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list
-          echo "deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports/ $(lsb_release -cs)-security main restricted" | sudo tee -a /etc/apt/sources.list
-          echo "deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports/ $(lsb_release -cs)-security universe" | sudo tee -a /etc/apt/sources.list
-          echo "deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports/ $(lsb_release -cs)-security multiverse" | sudo tee -a /etc/apt/sources.list
-  
-      # ARM-linux related sources and dpkg config and such
-      - name: (Linux) ARM setup
-        if: matrix.config.target == 'aarch64-unknown-linux-gnu' || matrix.config.target == 'armv7-unknown-linux-gnueabihf'
-        run: |
-          sudo dpkg --add-architecture arm64
-          sudo dpkg --add-architecture armhf
-          sudo apt-get update
-
       - name: Install Dependencies
         if: matrix.config.platform == 'ubuntu-22.04'
         run: sudo apt-get install -y build-essential libssl-dev pkg-config cmake libgtk-3-dev libclang-dev libglib2.0-dev
-
-      - name: Install OpenSSL (ARM64)
-        if: matrix.config.platform == 'ubuntu-22.04' && matrix.config.target == 'aarch64-unknown-linux-gnu'
-        run: sudo apt-get install -y libssl-dev:arm64
-
-      - name: Install OpenSSL (ARMv7)
-        if: matrix.config.platform == 'ubuntu-22.04' && matrix.config.target == 'armv7-unknown-linux-gnueabihf'
-        run: sudo apt-get install -y libssl-dev:armhf
-
-      # if we are linux and an ARM64 target, install the right linker
-      - name: Install ARM linker
-        if: matrix.config.platform == 'ubuntu-22.04' && matrix.config.target == 'aarch64-unknown-linux-gnu'
-        run: sudo apt-get install -y gcc-aarch64-linux-gnu
-
-      # if we are linux and an ARMv7 target, install the right linker
-      - name: Install ARMv7 linker
-        if: matrix.config.platform == 'ubuntu-22.04' && matrix.config.target == 'armv7-unknown-linux-gnueabihf'
-        run: sudo apt-get install -y gcc-arm-linux-gnueabihf
 
       - name: Add targets
         run: rustup target add ${{ matrix.config.target }}
@@ -110,19 +63,9 @@ jobs:
       - name: Define GIT_HASH
         id: sha
         run: echo "GIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-
-      - name: Define linker if building Linux ARM64
-        if: matrix.config.platform == 'ubuntu-22.04' && (matrix.config.target == 'aarch64-unknown-linux-gnu')
-        id: linker_arm64
-        run: echo "LINKER_CONFIG=--config target.aarch64-unknown-linux-gnu.linker=\'aarch64-linux-gnu-gcc\'" >> $GITHUB_OUTPUT
-
-      - name: Define linker if building Linux ARMv7
-        if: matrix.config.platform == 'ubuntu-22.04' && (matrix.config.target == 'armv7-unknown-linux-gnueabihf')
-        id: linker_armv7
-        run: echo "LINKER_CONFIG=--config target.armv7-unknown-linux-gnueabihf.linker=\'arm-linux-gnueabihf-gcc\'" >> $GITHUB_OUTPUT
       
       - name: Build
-        run: cargo build --release --target ${{ matrix.config.target }} # ${{ steps.linker_arm64.outputs.LINKER_CONFIG }} ${{ steps.linker_armv7.outputs.LINKER_CONFIG }}
+        run: cargo build --release --target ${{ matrix.config.target }}
         env:
           GIT_HASH: ${{ steps.sha.outputs.GIT_HASH }}
           RUSTFLAGS: -Awarnings
