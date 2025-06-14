@@ -54,3 +54,9 @@
 ## Stretch Goals
 
 * [ ] Stream PiP
+
+# Special Thanks
+
+* [Freya](https://github.com/marc2332/freya) - the main GUI library (that I may have fallen in love with)
+* [Dioxus](https://dioxuslabs.com/) - framework for things like signals and `rsx!`
+* Everyone else who contributes positively to the Rust ecosystem :)
