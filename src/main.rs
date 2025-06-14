@@ -94,14 +94,6 @@ fn main() {
 
 fn app() -> Element {
   let args = Args::parse_args_default_or_exit();
-  let platform = use_platform();
-
-  platform.with_window(move |w| {
-    // Disable hittest
-    if !args.debug {
-      w.set_cursor_hittest(false).unwrap_or_default();
-    }
-  });
 
   let mut app_state = use_signal_sync(AppState::new);
 
@@ -144,7 +136,8 @@ fn app() -> Element {
       position_top: "0",
       position_left: "0",
 
-      background: "transparent",
+      background: if app_state().is_open { "#cccccc" } else { "transparent" },
+      opacity: "0.3",
       height: "100%",
       width: "100%",
 
