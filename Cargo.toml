@@ -7,6 +7,13 @@ edition = "2024"
 lto = true
 strip = "debuginfo"
 
+[package.metadata.packager]
+product-name = "Orbolay"
+identifier = "dev.spikehd.orbolay"
+out-dir = "bins"
+log-level = "debug"
+formats = ["all"]
+
 [dependencies]
 chrono = "0.4.41"
 colored = "3.0.0"
