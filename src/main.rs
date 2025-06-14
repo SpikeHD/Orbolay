@@ -81,7 +81,8 @@ fn main() {
       .with_transparency(true)
       .with_window_attributes(move |w| {
         w.with_window_level(WindowLevel::AlwaysOnTop)
-          .with_inner_size(PhysicalSize::new(monitor_size.0, monitor_size.1))
+          // https://discourse.glfw.org/t/black-screen-when-setting-window-to-transparent-and-size-to-1920x1080/2585/4
+          .with_inner_size(PhysicalSize::new(monitor_size.0 + 1, monitor_size.1 + 1))
           .with_resizable(false)
           .with_position(PhysicalPosition::new(
             monitor_position.0,
@@ -179,24 +180,24 @@ fn app() -> Element {
 
     // Voice Controls
     if app_state().is_open {
-          if let Some(user) = app_state().voice_users.iter().find(|u| u.id == app_state().config.user_id) {
-      rect {
-        position: "absolute",
-        position_top: "0",
-        position_left: "0",
+      if let Some(user) = app_state().voice_users.iter().find(|u| u.id == app_state().config.user_id) {
+        rect {
+          position: "absolute",
+          position_top: "0",
+          position_left: "0",
 
-        content: "flex",
-        direction: "horizontal",
-        main_align: "center",
-        cross_align: "end",
-        height: "90%",
-        width: "100%",
+          content: "flex",
+          direction: "horizontal",
+          main_align: "center",
+          cross_align: "end",
+          height: "90%",
+          width: "100%",
 
-        voice_controls {
-          user: user.clone(),
+          voice_controls {
+            user: user.clone(),
+          }
         }
       }
-    }
     }
   )
 }
