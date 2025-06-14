@@ -68,16 +68,22 @@ pub struct MessageNotification {
 
 impl MessageNotification {
   pub fn fetch_icon(&self) -> Result<Vec<u8>, ureq::Error> {
-    if AVATAR_CACHE().contains_key(&self.icon) {
-      log!("Cache hit for avatar {}", self.icon);
+    let icon = if self.icon.starts_with("/") {
+      format!("https://discord.com{}", self.icon)
+    } else {
+      self.icon.clone()
+    };
+
+    if AVATAR_CACHE().contains_key(&icon) {
+      log!("Cache hit for icon {}", icon);
       // We can unwrap here because we know the key exists
-      return Ok(AVATAR_CACHE().get(&self.icon).unwrap().clone());
+      return Ok(AVATAR_CACHE().get(&icon).unwrap().clone());
     }
 
-    log!("Fetching avatar from {}", self.icon);
-    let img = ureq::get(&self.icon).call()?.body_mut().read_to_vec()?;
+    log!("Fetching icon from {}", icon);
+    let img = ureq::get(&icon).call()?.body_mut().read_to_vec()?;
 
-    (*AVATAR_CACHE.write()).insert(self.icon.clone(), img.clone());
+    (*AVATAR_CACHE.write()).insert(icon.clone(), img.clone());
 
     Ok(img)
   }
