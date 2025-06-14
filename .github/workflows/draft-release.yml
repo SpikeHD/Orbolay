@@ -1,0 +1,35 @@
+name: Draft release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number'
+        required: true
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # https://github.com/actions/upload-artifact/issues/21#issuecomment-2393490651
+      - name: Download latest successful build artifacts
+        run: |
+          gh_last_success_run_id=$(gh run list -w $WORKFLOW --json conclusion,headBranch,databaseId --jq 'first(.[] | select(.conclusion | contains("success"))) | .databaseId')
+          [ -z "$gh_last_success_run_id" ] && echo "No successful run found" && exit 1 || true
+          gh run download $gh_last_success_run_id -D $OUTPUT_DIR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WORKFLOW: .github/workflows/build.yml
+          OUTPUT_DIR: artifacts
+
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ inputs.version }}
+          name: v${{ inputs.version }}
+          body: "If you can see this, I forgot to change the release description."
+          files: artifacts/*
+          draft: true
