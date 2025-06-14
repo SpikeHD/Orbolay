@@ -2,8 +2,7 @@ use freya::prelude::*;
 use skia_safe::Color;
 
 use crate::{
-  user::{User, UserVoiceState},
-  util::image::circular_with_border,
+  app_state::AppState, user::{User, UserVoiceState}, util::image::circular_with_border
 };
 
 import_svg!(Deafened, "../../assets/deafened.svg", {
@@ -19,6 +18,7 @@ import_svg!(Muted, "../../assets/muted.svg", {
 
 #[derive(Props, Clone, PartialEq)]
 pub struct UserRowProps {
+  pub app_state: Signal<AppState, SyncStorage>,
   pub user: User,
 }
 
@@ -32,7 +32,7 @@ pub fn user_row(props: UserRowProps) -> Element {
       height: "50",
       margin: "6",
 
-      opacity: if props.user.voice_state == UserVoiceState::Speaking { "1.0" } else { "0.5" },
+      opacity: if props.user.voice_state == UserVoiceState::Speaking || !props.app_state.read().config.voice_semitransparent { "1.0" } else { "0.5" },
 
       rect {
         width: "auto",

@@ -1,6 +1,6 @@
 use crate::{config::Config, payloads::MessageNotification, user::User};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct AppState {
   pub config: Config,
   pub is_open: bool,

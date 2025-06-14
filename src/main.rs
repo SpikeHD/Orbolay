@@ -176,7 +176,8 @@ fn app() -> Element {
 
       for user in app_state.read().voice_users.iter() {
         user_row {
-          user: user.clone()
+          user: user.clone(),
+          app_state: app_state.clone()
         }
       }
     }
@@ -195,6 +196,8 @@ fn app() -> Element {
       background: "transparent",
       height: "100%",
       width: "100%",
+
+      opacity: if app_state.read().config.messages_semitransparent { "0.5" } else { "1.0" },
 
       for message in app_state.read().messages.iter() {
         message_row {
