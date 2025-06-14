@@ -14,6 +14,10 @@
   <img src="https://img.shields.io/github/stars/SpikeHD/Orbolay" />
 </div>
 
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/d7adf8d3-96e5-4159-ac1d-7afb131e1fc1" />
+</div>
+
 # Features
 
 * Voice channel status (whose in the call, whose speaking/not speaking/muted/etc.)
