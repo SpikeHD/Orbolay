@@ -22,6 +22,55 @@ pub struct UserRowProps {
   pub user: User,
 }
 
+#[component]
+fn avatar_icon(user: User) -> Element {
+  rsx! {
+    rect {
+      width: "auto",
+      height: "100%",
+      // 50% of the height
+      corner_radius: "25",
+      image {
+        sampling: "trilinear",
+        image_data: dynamic_bytes(avatar(&user)),
+      }
+    }
+  }
+}
+
+#[component]
+fn user_label(user: User) -> Element {
+  rsx! {
+    rect {
+      content: "flex",
+      direction: "horizontal",
+      main_align: "center",
+      cross_align: "center",
+
+      height: "70%",
+      background: "#1e1f23",
+      corner_radius: "5",
+      margin: "0 6 0 6",
+
+      rect {
+        padding: "4",
+
+        label {
+          font_size: "14",
+          color: "white",
+          "{user.name}"
+        }
+      }
+
+      if user.voice_state == UserVoiceState::Muted {
+        Muted {}
+      } else if user.voice_state == UserVoiceState::Deafened {
+        Deafened {}
+      }
+    }
+  }
+}
+
 pub fn user_row(props: UserRowProps) -> Element {
   rsx! {
     rect {
@@ -34,45 +83,22 @@ pub fn user_row(props: UserRowProps) -> Element {
 
       opacity: if props.user.voice_state == UserVoiceState::Speaking || !props.app_state.read().config.voice_semitransparent { "1.0" } else { "0.5" },
 
-      rect {
-        width: "auto",
-        height: "100%",
-        // 50% of the height
-        corner_radius: "25",
-        image {
-          sampling: "trilinear",
-          image_data: dynamic_bytes(avatar(&props.user)),
+      // Change order based on right/left alignment
+      if props.app_state.read().config.user_alignment.left {
+        avatar_icon {
+          user: props.user.clone()
+        }
+        user_label {
+          user: props.user.clone()
+        }
+      } else {
+        user_label {
+          user: props.user.clone()
+        }
+        avatar_icon {
+          user: props.user.clone()
         }
       }
-
-      rect {
-        content: "flex",
-        direction: "horizontal",
-        main_align: "center",
-        cross_align: "center",
-
-        height: "70%",
-        background: "#1e1f23",
-        corner_radius: "5",
-        margin: "0 0 0 6",
-
-        rect {
-          padding: "4",
-
-          label {
-            font_size: "14",
-            color: "white",
-            "{props.user.name}"
-          }
-        }
-
-        if props.user.voice_state == UserVoiceState::Muted {
-          Muted {}
-        } else if props.user.voice_state == UserVoiceState::Deafened {
-          Deafened {}
-        }
-      }
-
     }
   }
 }
