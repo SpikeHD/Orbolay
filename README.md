@@ -20,13 +20,15 @@
 
 # Features
 
-* Voice channel status (whose in the call, whose speaking/not speaking/muted/etc.)
+* Voice channel member list and status (who is speaking/muted/deafened/etc)
 * Custom notifications
 * ~~Mute/deafen/disconnect controls~~
+* Customizable visuals and layout
+* Works with any modded client (including web!)
 
 # Compatibility
 
-* **Windows**: 10 and 11 should work fine
+* **Windows**: 10 and 11 should work fine. Window 7 is unsupported but might work with kernel extensions
 * **MacOS**: Works, but no interactivity (no VC controls through overlay)
 * **Linux**: X11 should be fine, Wayland works but cannot use always-on-top
 
