@@ -9,6 +9,8 @@ on:
 
 jobs:
   create-release:
+    permissions:
+      actions: read
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
