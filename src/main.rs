@@ -197,7 +197,7 @@ fn app() -> Element {
       height: "100%",
       width: "100%",
 
-      opacity: if app_state.read().config.messages_semitransparent { "0.5" } else { "1.0" },
+      opacity: if app_state.read().config.messages_semitransparent && !app_state.read().is_open { "0.5" } else { "1.0" },
 
       for message in app_state.read().messages.iter() {
         message_row {
