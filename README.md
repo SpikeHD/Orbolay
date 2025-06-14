@@ -17,7 +17,8 @@
 # Features
 
 * Voice channel status (whose in the call, whose speaking/not speaking/muted/etc.)
-* TODO
+* Custom notifications
+* ~~Mute/deafen/disconnect controls~~
 
 # Installation
 
