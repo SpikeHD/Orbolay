@@ -76,6 +76,11 @@ fn main() {
   log!("Monitor position: {:?}", monitor_position);
   log!("Monitor size: {:?}", monitor_size);
 
+  #[cfg(target_os = "macos")]
+  let window_size = ((monitor_size.0 + 1) as f32 * primary.scale_factor, (monitor_size.1 + 1) as f32 * primary.scale_factor);
+  #[cfg(not(target_os = "macos"))]
+  let window_size = (monitor_size.0 + 1, monitor_size.1 + 1);
+
   launch_cfg(
     app,
     LaunchConfig::<f32>::new()
@@ -85,7 +90,7 @@ fn main() {
       .with_window_attributes(move |w| {
         let mut w = w.with_window_level(WindowLevel::AlwaysOnTop)
           // https://discourse.glfw.org/t/black-screen-when-setting-window-to-transparent-and-size-to-1920x1080/2585/4
-          .with_inner_size(PhysicalSize::new(monitor_size.0 + 1, monitor_size.1 + 1))
+          .with_inner_size(PhysicalSize::new(window_size.0, window_size.1))
           .with_resizable(false)
           .with_position(PhysicalPosition::new(
             monitor_position.0,
