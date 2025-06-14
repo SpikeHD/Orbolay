@@ -9,8 +9,10 @@ use display_info::DisplayInfo;
 use freya::prelude::*;
 use gumdrop::Options;
 use winit::{
-  dpi::{PhysicalPosition, PhysicalSize}, platform::windows::WindowAttributesExtWindows, window::WindowLevel
+  dpi::{PhysicalPosition, PhysicalSize}, window::WindowLevel
 };
+#[cfg(target_os = "windows")]
+use winit::platform::windows::WindowAttributesExtWindows;
 
 use crate::{
   app_state::AppState,
