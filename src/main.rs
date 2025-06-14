@@ -9,8 +9,7 @@ use display_info::DisplayInfo;
 use freya::prelude::*;
 use gumdrop::Options;
 use winit::{
-  dpi::{PhysicalPosition, PhysicalSize},
-  window::WindowLevel,
+  dpi::{PhysicalPosition, PhysicalSize}, platform::windows::WindowAttributesExtWindows, window::WindowLevel
 };
 
 use crate::{
@@ -88,12 +87,20 @@ fn main() {
             monitor_position.0,
             monitor_position.1,
           ))
+          .with_skip_taskbar(true)
       }),
   );
 }
 
 fn app() -> Element {
   let args = Args::parse_args_default_or_exit();
+  
+  use_platform().with_window(move |w| {
+    // Disable hittest
+    if !args.debug {
+      w.set_cursor_hittest(false).unwrap_or_default();
+    }
+  });
 
   let mut app_state = use_signal_sync(AppState::new);
 
