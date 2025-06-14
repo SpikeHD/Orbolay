@@ -21,6 +21,8 @@ use crate::{
 mod app_state;
 mod components;
 mod config;
+#[cfg(target_os = "windows")]
+mod keys;
 mod logger;
 mod payloads;
 mod user;
@@ -107,6 +109,9 @@ fn app() -> Element {
     std::thread::spawn(move || {
       websocket::create_websocket(args.port, app_state).expect("Failed to start websocket server");
     });
+
+    #[cfg(target_os = "windows")]
+    keys::watch_keybinds(app_state);
 
     // Check the messages once per second, removing any that are older than 5 seconds
     std::thread::spawn(move || {

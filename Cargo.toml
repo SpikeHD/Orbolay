@@ -21,3 +21,6 @@ skia-safe = "0.82.0"
 tungstenite = "0.26.2"
 ureq = "3.0.11"
 winit = "0.30.11"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+device_query = "3.0.1"
