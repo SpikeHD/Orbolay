@@ -25,7 +25,7 @@
 > [!NOTE]
 > This will change. Orbolay is still in early stages!
 
-1. Download the [latest release](https://github.com/SpikeHD/Orbolay/releases/latest) from GitHub
+1. Download the [latest actions build](https://github.com/SpikeHD/Orbolay/actions/workflows/build.yml).
 2. Ensure you are using a compatible bridge plugin ([Shelter](https://github.com/SpikeHD/shelter-plugins?tab=readme-ov-file#orbolay-bridge))
 3. Run the executable!
 

@@ -80,15 +80,21 @@ fn main() {
       .with_background("transparent")
       .with_transparency(true)
       .with_window_attributes(move |w| {
-        w.with_window_level(WindowLevel::AlwaysOnTop)
+        let mut w = w.with_window_level(WindowLevel::AlwaysOnTop)
           // https://discourse.glfw.org/t/black-screen-when-setting-window-to-transparent-and-size-to-1920x1080/2585/4
           .with_inner_size(PhysicalSize::new(monitor_size.0 + 1, monitor_size.1 + 1))
           .with_resizable(false)
           .with_position(PhysicalPosition::new(
             monitor_position.0,
             monitor_position.1,
-          ))
-          .with_skip_taskbar(true)
+          ));
+          
+        #[cfg(target_os = "windows")]
+        {
+          w = w.with_skip_taskbar(true);
+        }
+
+        w
       }),
   );
 }
