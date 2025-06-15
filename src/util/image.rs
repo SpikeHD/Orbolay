@@ -52,7 +52,7 @@ pub fn circular_with_border(
   border_paint.set_color(border);
   border_paint.set_anti_alias(true);
   border_paint.set_style(PaintStyle::Stroke);
-  border_paint.set_stroke_width(4.0 * scale_factor);
+  border_paint.set_stroke_width(32.);
 
   canvas.draw_path(&clip_path, &border_paint);
 
