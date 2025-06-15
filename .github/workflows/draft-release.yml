@@ -28,11 +28,32 @@ jobs:
           WORKFLOW: .github/workflows/build.yml
           OUTPUT_DIR: artifacts
 
+      - name: Rename artifacts
+        run: |
+          mkdir -p renamed_artifacts
+
+          for artifact in artifacts/*/; do
+            target=$(basename $artifact)
+
+            # target folder should have files in it, rename them (with the extension, if any) to the target name
+            for file in $artifact*; do
+              filename=$(basename $file)
+              ext=".${filename##*.}"
+
+              # If the ext is the filename, then there was no extension
+              if [ "$ext" == ".$filename" ]; then
+                ext=""
+              fi
+
+              mv "$file" "renamed_artifacts/$target$ext"
+            done
+          done
+
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ inputs.version }}
           name: v${{ inputs.version }}
           body: "If you can see this, I forgot to change the release description."
-          files: artifacts/*
+          files: renamed_artifacts/*
           draft: true
