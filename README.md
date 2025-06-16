@@ -10,7 +10,7 @@
 </div>
 
 <div align="center">
-  <a><img src="https://img.shields.io/discord/1128909403672821811?logo=discord&color=%20%235865F2" /></a>
+  <a href="https://discord.gg/agQ9mRdHMZ"><img src="https://img.shields.io/discord/1128909403672821811?logo=discord&color=%20%235865F2" /></a>
   <img src="https://img.shields.io/github/stars/SpikeHD/Orbolay" />
 </div>
 
