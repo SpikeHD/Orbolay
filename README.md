@@ -5,12 +5,12 @@
 
 <div align="center">
   <img src="https://img.shields.io/github/actions/workflow/status/SpikeHD/Orbolay/build.yml" />
-  <img src="https://img.shields.io/github/repo-size/SpikeHD/Orbolay" />
   <img src="https://img.shields.io/github/commit-activity/m/SpikeHD/Orbolay" />
+  <img src="https://img.shields.io/github/release-date/SpikeHD/Orbolay" />
 </div>
 
 <div align="center">
-  <img src="https://img.shields.io/github/release-date/SpikeHD/Orbolay" />
+  <a><img src="https://img.shields.io/discord/1128909403672821811?logo=discord&color=%20%235865F2" /></a>
   <img src="https://img.shields.io/github/stars/SpikeHD/Orbolay" />
 </div>
 
