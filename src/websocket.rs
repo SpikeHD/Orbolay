@@ -1,10 +1,7 @@
 use freya::prelude::{Readable, Signal, SyncStorage, Writable};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::{
-  io::Read,
-  net::{TcpListener, TcpStream},
-};
+use std::net::{TcpListener, TcpStream};
 use tungstenite::{Message, Utf8Bytes, accept};
 
 use crate::{
