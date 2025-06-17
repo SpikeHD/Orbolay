@@ -5,14 +5,12 @@
 
 use std::collections::HashMap;
 
+use display_info::DisplayInfo;
 use freya::prelude::*;
 use gumdrop::Options;
+use winit::dpi::{PhysicalPosition, PhysicalSize};
 #[cfg(target_os = "windows")]
 use winit::platform::windows::WindowAttributesExtWindows;
-use winit::{
-  dpi::{PhysicalPosition, PhysicalSize},
-  window::WindowLevel,
-};
 
 use crate::{
   app_state::AppState,
@@ -62,6 +60,22 @@ fn main() {
     std::process::exit(0);
   }
 
+  let displays = DisplayInfo::all().expect("Failed to get display information");
+  let primary = displays
+    .iter()
+    .find(|m| m.is_primary)
+    .unwrap_or(displays.first().expect("No displays found"));
+  let monitor_position = (primary.x, primary.y);
+  let monitor_size = (primary.width, primary.height);
+
+  #[cfg(target_os = "macos")]
+  let window_size = (
+    (monitor_size.0 + 1) as f32 * primary.scale_factor,
+    (monitor_size.1 + 1) as f32 * primary.scale_factor,
+  );
+  #[cfg(not(target_os = "macos"))]
+  let window_size = (monitor_size.0 + 1, monitor_size.1 + 1);
+
   launch_cfg(
     app,
     LaunchConfig::<f32>::new()
@@ -69,51 +83,28 @@ fn main() {
       .with_background("transparent")
       .with_transparency(true)
       .with_window_attributes(move |w| {
-        let mut w = w
-          .with_window_level(WindowLevel::AlwaysOnTop)
-          .with_inner_size(PhysicalSize::new(1, 1))
-          .with_resizable(false)
-          .with_position(PhysicalPosition::new(0, 0));
-
         #[cfg(target_os = "windows")]
-        {
-          w = w.with_skip_taskbar(true);
-        }
+        return w
+            .with_skip_taskbar(true)
+            // https://discourse.glfw.org/t/black-screen-when-setting-window-to-transparent-and-size-to-1920x1080/2585/4
+            .with_inner_size(PhysicalSize::new(window_size.0, window_size.1))
+            .with_resizable(false)
+            .with_position(PhysicalPosition::new(
+              monitor_position.0,
+              monitor_position.1,
+            ));
 
-        w
+        #[cfg(not(target_os = "windows"))]
+        return w
+            // https://discourse.glfw.org/t/black-screen-when-setting-window-to-transparent-and-size-to-1920x1080/2585/4
+            .with_inner_size(PhysicalSize::new(window_size.0, window_size.1))
+            .with_resizable(false)
+            .with_position(PhysicalPosition::new(
+              monitor_position.0,
+              monitor_position.1,
+            ));
       }),
   );
-}
-
-fn apply_window_settings(platform: &UsePlatform, debug: bool) {
-  platform.with_window(move |w| {
-    // Disable hittest
-    if !debug {
-      w.set_cursor_hittest(false).unwrap_or_default();
-    }
-
-    let primary = w.primary_monitor();
-    let first_monitor = w.available_monitors().next();
-    let primary = if let Some(primary) = primary {
-      primary.clone()
-    } else {
-      first_monitor.expect("No monitors found")
-    };
-
-    // Set the window size and position to the primary monitor
-    // https://discourse.glfw.org/t/black-screen-when-setting-window-to-transparent-and-size-to-1920x1080/2585/4
-    let size = (primary.size().width + 1, primary.size().height + 1);
-    #[cfg(target_os = "macos")]
-    let size = (
-      (size.0 + 1) as f64 * primary.scale_factor(),
-      (size.1 + 1) as f64 * primary.scale_factor(),
-    );
-    #[cfg(not(target_os = "macos"))]
-    let size = (size.0 + 1, size.1 + 1);
-
-    w.set_outer_position(primary.position());
-    let _ = w.request_inner_size(PhysicalSize::new(size.0, size.1));
-  });
 }
 
 fn app() -> Element {
@@ -121,14 +112,19 @@ fn app() -> Element {
   let platform = use_platform();
   let mut app_state = use_signal_sync(AppState::new);
 
+  platform.with_window(move |w| {
+    if !args.debug {
+      w.set_cursor_hittest(false).unwrap_or_default();
+    }
+  });
+
   use_effect(move || {
     let (ws_sender, ws_receiver) = flume::unbounded();
     app_state.write().ws_sender = Some(ws_sender);
 
-    apply_window_settings(&platform, args.debug);
-
     std::thread::spawn(move || {
-      websocket::create_websocket(args.port, app_state, ws_receiver).expect("Failed to start websocket server");
+      websocket::create_websocket(args.port, app_state, ws_receiver)
+        .expect("Failed to start websocket server");
     });
 
     #[cfg(target_os = "windows")]

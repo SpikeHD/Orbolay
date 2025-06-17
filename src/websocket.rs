@@ -1,13 +1,16 @@
 use freya::prelude::{Readable, Signal, SyncStorage, Writable};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::{io::Read, net::{TcpListener, TcpStream}};
-use tungstenite::{accept, Bytes, Message, Utf8Bytes};
+use std::{
+  io::Read,
+  net::{TcpListener, TcpStream},
+};
+use tungstenite::{Message, Utf8Bytes, accept};
 
 use crate::{
   app_state::AppState,
   config::Config,
-  error, log,
+  log,
   payloads::{ChannelJoinPayload, MessageNotificationPayload, UpdatePayload},
   success, warn,
 };
@@ -68,7 +71,7 @@ fn ws_stream(
       if msg.is_close() {
         log!("Stream closed");
         // Safe to assume there is only one websocket client connected, and wee can wipe state
-        (*app_state.write()).voice_users = vec![];
+        app_state.write().voice_users = vec![];
         break;
       }
 
@@ -151,8 +154,12 @@ fn ws_stream(
       if let Ok(msg) = ws_receiver.try_recv() {
         let msg = serde_json::to_string(&msg)?;
         log!("Sending message to websocket: {:?}", msg);
-        websocket.write(Message::Text(Utf8Bytes::from(msg))).expect("Failed to send message to websocket, socket closed?");
-        websocket.flush().expect("Failed to flush message to websocket, socket closed?");
+        websocket
+          .write(Message::Text(Utf8Bytes::from(msg)))
+          .expect("Failed to send message to websocket, socket closed?");
+        websocket
+          .flush()
+          .expect("Failed to flush message to websocket, socket closed?");
       }
     }
   }

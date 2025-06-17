@@ -18,6 +18,7 @@ formats = ["all"]
 chrono = "0.4.41"
 colored = "3.0.0"
 dioxus = { version = "0.6.3", features = ["hooks"] }
+display-info = "0.5.4"
 flume = "0.11.1"
 freya = { git = "https://github.com/marc2332/freya.git", branch = "feat/use-platform-sender", features = [] }
 gumdrop = "0.8.1"

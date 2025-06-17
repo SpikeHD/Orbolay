@@ -1,7 +1,11 @@
-use freya::prelude::{dioxus_elements::attributes::aspect_ratio, *};
+use freya::prelude::*;
 use serde_json::Value;
 
-use crate::{app_state::AppState, user::{User, UserVoiceState}, websocket::BridgeMessage};
+use crate::{
+  app_state::AppState,
+  user::{User, UserVoiceState},
+  websocket::BridgeMessage,
+};
 
 import_svg!(Deafened, "../../assets/deafened.svg", {
   height: "24",
