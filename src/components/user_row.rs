@@ -83,7 +83,7 @@ pub fn user_row(props: UserRowProps) -> Element {
       height: "50",
       margin: "6",
 
-      opacity: if props.user.voice_state != UserVoiceState::Speaking ||
+      opacity: if props.user.voice_state != UserVoiceState::Speaking &&
         (props.app_state.read().config.voice_semitransparent && !props.app_state.read().is_open) {
           "0.5"
         } else {
