@@ -62,6 +62,9 @@ fn ws_stream(
   websocket.send(Message::Ping(Bytes::new()))?;
 
   loop {
+    // TODO find a better way to do this
+    std::thread::sleep(std::time::Duration::from_millis(50));
+
     // Read from the stream
     if let Ok(msg) = websocket.read() {
       if msg.is_close() {
