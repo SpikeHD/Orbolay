@@ -59,8 +59,6 @@ fn ws_stream(
 
   log!("Stream connected");
 
-  websocket.send(Message::Ping(Bytes::new()))?;
-
   loop {
     // TODO find a better way to do this
     std::thread::sleep(std::time::Duration::from_millis(50));
