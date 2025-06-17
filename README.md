@@ -32,14 +32,14 @@
 * **MacOS** - works, but cannot watch for keybinds (which means no voice controls)
 * **Linux**
   * **X11** - should work fine
-  * **Wayland** - Technically works, but cannot be always-on-top, and cannot watch for keybinds (which means no voice controls)
+  * **Wayland** - technically works, but cannot be always-on-top, and cannot watch for keybinds (which means no voice controls)
 
 # Installation
 
 > [!NOTE]
 > This will change. Orbolay is still in early stages!
 
-1. Download the [latest actions build](https://github.com/SpikeHD/Orbolay/actions/workflows/build.yml) or [release](https://github.com/SpikeHD/Orbolay/releases).
+1. Download a [release](https://github.com/SpikeHD/Orbolay/releases) or the [latest actions build](https://github.com/SpikeHD/Orbolay/actions/workflows/build.yml).
 2. Ensure you are using a compatible bridge plugin ([Shelter](https://github.com/SpikeHD/shelter-plugins?tab=readme-ov-file#orbolay-bridge))
 3. Run the executable!
 
