@@ -5,14 +5,12 @@
 
 use std::collections::HashMap;
 
-use display_info::DisplayInfo;
 use freya::prelude::*;
 use gumdrop::Options;
 #[cfg(target_os = "windows")]
 use winit::platform::windows::WindowAttributesExtWindows;
 use winit::{
-  dpi::{PhysicalPosition, PhysicalSize},
-  window::WindowLevel,
+  dpi::{PhysicalPosition, PhysicalSize}, monitor::MonitorHandle, window::WindowLevel
 };
 
 use crate::{
@@ -63,24 +61,6 @@ fn main() {
     std::process::exit(0);
   }
 
-  let displays = DisplayInfo::all().expect("Failed to get display information");
-  let primary = displays
-    .iter()
-    .find(|m| m.is_primary)
-    .unwrap_or(displays.first().expect("No displays found"));
-  let monitor_position = (primary.x, primary.y);
-  let monitor_size = (primary.width, primary.height);
-
-  log!("Displays: {:?}", displays);
-  log!("Primary monitor: {:?}", primary);
-  log!("Monitor position: {:?}", monitor_position);
-  log!("Monitor size: {:?}", monitor_size);
-
-  #[cfg(target_os = "macos")]
-  let window_size = ((monitor_size.0 + 1) as f32 * primary.scale_factor, (monitor_size.1 + 1) as f32 * primary.scale_factor);
-  #[cfg(not(target_os = "macos"))]
-  let window_size = (monitor_size.0 + 1, monitor_size.1 + 1);
-
   launch_cfg(
     app,
     LaunchConfig::<f32>::new()
@@ -89,13 +69,9 @@ fn main() {
       .with_transparency(true)
       .with_window_attributes(move |w| {
         let mut w = w.with_window_level(WindowLevel::AlwaysOnTop)
-          // https://discourse.glfw.org/t/black-screen-when-setting-window-to-transparent-and-size-to-1920x1080/2585/4
-          .with_inner_size(PhysicalSize::new(window_size.0, window_size.1))
+          .with_inner_size(PhysicalSize::new(1, 1))
           .with_resizable(false)
-          .with_position(PhysicalPosition::new(
-            monitor_position.0,
-            monitor_position.1,
-          ));
+          .with_position(PhysicalPosition::new(0, 0));
 
         #[cfg(target_os = "windows")]
         {
@@ -107,19 +83,42 @@ fn main() {
   );
 }
 
-fn app() -> Element {
-  let args = Args::parse_args_default_or_exit();
-
-  use_platform().with_window(move |w| {
+fn apply_window_settings(platform: &UsePlatform, debug: bool) {
+  platform.with_window(move |w| {
     // Disable hittest
-    if !args.debug {
+    if !debug {
       w.set_cursor_hittest(false).unwrap_or_default();
     }
-  });
 
+    let mut primary = w.primary_monitor();
+    let first_monitor = w.available_monitors().nth(0);
+    let primary = if let Some(primary) = primary {
+      primary.clone()
+    } else {
+      first_monitor.expect("No monitors found")
+    };
+
+    // Set the window size and position to the primary monitor 
+    // https://discourse.glfw.org/t/black-screen-when-setting-window-to-transparent-and-size-to-1920x1080/2585/4
+    let size = (primary.size().width + 1, primary.size().height + 1);
+    #[cfg(target_os = "macos")]
+    let size = ((size.0 + 1) as f32 * primary.scale_factor(), (size.1 + 1) as f32 * primary.scale_factor());
+    #[cfg(not(target_os = "macos"))]
+    let size = (size.0 + 1, size.1 + 1);
+
+    w.set_outer_position(primary.position());
+    let _ = w.request_inner_size(PhysicalSize::new(size.0, size.1));
+  });
+}
+
+fn app() -> Element {
+  let args = Args::parse_args_default_or_exit();
+  let platform = use_platform();
   let mut app_state = use_signal_sync(AppState::new);
 
   use_effect(move || {
+    apply_window_settings(&platform, args.debug);
+
     std::thread::spawn(move || {
       websocket::create_websocket(args.port, app_state).expect("Failed to start websocket server");
     });
