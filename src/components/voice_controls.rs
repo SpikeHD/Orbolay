@@ -1,4 +1,4 @@
-use freya::prelude::*;
+use freya::prelude::{dioxus_elements::attributes::aspect_ratio, *};
 use serde_json::Value;
 
 use crate::{app_state::AppState, user::{User, UserVoiceState}, websocket::BridgeMessage};
@@ -33,10 +33,13 @@ pub struct VoiceControlsProps {
 #[derive(Props, Clone, PartialEq)]
 pub struct ButtonProps {
   pub icon: Element,
+  pub is_red: bool,
   pub onclick: Callback<MouseEvent>,
 }
 
 fn control_button(props: ButtonProps) -> Element {
+  let mut hovered = use_signal(|| false);
+
   rsx! {
     rect {
       content: "flex",
@@ -44,12 +47,28 @@ fn control_button(props: ButtonProps) -> Element {
       main_align: "center",
       cross_align: "center",
       height: "100%",
-      width: "auto",
+      width: "20%",
       margin: "6",
       padding: "6",
       corner_radius: "10",
+      background: if *hovered.read() {
+        if props.is_red {
+          "#3f2226"
+        } else {
+          "#37373c"
+        }
+      } else {
+        "transparent"
+      },
+
       onclick: move |e| {
         props.onclick.call(e);
+      },
+      onmouseenter: move |_| {
+        (*hovered.write()) = true;
+      },
+      onmouseleave: move |_| {
+        (*hovered.write()) = false;
       },
 
       {props.icon}
@@ -80,6 +99,7 @@ pub fn voice_controls(mut props: VoiceControlsProps) -> Element {
             Mute {}
           }
         },
+        is_red: props.user.voice_state == UserVoiceState::Muted || props.user.voice_state == UserVoiceState::Deafened,
         onclick: move |_| {
           (*props.app_state.write()).send(BridgeMessage {
             cmd: "TOGGLE_MUTE".to_string(),
@@ -97,6 +117,7 @@ pub fn voice_controls(mut props: VoiceControlsProps) -> Element {
             Deafen {}
           }
         },
+        is_red: props.user.voice_state == UserVoiceState::Deafened,
         onclick: move |_| {
           (*props.app_state.write()).send(BridgeMessage {
             cmd: "TOGGLE_DEAF".to_string(),
@@ -108,6 +129,7 @@ pub fn voice_controls(mut props: VoiceControlsProps) -> Element {
       // Disconnect button
       control_button {
         icon: rsx! { Disconnect {} },
+        is_red: true,
         onclick: move |_| {
           (*props.app_state.write()).send(BridgeMessage {
             cmd: "DISCONNECT".to_string(),
