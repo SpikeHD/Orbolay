@@ -105,8 +105,8 @@ fn apply_window_settings(platform: &UsePlatform, debug: bool) {
     let size = (primary.size().width + 1, primary.size().height + 1);
     #[cfg(target_os = "macos")]
     let size = (
-      (size.0 + 1) as f32 * primary.scale_factor(),
-      (size.1 + 1) as f32 * primary.scale_factor(),
+      (size.0 + 1) as f64 * primary.scale_factor(),
+      (size.1 + 1) as f64 * primary.scale_factor(),
     );
     #[cfg(not(target_os = "macos"))]
     let size = (size.0 + 1, size.1 + 1);
