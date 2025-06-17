@@ -22,22 +22,24 @@
 
 * Voice channel member list and status (who is speaking/muted/deafened/etc)
 * Custom notifications
-* ~~Mute/deafen/disconnect controls~~
+* Mute/deafen/disconnect controls
 * Customizable visuals and layout
 * Works with any modded client (including web!)
 
 # Compatibility
 
-* **Windows**: 10 and 11 should work fine. Window 7 is unsupported but might work with kernel extensions
-* **MacOS**: Works, but no interactivity (no VC controls through overlay)
-* **Linux**: X11 should be fine, Wayland works but cannot use always-on-top
+* **Windows** - 10 and 11 both work, Windows 7 might work with kernel extensions
+* **MacOS** - works, but cannot watch for keybinds (which means no voice controls)
+* **Linux**
+  * **X11** - should work fine
+  * **Wayland** - Technically works, but cannot be always-on-top, and cannot watch for keybinds (which means no voice controls)
 
 # Installation
 
 > [!NOTE]
 > This will change. Orbolay is still in early stages!
 
-1. Download the [latest actions build](https://github.com/SpikeHD/Orbolay/actions/workflows/build.yml).
+1. Download the [latest actions build](https://github.com/SpikeHD/Orbolay/actions/workflows/build.yml) or [release](https://github.com/SpikeHD/Orbolay/releases).
 2. Ensure you are using a compatible bridge plugin ([Shelter](https://github.com/SpikeHD/shelter-plugins?tab=readme-ov-file#orbolay-bridge))
 3. Run the executable!
 
@@ -48,8 +50,11 @@
   * [x] Speaking/not speaking
   * [x] Muted/deafened icons beside name
   * [x] Proper avatar images
-* [ ] Voice control
-  * [ ] Mute/deafen buttons
+* [x] Voice control
+  * [x] Mute
+  * [x] Deafen
+  * [x] Disconnect
+  * [ ] Stop screenshare
 * [x] Notifications
   * [x] Message notifications
 
