@@ -11,7 +11,7 @@ use crate::{app_state::AppState, log};
 // TODO configurable
 static KEYBIND: [Keycode; 2] = [Keycode::LControl, Keycode::Grave];
 
-pub fn watch_keybinds(mut app_state: Signal<AppState, SyncStorage>) {
+pub fn watch_keybinds(mut app_state: Signal<AppState, SyncStorage>, platform: PlatformSender) {
   std::thread::spawn(move || {
     let pressed = AtomicBool::new(false);
 
@@ -35,10 +35,10 @@ pub fn watch_keybinds(mut app_state: Signal<AppState, SyncStorage>) {
         if all_match && !pressed.load(Ordering::Relaxed) {
           (*app_state.write()).is_open = !app_state().is_open;
           pressed.store(true, Ordering::Relaxed);
+          platform.with_window(move |w| { let _ = w.set_cursor_hittest(app_state.read().is_open); });
           log!("Opening overlay");
         } else if pressed.load(Ordering::Relaxed) {
           pressed.store(false, Ordering::Relaxed);
-          log!("Closing overlay");
         }
       }
     }

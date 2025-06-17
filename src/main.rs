@@ -90,7 +90,7 @@ fn apply_window_settings(platform: &UsePlatform, debug: bool) {
       w.set_cursor_hittest(false).unwrap_or_default();
     }
 
-    let mut primary = w.primary_monitor();
+    let primary = w.primary_monitor();
     let first_monitor = w.available_monitors().nth(0);
     let primary = if let Some(primary) = primary {
       primary.clone()
@@ -124,7 +124,7 @@ fn app() -> Element {
     });
 
     #[cfg(target_os = "windows")]
-    keys::watch_keybinds(app_state);
+    keys::watch_keybinds(app_state, platform.sender());
 
     // Check the messages once per second, removing any that are older than 5 seconds
     std::thread::spawn(move || {
