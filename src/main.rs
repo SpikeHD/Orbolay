@@ -10,7 +10,8 @@ use gumdrop::Options;
 #[cfg(target_os = "windows")]
 use winit::platform::windows::WindowAttributesExtWindows;
 use winit::{
-  dpi::{PhysicalPosition, PhysicalSize}, monitor::MonitorHandle, window::WindowLevel
+  dpi::{PhysicalPosition, PhysicalSize},
+  window::WindowLevel,
 };
 
 use crate::{
@@ -68,7 +69,8 @@ fn main() {
       .with_background("transparent")
       .with_transparency(true)
       .with_window_attributes(move |w| {
-        let mut w = w.with_window_level(WindowLevel::AlwaysOnTop)
+        let mut w = w
+          .with_window_level(WindowLevel::AlwaysOnTop)
           .with_inner_size(PhysicalSize::new(1, 1))
           .with_resizable(false)
           .with_position(PhysicalPosition::new(0, 0));
@@ -91,18 +93,21 @@ fn apply_window_settings(platform: &UsePlatform, debug: bool) {
     }
 
     let primary = w.primary_monitor();
-    let first_monitor = w.available_monitors().nth(0);
+    let first_monitor = w.available_monitors().next();
     let primary = if let Some(primary) = primary {
       primary.clone()
     } else {
       first_monitor.expect("No monitors found")
     };
 
-    // Set the window size and position to the primary monitor 
+    // Set the window size and position to the primary monitor
     // https://discourse.glfw.org/t/black-screen-when-setting-window-to-transparent-and-size-to-1920x1080/2585/4
     let size = (primary.size().width + 1, primary.size().height + 1);
     #[cfg(target_os = "macos")]
-    let size = ((size.0 + 1) as f32 * primary.scale_factor(), (size.1 + 1) as f32 * primary.scale_factor());
+    let size = (
+      (size.0 + 1) as f32 * primary.scale_factor(),
+      (size.1 + 1) as f32 * primary.scale_factor(),
+    );
     #[cfg(not(target_os = "macos"))]
     let size = (size.0 + 1, size.1 + 1);
 
@@ -176,7 +181,7 @@ fn app() -> Element {
       for user in app_state.read().voice_users.iter() {
         user_row {
           user: user.clone(),
-          app_state: app_state.clone()
+          app_state: app_state
         }
       }
     }

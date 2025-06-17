@@ -5,7 +5,11 @@ use std::net::{TcpListener, TcpStream};
 use tungstenite::accept;
 
 use crate::{
-  app_state::AppState, config::Config, error, log, payloads::{ChannelJoinPayload, MessageNotificationPayload, UpdatePayload}, success, warn
+  app_state::AppState,
+  config::Config,
+  error, log,
+  payloads::{ChannelJoinPayload, MessageNotificationPayload, UpdatePayload},
+  success, warn,
 };
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]

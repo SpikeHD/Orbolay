@@ -2,7 +2,9 @@ use freya::prelude::*;
 use skia_safe::Color;
 
 use crate::{
-  app_state::AppState, user::{User, UserVoiceState}, util::image::circular_with_border
+  app_state::AppState,
+  user::{User, UserVoiceState},
+  util::image::circular_with_border,
 };
 
 import_svg!(Deafened, "../../assets/deafened.svg", {

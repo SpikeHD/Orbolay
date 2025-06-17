@@ -1,7 +1,4 @@
-use std::sync::{
-  Arc,
-  atomic::{AtomicBool, Ordering},
-};
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use device_query::{DeviceQuery, DeviceState, Keycode};
 use freya::prelude::*;
@@ -33,9 +30,11 @@ pub fn watch_keybinds(mut app_state: Signal<AppState, SyncStorage>, platform: Pl
         }
 
         if all_match && !pressed.load(Ordering::Relaxed) {
-          (*app_state.write()).is_open = !app_state().is_open;
+          app_state.write().is_open = !app_state().is_open;
           pressed.store(true, Ordering::Relaxed);
-          platform.with_window(move |w| { let _ = w.set_cursor_hittest(app_state.read().is_open); });
+          platform.with_window(move |w| {
+            let _ = w.set_cursor_hittest(app_state.read().is_open);
+          });
           log!("Opening overlay");
         } else if !all_match && pressed.load(Ordering::Relaxed) {
           pressed.store(false, Ordering::Relaxed);
