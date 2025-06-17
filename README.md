@@ -57,6 +57,7 @@
   * [ ] Stop screenshare
 * [x] Notifications
   * [x] Message notifications
+* [ ] Vencord bridge plugin
 
 ## Stretch Goals
 
