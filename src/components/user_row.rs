@@ -83,7 +83,12 @@ pub fn user_row(props: UserRowProps) -> Element {
       height: "50",
       margin: "6",
 
-      opacity: if props.user.voice_state == UserVoiceState::Speaking || !props.app_state.read().config.voice_semitransparent { "1.0" } else { "0.5" },
+      opacity: if props.user.voice_state != UserVoiceState::Speaking ||
+        (props.app_state.read().config.voice_semitransparent && !props.app_state.read().is_open) {
+          "0.5"
+        } else {
+          "1.0"
+        },
 
       // Change order based on right/left alignment
       if props.app_state.read().config.user_alignment.left {

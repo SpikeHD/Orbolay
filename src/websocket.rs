@@ -1,8 +1,8 @@
 use freya::prelude::{Readable, Signal, SyncStorage, Writable};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::net::{TcpListener, TcpStream};
-use tungstenite::accept;
+use std::{io::Read, net::{TcpListener, TcpStream}};
+use tungstenite::{accept, Bytes, Message, Utf8Bytes};
 
 use crate::{
   app_state::AppState,
@@ -12,7 +12,7 @@ use crate::{
   success, warn,
 };
 
-#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct BridgeMessage {
   pub cmd: String,
   #[serde(flatten)]
@@ -22,6 +22,7 @@ pub struct BridgeMessage {
 pub fn create_websocket(
   port: u16,
   app_state: Signal<AppState, SyncStorage>,
+  ws_receiver: flume::Receiver<BridgeMessage>,
 ) -> Result<(), Box<dyn std::error::Error>> {
   let server = TcpListener::bind(format!("127.0.0.1:{port}"))?;
   success!("Websocket server started on port {}", port);
@@ -31,8 +32,9 @@ pub fn create_websocket(
       Ok(stream) => {
         log!("Accepted connection");
 
+        let recv = ws_receiver.clone();
         std::thread::spawn(move || {
-          ws_stream(stream, app_state).expect("Failed to handle stream");
+          ws_stream(stream, app_state, recv).expect("Failed to handle stream");
         });
       }
       Err(e) => {
@@ -49,18 +51,28 @@ pub fn create_websocket(
 fn ws_stream(
   stream: TcpStream,
   mut app_state: Signal<AppState, SyncStorage>,
+  ws_receiver: flume::Receiver<BridgeMessage>,
 ) -> Result<(), Box<dyn std::error::Error>> {
   let mut websocket = accept(stream)?;
 
-  websocket.get_mut().set_nonblocking(false)?;
+  websocket.get_mut().set_nonblocking(true)?;
 
   log!("Stream connected");
+
+  websocket.send(Message::Ping(Bytes::new()))?;
 
   loop {
     // Read from the stream
     if let Ok(msg) = websocket.read() {
-      if msg.is_empty() || msg.is_close() {
+      if msg.is_close() {
+        log!("Stream closed");
+        // Safe to assume there is only one websocket client connected, and wee can wipe state
+        (*app_state.write()).voice_users = vec![];
         break;
+      }
+
+      if msg.is_empty() {
+        continue;
       }
 
       let msg = msg.to_string();
@@ -134,8 +146,13 @@ fn ws_stream(
         }
       }
     } else {
-      error!("Failed to read from stream. Socket closed?");
-      break;
+      // Try to retrieve something to send to the websocket
+      if let Ok(msg) = ws_receiver.try_recv() {
+        let msg = serde_json::to_string(&msg)?;
+        log!("Sending message to websocket: {:?}", msg);
+        websocket.write(Message::Text(Utf8Bytes::from(msg))).expect("Failed to send message to websocket, socket closed?");
+        websocket.flush().expect("Failed to flush message to websocket, socket closed?");
+      }
     }
   }
   Ok(())

@@ -122,10 +122,13 @@ fn app() -> Element {
   let mut app_state = use_signal_sync(AppState::new);
 
   use_effect(move || {
+    let (ws_sender, ws_receiver) = flume::unbounded();
+    app_state.write().ws_sender = Some(ws_sender);
+
     apply_window_settings(&platform, args.debug);
 
     std::thread::spawn(move || {
-      websocket::create_websocket(args.port, app_state).expect("Failed to start websocket server");
+      websocket::create_websocket(args.port, app_state, ws_receiver).expect("Failed to start websocket server");
     });
 
     #[cfg(target_os = "windows")]
@@ -227,6 +230,7 @@ fn app() -> Element {
 
           voice_controls {
             user: user.clone(),
+            app_state: app_state
           }
         }
       }
