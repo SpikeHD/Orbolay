@@ -8,9 +8,12 @@ use std::collections::HashMap;
 use display_info::DisplayInfo;
 use freya::prelude::*;
 use gumdrop::Options;
-use winit::dpi::{PhysicalPosition, PhysicalSize};
 #[cfg(target_os = "windows")]
-use winit::{platform::windows::WindowAttributesExtWindows, window::WindowLevel};
+use winit::platform::windows::WindowAttributesExtWindows;
+use winit::{
+  dpi::{PhysicalPosition, PhysicalSize},
+  window::WindowLevel,
+};
 
 use crate::{
   app_state::AppState,

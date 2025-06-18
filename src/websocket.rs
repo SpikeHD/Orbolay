@@ -103,7 +103,12 @@ fn ws_stream(
             .iter_mut()
             .any(|user| user.id == data.state.user_id);
 
-          println!("User: {:?}", voice_users.iter().find(|user| user.id == data.state.user_id));
+          println!(
+            "User: {:?}",
+            voice_users
+              .iter()
+              .find(|user| user.id == data.state.user_id)
+          );
 
           // Set "streaming" to the value on the user if it is not included in the payload
           if data.state.streaming.is_none() {
@@ -124,14 +129,14 @@ fn ws_stream(
 
           if user_in_list {
             let mut state = app_state.write();
-            let user= state
+            let user = state
               .voice_users
               .iter_mut()
               .find(|user| user.id == data.state.user_id)
               .unwrap();
 
-              user.voice_state = data.state.clone().into();
-              user.streaming = data.state.streaming.unwrap_or_default();
+            user.voice_state = data.state.clone().into();
+            user.streaming = data.state.streaming.unwrap_or_default();
           } else {
             // Push them
             app_state.write().voice_users.push(data.state.into());
