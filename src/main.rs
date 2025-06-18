@@ -10,7 +10,7 @@ use freya::prelude::*;
 use gumdrop::Options;
 use winit::dpi::{PhysicalPosition, PhysicalSize};
 #[cfg(target_os = "windows")]
-use winit::platform::windows::WindowAttributesExtWindows;
+use winit::{platform::windows::WindowAttributesExtWindows, window::WindowLevel};
 
 use crate::{
   app_state::AppState,
@@ -89,6 +89,7 @@ fn main() {
             // https://discourse.glfw.org/t/black-screen-when-setting-window-to-transparent-and-size-to-1920x1080/2585/4
             .with_inner_size(PhysicalSize::new(window_size.0, window_size.1))
             .with_resizable(false)
+            .with_window_level(WindowLevel::AlwaysOnTop)
             .with_position(PhysicalPosition::new(
               monitor_position.0,
               monitor_position.1,
@@ -99,6 +100,7 @@ fn main() {
             // https://discourse.glfw.org/t/black-screen-when-setting-window-to-transparent-and-size-to-1920x1080/2585/4
             .with_inner_size(PhysicalSize::new(window_size.0, window_size.1))
             .with_resizable(false)
+            .with_window_level(WindowLevel::AlwaysOnTop)
             .with_position(PhysicalPosition::new(
               monitor_position.0,
               monitor_position.1,
@@ -112,15 +114,15 @@ fn app() -> Element {
   let platform = use_platform();
   let mut app_state = use_signal_sync(AppState::new);
 
-  platform.with_window(move |w| {
-    if !args.debug {
-      w.set_cursor_hittest(false).unwrap_or_default();
-    }
-  });
-
   use_effect(move || {
     let (ws_sender, ws_receiver) = flume::unbounded();
     app_state.write().ws_sender = Some(ws_sender);
+
+    platform.with_window(move |w| {
+      if !args.debug {
+        w.set_cursor_hittest(false).unwrap_or_default();
+      }
+    });
 
     std::thread::spawn(move || {
       websocket::create_websocket(args.port, app_state, ws_receiver)

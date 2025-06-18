@@ -35,7 +35,7 @@ pub fn watch_keybinds(mut app_state: Signal<AppState, SyncStorage>, platform: Pl
           platform.with_window(move |w| {
             let _ = w.set_cursor_hittest(app_state.read().is_open);
           });
-          log!("Opening overlay");
+          log!("Toggling overlay");
         } else if !all_match && pressed.load(Ordering::Relaxed) {
           pressed.store(false, Ordering::Relaxed);
         }
