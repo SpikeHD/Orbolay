@@ -113,8 +113,6 @@ fn ws_stream(
               .map(|user| user.streaming);
           }
 
-          println!("User is streaming: {:?}", data.state.streaming);
-
           // If the channel is 0, then they left and we should remove them from the list
           if data.state.channel_id.clone().unwrap_or("1".to_string()) == "0" {
             app_state
