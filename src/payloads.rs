@@ -15,6 +15,7 @@ pub struct VoiceState {
   pub mute: Option<bool>,
   pub deaf: Option<bool>,
   pub speaking: Option<bool>,
+  pub streaming: Option<bool>,
 }
 
 impl From<VoiceState> for User {
@@ -26,6 +27,7 @@ impl From<VoiceState> for User {
       id: val.user_id,
       avatar: val.avatar_url.unwrap_or_default(),
       voice_state,
+      streaming: val.streaming.unwrap_or_default(),
     }
   }
 }

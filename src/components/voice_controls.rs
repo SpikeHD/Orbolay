@@ -27,6 +27,10 @@ import_svg!(Disconnect, "../../assets/disconnect.svg", {
   height: "24",
   width: "24",
 });
+import_svg!(StopStream, "../../assets/stopstream.svg", {
+  height: "24",
+  width: "24",
+});
 
 #[derive(Props, Clone, PartialEq)]
 pub struct VoiceControlsProps {
@@ -139,6 +143,20 @@ pub fn voice_controls(mut props: VoiceControlsProps) -> Element {
             cmd: "DISCONNECT".to_string(),
             data: Value::Null,
           })
+        }
+      }
+
+      // Stop stream button
+      if props.user.streaming {
+        control_button {
+          icon: rsx! { StopStream {} },
+          is_red: true,
+          onclick: move |_| {
+            (*props.app_state.write()).send(BridgeMessage {
+              cmd: "STOP_STREAM".to_string(),
+              data: Value::Null,
+            })
+          }
         }
       }
     }

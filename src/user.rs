@@ -17,6 +17,7 @@ pub struct User {
   pub id: String,
   pub avatar: String,
   pub voice_state: UserVoiceState,
+  pub streaming: bool,
 }
 
 impl User {
