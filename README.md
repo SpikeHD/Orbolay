@@ -54,7 +54,7 @@
   * [x] Mute
   * [x] Deafen
   * [x] Disconnect
-  * [ ] Stop screenshare
+  * [x] Stop screenshare
 * [x] Notifications
   * [x] Message notifications
 * [ ] Vencord bridge plugin
