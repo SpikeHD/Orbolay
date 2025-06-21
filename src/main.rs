@@ -125,6 +125,31 @@ fn app() -> Element {
       if !args.debug {
         w.set_cursor_hittest(false).unwrap_or_default();
       }
+
+      // From https://github.com/glfw/glfw/pull/2681
+      #[cfg(target_os = "windows")]
+      unsafe {
+        use std::os::raw::c_void;
+
+        use winit::{raw_window_handle::{HasWindowHandle, RawWindowHandle}};
+        use windows::Win32::{Foundation::{HWND, COLORREF}, UI::WindowsAndMessaging::{
+          SetLayeredWindowAttributes, LWA_ALPHA,
+        }};
+
+        let handle = match w.window_handle().unwrap().as_raw() {
+            RawWindowHandle::Win32(handle) => Some(HWND(handle.hwnd.get() as *mut c_void)),
+            _ => None,
+        };
+
+        if let Some(handle) = handle {
+          let _ = SetLayeredWindowAttributes(
+            handle,
+            COLORREF(0x0030C100),
+            254,
+            LWA_ALPHA,
+          );
+        }
+      }
     });
 
     std::thread::spawn(move || {
