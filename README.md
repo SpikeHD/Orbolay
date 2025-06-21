@@ -43,6 +43,13 @@
 2. Ensure you are using a compatible bridge plugin ([Shelter](https://github.com/SpikeHD/shelter-plugins?tab=readme-ov-file#orbolay-bridge))
 3. Run the executable!
 
+# How to Use
+
+1. Run the executable
+2. If you join a VC, it should show members in the corner
+3. If you get a notification, it should show in the other corner
+4. Press <kbd>Ctrl</kbd> + <kbd>`</kbd> to open the overlay and interact with voice controls
+
 # TODO
 
 * [x] Voice states
