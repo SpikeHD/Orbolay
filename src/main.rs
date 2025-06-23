@@ -145,7 +145,7 @@ fn app() -> Element {
           let _ = SetLayeredWindowAttributes(
             handle,
             COLORREF(0x0030C100),
-            254,
+            0,
             LWA_ALPHA,
           );
         }
