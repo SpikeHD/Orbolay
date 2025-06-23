@@ -186,10 +186,9 @@ fn app() -> Element {
       position_top: "0",
       position_left: "0",
 
-      background: if app_state.read().is_open { "#555555" } else { "transparent" },
+      background: if app_state.read().is_open { "#22222256" } else { "transparent" },
       width: "100%",
       height: "100%",
-      opacity: "0.3",
     }
 
     // Voice users
