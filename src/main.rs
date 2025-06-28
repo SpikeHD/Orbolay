@@ -182,8 +182,8 @@ fn app() -> Element {
     rect {
       content: "flex",
       direction: "vertical",
-      cross_align: if app_state.read().config.user_alignment.left { "start" } else { "end" },
-      main_align: if app_state.read().config.user_alignment.top { "start" } else { "end" },
+      cross_align: if util::transform_alignment(&app_state.read().config.user_alignment).left { "start" } else { "end" },
+      main_align: if util::transform_alignment(&app_state.read().config.user_alignment).top { "start" } else { "end" },
 
       position: "absolute",
       position_top: "0",
@@ -205,8 +205,8 @@ fn app() -> Element {
     rect {
       content: "flex",
       direction: "vertical",
-      cross_align: if app_state.read().config.message_alignment.left { "start" } else { "end" },
-      main_align: if app_state.read().config.message_alignment.top { "start" } else { "end" },
+      cross_align: if util::transform_alignment(&app_state.read().config.message_alignment).left { "start" } else { "end" },
+      main_align: if util::transform_alignment(&app_state.read().config.message_alignment).top { "start" } else { "end" },
 
       position: "absolute",
       position_top: "0",

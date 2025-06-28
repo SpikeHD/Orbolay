@@ -1,5 +1,7 @@
 use sysinfo::{ProcessRefreshKind, RefreshKind, System};
 
+use crate::config::CornerAlignment;
+
 pub mod image;
 
 pub fn truncate(text: impl AsRef<str>, max: usize) -> String {
@@ -38,4 +40,14 @@ pub fn is_already_running() -> bool {
   }
 
   false
+}
+
+pub fn transform_alignment(alignment: &String) -> CornerAlignment {
+  match alignment.to_ascii_lowercase().as_str() {
+    "topleft" => CornerAlignment { top: true, left: true },
+    "topright" => CornerAlignment { top: true, left: false },
+    "bottomleft" => CornerAlignment { top: false, left: true },
+    "bottomright" => CornerAlignment { top: false, left: false }, 
+    _ => CornerAlignment { top: true, left: true },
+  }
 }
