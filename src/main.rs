@@ -102,24 +102,24 @@ fn main() {
       .with_window_attributes(move |w| {
         #[cfg(target_os = "windows")]
         return w
-            .with_skip_taskbar(true)
-            .with_inner_size(PhysicalSize::new(window_size.0, window_size.1))
-            .with_resizable(false)
-            .with_window_level(WindowLevel::AlwaysOnTop)
-            .with_position(PhysicalPosition::new(
-              monitor_position.0,
-              monitor_position.1,
-            ));
+          .with_skip_taskbar(true)
+          .with_inner_size(PhysicalSize::new(window_size.0, window_size.1))
+          .with_resizable(false)
+          .with_window_level(WindowLevel::AlwaysOnTop)
+          .with_position(PhysicalPosition::new(
+            monitor_position.0,
+            monitor_position.1,
+          ));
 
         #[cfg(not(target_os = "windows"))]
         return w
-            .with_inner_size(PhysicalSize::new(window_size.0, window_size.1))
-            .with_resizable(false)
-            .with_window_level(WindowLevel::AlwaysOnTop)
-            .with_position(PhysicalPosition::new(
-              monitor_position.0,
-              monitor_position.1,
-            ));
+          .with_inner_size(PhysicalSize::new(window_size.0, window_size.1))
+          .with_resizable(false)
+          .with_window_level(WindowLevel::AlwaysOnTop)
+          .with_position(PhysicalPosition::new(
+            monitor_position.0,
+            monitor_position.1,
+          ));
       }),
   );
 }

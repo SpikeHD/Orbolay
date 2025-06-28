@@ -22,6 +22,7 @@ pub fn is_already_running() -> bool {
     RefreshKind::nothing().with_processes(ProcessRefreshKind::everything()),
   );
   let procs = sys.processes();
+  let pid = std::process::id();
 
   for proc in procs.values() {
     if proc
@@ -30,6 +31,7 @@ pub fn is_already_running() -> bool {
       .to_str()
       .unwrap_or("")
       .contains("orbolay")
+      && proc.pid().as_u32() != pid
     {
       return true;
     }
