@@ -8,6 +8,7 @@ use std::collections::HashMap;
 use display_info::DisplayInfo;
 use freya::prelude::*;
 use gumdrop::Options;
+use native_dialog::{MessageDialogBuilder, MessageLevel};
 #[cfg(target_os = "windows")]
 use winit::platform::windows::WindowAttributesExtWindows;
 use winit::{
@@ -63,6 +64,18 @@ fn main() {
     std::process::exit(0);
   }
 
+  // Close if we are already running
+  if util::is_already_running() {
+    MessageDialogBuilder::default()
+      .set_level(MessageLevel::Error)
+      .set_title("Orbolay")
+      .set_text("Orbolay is already running. Kill the existing process before starting a new one.")
+      .alert()
+      .show()
+      .expect("Failed to show message dialog");
+    std::process::exit(0);
+  }
+
   let displays = DisplayInfo::all().expect("Failed to get display information");
   let primary = displays
     .iter()
@@ -76,6 +89,7 @@ fn main() {
     (monitor_size.0 + 1) as f32 * primary.scale_factor,
     (monitor_size.1 + 1) as f32 * primary.scale_factor,
   );
+  // https://discourse.glfw.org/t/black-screen-when-setting-window-to-transparent-and-size-to-1920x1080/2585/4
   #[cfg(not(target_os = "macos"))]
   let window_size = (monitor_size.0 + 1, monitor_size.1 + 1);
 
@@ -89,7 +103,6 @@ fn main() {
         #[cfg(target_os = "windows")]
         return w
             .with_skip_taskbar(true)
-            // https://discourse.glfw.org/t/black-screen-when-setting-window-to-transparent-and-size-to-1920x1080/2585/4
             .with_inner_size(PhysicalSize::new(window_size.0, window_size.1))
             .with_resizable(false)
             .with_window_level(WindowLevel::AlwaysOnTop)
@@ -100,7 +113,6 @@ fn main() {
 
         #[cfg(not(target_os = "windows"))]
         return w
-            // https://discourse.glfw.org/t/black-screen-when-setting-window-to-transparent-and-size-to-1920x1080/2585/4
             .with_inner_size(PhysicalSize::new(window_size.0, window_size.1))
             .with_resizable(false)
             .with_window_level(WindowLevel::AlwaysOnTop)
