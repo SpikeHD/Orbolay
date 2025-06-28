@@ -1645,8 +1645,8 @@ checksum = "d8866fac38f53fc87fa3ae1b09ddd723e0482f8fa74323518b4c59df2c55a00a"
 
 [[package]]
 name = "freya"
-version = "0.3.3"
-source = "git+https://github.com/marc2332/freya.git?branch=debug%2Forbolay-transparency-issue#14202d64107a11f89afb3609920fd5b43a71152a"
+version = "0.4.0"
+source = "git+https://github.com/marc2332/freya.git?branch=main#cb85031eb1be0781408d6009f56d9b3a4198a3b4"
 dependencies = [
  "dioxus",
  "dioxus-core",
@@ -1665,8 +1665,8 @@ dependencies = [
 
 [[package]]
 name = "freya-components"
-version = "0.3.3"
-source = "git+https://github.com/marc2332/freya.git?branch=debug%2Forbolay-transparency-issue#14202d64107a11f89afb3609920fd5b43a71152a"
+version = "0.4.0"
+source = "git+https://github.com/marc2332/freya.git?branch=main#cb85031eb1be0781408d6009f56d9b3a4198a3b4"
 dependencies = [
  "dioxus",
  "freya-core",
@@ -1684,8 +1684,8 @@ dependencies = [
 
 [[package]]
 name = "freya-core"
-version = "0.3.3"
-source = "git+https://github.com/marc2332/freya.git?branch=debug%2Forbolay-transparency-issue#14202d64107a11f89afb3609920fd5b43a71152a"
+version = "0.4.0"
+source = "git+https://github.com/marc2332/freya.git?branch=main#cb85031eb1be0781408d6009f56d9b3a4198a3b4"
 dependencies = [
  "accesskit",
  "accesskit_winit",
@@ -1699,6 +1699,7 @@ dependencies = [
  "itertools 0.13.0",
  "keyboard-types",
  "nom 7.1.3",
+ "ragnarok",
  "rustc-hash 2.1.1",
  "shipyard",
  "smallvec",
@@ -1710,8 +1711,8 @@ dependencies = [
 
 [[package]]
 name = "freya-elements"
-version = "0.3.3"
-source = "git+https://github.com/marc2332/freya.git?branch=debug%2Forbolay-transparency-issue#14202d64107a11f89afb3609920fd5b43a71152a"
+version = "0.4.0"
+source = "git+https://github.com/marc2332/freya.git?branch=main#cb85031eb1be0781408d6009f56d9b3a4198a3b4"
 dependencies = [
  "dioxus-core",
  "dioxus-rsx",
@@ -1722,8 +1723,8 @@ dependencies = [
 
 [[package]]
 name = "freya-engine"
-version = "0.3.3"
-source = "git+https://github.com/marc2332/freya.git?branch=debug%2Forbolay-transparency-issue#14202d64107a11f89afb3609920fd5b43a71152a"
+version = "0.4.0"
+source = "git+https://github.com/marc2332/freya.git?branch=main#cb85031eb1be0781408d6009f56d9b3a4198a3b4"
 dependencies = [
  "bitflags 2.9.1",
  "glutin",
@@ -1732,8 +1733,8 @@ dependencies = [
 
 [[package]]
 name = "freya-hooks"
-version = "0.3.3"
-source = "git+https://github.com/marc2332/freya.git?branch=debug%2Forbolay-transparency-issue#14202d64107a11f89afb3609920fd5b43a71152a"
+version = "0.4.0"
+source = "git+https://github.com/marc2332/freya.git?branch=main#cb85031eb1be0781408d6009f56d9b3a4198a3b4"
 dependencies = [
  "bitflags 2.9.1",
  "bytes",
@@ -1755,21 +1756,21 @@ dependencies = [
 
 [[package]]
 name = "freya-native-core"
-version = "0.3.3"
-source = "git+https://github.com/marc2332/freya.git?branch=debug%2Forbolay-transparency-issue#14202d64107a11f89afb3609920fd5b43a71152a"
+version = "0.4.0"
+source = "git+https://github.com/marc2332/freya.git?branch=main#cb85031eb1be0781408d6009f56d9b3a4198a3b4"
 dependencies = [
  "dioxus-core",
  "parking_lot",
+ "ragnarok",
  "rustc-hash 2.1.1",
  "shipyard",
- "smallvec",
  "torin",
 ]
 
 [[package]]
 name = "freya-native-core-macro"
-version = "0.3.3"
-source = "git+https://github.com/marc2332/freya.git?branch=debug%2Forbolay-transparency-issue#14202d64107a11f89afb3609920fd5b43a71152a"
+version = "0.4.0"
+source = "git+https://github.com/marc2332/freya.git?branch=main#cb85031eb1be0781408d6009f56d9b3a4198a3b4"
 dependencies = [
  "quote",
  "syn 2.0.104",
@@ -1777,8 +1778,8 @@ dependencies = [
 
 [[package]]
 name = "freya-router"
-version = "0.3.0"
-source = "git+https://github.com/marc2332/freya.git?branch=debug%2Forbolay-transparency-issue#14202d64107a11f89afb3609920fd5b43a71152a"
+version = "0.4.0"
+source = "git+https://github.com/marc2332/freya.git?branch=main#cb85031eb1be0781408d6009f56d9b3a4198a3b4"
 dependencies = [
  "dioxus-lib",
  "freya-elements",
@@ -1792,8 +1793,8 @@ dependencies = [
 
 [[package]]
 name = "freya-router-macro"
-version = "0.3.0"
-source = "git+https://github.com/marc2332/freya.git?branch=debug%2Forbolay-transparency-issue#14202d64107a11f89afb3609920fd5b43a71152a"
+version = "0.4.0"
+source = "git+https://github.com/marc2332/freya.git?branch=main#cb85031eb1be0781408d6009f56d9b3a4198a3b4"
 dependencies = [
  "base16",
  "digest",
@@ -1806,8 +1807,8 @@ dependencies = [
 
 [[package]]
 name = "freya-winit"
-version = "0.3.3"
-source = "git+https://github.com/marc2332/freya.git?branch=debug%2Forbolay-transparency-issue#14202d64107a11f89afb3609920fd5b43a71152a"
+version = "0.4.0"
+source = "git+https://github.com/marc2332/freya.git?branch=main#cb85031eb1be0781408d6009f56d9b3a4198a3b4"
 dependencies = [
  "accesskit",
  "accesskit_winit",
@@ -1825,6 +1826,7 @@ dependencies = [
  "image",
  "itertools 0.13.0",
  "keyboard-types",
+ "ragnarok",
  "raw-window-handle",
  "tokio",
  "torin",
@@ -3433,6 +3435,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "74765f6d916ee2faa39bc8e68e4f3ed8949b48cccdac59983d287a7cb71ce9c5"
 
 [[package]]
+name = "ragnarok"
+version = "0.1.0"
+source = "git+https://github.com/marc2332/freya.git?branch=main#cb85031eb1be0781408d6009f56d9b3a4198a3b4"
+dependencies = [
+ "euclid",
+ "itertools 0.13.0",
+ "rustc-hash 2.1.1",
+ "tracing",
+]
+
+[[package]]
 name = "rand"
 version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4360,8 +4373,8 @@ checksum = "5d99f8c9a7727884afe522e9bd5edbfc91a3312b36a77b5fb8926e4c31a41801"
 
 [[package]]
 name = "torin"
-version = "0.3.3"
-source = "git+https://github.com/marc2332/freya.git?branch=debug%2Forbolay-transparency-issue#14202d64107a11f89afb3609920fd5b43a71152a"
+version = "0.4.0"
+source = "git+https://github.com/marc2332/freya.git?branch=main#cb85031eb1be0781408d6009f56d9b3a4198a3b4"
 dependencies = [
  "euclid",
  "rustc-hash 2.1.1",
