@@ -40,7 +40,7 @@
 > This will change. Orbolay is still in early stages!
 
 1. Download a [release](https://github.com/SpikeHD/Orbolay/releases) or the [latest actions build](https://github.com/SpikeHD/Orbolay/actions/workflows/build.yml).
-2. Ensure you are using a compatible bridge plugin ([Shelter](https://github.com/SpikeHD/shelter-plugins?tab=readme-ov-file#orbolay-bridge))
+2. Ensure you are using a compatible bridge plugin ([Shelter](https://github.com/SpikeHD/shelter-plugins?tab=readme-ov-file#orbolay-bridge) / [Vencord](https://github.com/SpikeHD/vc-orbolay-bridge))
 3. Run the executable!
 
 # How to Use
@@ -64,7 +64,7 @@
   * [x] Stop screenshare
 * [x] Notifications
   * [x] Message notifications
-* [ ] Vencord bridge plugin
+* [x] Vencord bridge plugin
 
 ## Stretch Goals
 
