@@ -65,6 +65,8 @@
 * [x] Notifications
   * [x] Message notifications
 * [x] Vencord bridge plugin
+* [ ] Reconfigurable keybind
+* [ ] Streamer mode handling
 
 ## Stretch Goals
 
@@ -75,3 +77,7 @@
 * [Freya](https://github.com/marc2332/freya) - the main GUI library (that I may have fallen in love with)
 * [Dioxus](https://dioxuslabs.com/) - framework for things like signals and `rsx!`
 * Everyone else who contributes positively to the Rust ecosystem :)
+
+# Contributing
+
+PRs (especially for compatibility), polite issues, etc. are all welcome!
