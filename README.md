@@ -67,6 +67,7 @@
 * [x] Vencord bridge plugin
 * [ ] Reconfigurable keybind
 * [ ] Streamer mode handling
+* [ ] Click a message to navigate to it
 
 ## Stretch Goals
 
