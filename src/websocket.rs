@@ -7,7 +7,7 @@ use tungstenite::{Message, Utf8Bytes, accept};
 use crate::{
   app_state::AppState,
   config::Config,
-  log,
+  error, log,
   payloads::{ChannelJoinPayload, MessageNotificationPayload, UpdatePayload},
   success, warn,
 };
@@ -104,14 +104,11 @@ fn ws_stream(
             .iter_mut()
             .find(|user| user.id == data.state.user_id);
 
-          println!(
-            "User: {:?}",
-            user
-          );
+          println!("User: {user:?}");
 
           // If the channel is 0, then they left and we should remove them from the list
           if data.state.channel_id.clone().unwrap_or("1".to_string()) == "0" {
-            (*state)
+            state
               .voice_users
               .retain(|user| user.id != data.state.user_id);
             continue;
@@ -130,7 +127,7 @@ fn ws_stream(
           }
 
           // Push them
-          (*state).voice_users.push(data.state.into());
+          state.voice_users.push(data.state.into());
         }
         "CHANNEL_LEFT" => {
           // User left the channel, no more need for list
@@ -160,10 +157,10 @@ fn ws_stream(
         log!("Sending message to websocket: {:?}", msg);
         websocket
           .write(Message::Text(Utf8Bytes::from(msg)))
-          .expect("Failed to send message to websocket, socket closed?");
+          .unwrap_or_else(|_| error!("Failed to send message to websocket, socket closed?"));
         websocket
           .flush()
-          .expect("Failed to flush message to websocket, socket closed?");
+          .unwrap_or_else(|_| error!("Failed to flush messageto websocket, socket closed?"));
       }
     }
   }

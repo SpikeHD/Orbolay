@@ -1,7 +1,5 @@
 use sysinfo::{ProcessRefreshKind, RefreshKind, System};
 
-use crate::config::CornerAlignment;
-
 pub mod image;
 
 pub fn truncate(text: impl AsRef<str>, max: usize) -> String {
