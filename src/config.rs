@@ -37,7 +37,7 @@ impl Default for Config {
       message_alignment: "topright".into(),
       user_alignment: "topleft".into(),
       voice_semitransparent: true,
-      messages_semitransparent: true,
+      messages_semitransparent: false,
     }
   }
 }

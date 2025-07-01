@@ -18,7 +18,7 @@ use winit::{
 
 use crate::{
   app_state::AppState,
-  components::{message_row::message_row, user_row::user_row, voice_controls::voice_controls}, config::CornerAlignment,
+  components::{message_row::message_row, user_row::user_row, voice_controls::voice_controls}, config::CornerAlignment, payloads::MessageNotification,
 };
 
 mod app_state;
@@ -146,6 +146,15 @@ fn app() -> Element {
 
     #[cfg(target_os = "windows")]
     keys::watch_keybinds(app_state, platform.sender());
+
+    // Write informational message to the app_state messages list
+    app_state.write().messages.push(MessageNotification {
+      title: format!("Orbolay v{} (rev {})", APP_VERSION.unwrap_or("0.0.0"), GIT_HASH.unwrap_or("unknown")),
+      body: "by SpikeHD".to_string(),
+      timestamp: Some(chrono::Utc::now().timestamp().to_string()),
+      icon: "https://avatars.githubusercontent.com/u/25207995?v=4".to_string(),
+      channel_id: String::new(),
+    });
 
     // Check the messages once per second, removing any that are older than 5 seconds
     std::thread::spawn(move || {
