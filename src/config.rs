@@ -6,6 +6,18 @@ pub struct CornerAlignment {
   pub left: bool,
 }
 
+impl CornerAlignment {
+  pub fn from_str(s: impl AsRef<str>) -> Self {
+    match s.as_ref().to_ascii_lowercase().as_str() {
+      "topleft" => CornerAlignment { top: true, left: true },
+      "topright" => CornerAlignment { top: true, left: false },
+      "bottomleft" => CornerAlignment { top: false, left: true },
+      "bottomright" => CornerAlignment { top: false, left: false }, 
+      _ => CornerAlignment { top: true, left: true },
+    }
+  }
+}
+
 #[derive(Debug, Clone, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Config {

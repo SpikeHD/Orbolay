@@ -2,9 +2,7 @@ use freya::prelude::*;
 use skia_safe::Color;
 
 use crate::{
-  app_state::AppState,
-  user::{User, UserVoiceState},
-  util::{self, image::circular_with_border},
+  app_state::AppState, config::CornerAlignment, user::{User, UserVoiceState}, util::image::circular_with_border,
 };
 
 import_svg!(Deafened, "../../assets/deafened.svg", {
@@ -91,7 +89,7 @@ pub fn user_row(props: UserRowProps) -> Element {
         },
 
       // Change order based on right/left alignment
-      if util::transform_alignment(&props.app_state.read().config.user_alignment).left {
+      if CornerAlignment::from_str(&props.app_state.read().config.user_alignment).left {
         avatar_icon {
           user: props.user.clone()
         }

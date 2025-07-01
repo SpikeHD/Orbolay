@@ -97,50 +97,40 @@ fn ws_stream(
           app_state.write().voice_users = users;
         }
         "VOICE_STATE_UPDATE" => {
+          let mut state = app_state.write();
           let mut data = serde_json::from_value::<UpdatePayload>(msg.data)?;
-          let mut voice_users = app_state().voice_users;
-          let user_in_list = voice_users
+          let user = state
+            .voice_users
             .iter_mut()
-            .any(|user| user.id == data.state.user_id);
+            .find(|user| user.id == data.state.user_id);
 
           println!(
             "User: {:?}",
-            voice_users
-              .iter()
-              .find(|user| user.id == data.state.user_id)
+            user
           );
-
-          // Set "streaming" to the value on the user if it is not included in the payload
-          if data.state.streaming.is_none() {
-            data.state.streaming = voice_users
-              .iter()
-              .find(|user| user.id == data.state.user_id)
-              .map(|user| user.streaming);
-          }
 
           // If the channel is 0, then they left and we should remove them from the list
           if data.state.channel_id.clone().unwrap_or("1".to_string()) == "0" {
-            app_state
-              .write()
+            (*state)
               .voice_users
               .retain(|user| user.id != data.state.user_id);
             continue;
           }
 
-          if user_in_list {
-            let mut state = app_state.write();
-            let user = state
-              .voice_users
-              .iter_mut()
-              .find(|user| user.id == data.state.user_id)
-              .unwrap();
+          if let Some(user) = user {
+            // Set "streaming" to the value on the user if it is not included in the payload
+            if data.state.streaming.is_none() {
+              data.state.streaming = Some(user.streaming);
+            }
 
             user.voice_state = data.state.clone().into();
             user.streaming = data.state.streaming.unwrap_or_default();
-          } else {
-            // Push them
-            app_state.write().voice_users.push(data.state.into());
+
+            continue;
           }
+
+          // Push them
+          (*state).voice_users.push(data.state.into());
         }
         "CHANNEL_LEFT" => {
           // User left the channel, no more need for list
