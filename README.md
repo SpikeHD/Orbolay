@@ -50,6 +50,18 @@
 3. If you get a notification, it should show in the other corner
 4. Press <kbd>Ctrl</kbd> + <kbd>`</kbd> to open the overlay and interact with voice controls
 
+# Building
+
+## Requirements
+
+* Rust and Cargo
+
+## Steps
+
+1. Clone the repository
+2. `cargo build --release`
+3. Binaries will be in `target/release/`
+
 # TODO
 
 * [x] Voice states
