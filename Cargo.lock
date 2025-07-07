@@ -235,9 +235,9 @@ dependencies = [
 
 [[package]]
 name = "async-channel"
-version = "2.3.1"
+version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "89b47800b0be77592da0afd425cc03468052844aff33b84e33cc696f64e77b6a"
+checksum = "924ed96dd52d1b75e9c1a3e6275715fd320f5f9439fb5a4a11fa51f4221158d2"
 dependencies = [
  "concurrent-queue",
  "event-listener-strategy",
@@ -507,9 +507,9 @@ dependencies = [
 
 [[package]]
 name = "blocking"
-version = "1.6.1"
+version = "1.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "703f41c54fc768e63e091340b424302bb1c29ef4aa0c7f10fe849dfb114d29ea"
+checksum = "e83f8d02be6967315521be875afa792a316e28d57b5a2d401897e2a7921b7f21"
 dependencies = [
  "async-channel",
  "async-task",
@@ -576,9 +576,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.27"
+version = "1.2.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d487aa071b5f64da6f19a3e848e3578944b726ee5a4854b82172f02aa876bfdc"
+checksum = "5c1599538de2394445747c8cf7935946e3cc27e9625f889d979bfb2aaf569362"
 dependencies = [
  "jobserver",
  "libc",
@@ -1646,7 +1646,7 @@ checksum = "d8866fac38f53fc87fa3ae1b09ddd723e0482f8fa74323518b4c59df2c55a00a"
 [[package]]
 name = "freya"
 version = "0.4.0"
-source = "git+https://github.com/marc2332/freya.git?branch=main#0120ed3fea0a2714b4ef3c72fcf400288862ccfa"
+source = "git+https://github.com/marc2332/freya.git?branch=main#d4d5157a74791c4c0557ccb5419716e6e44008d5"
 dependencies = [
  "dioxus",
  "dioxus-core",
@@ -1666,7 +1666,7 @@ dependencies = [
 [[package]]
 name = "freya-components"
 version = "0.4.0"
-source = "git+https://github.com/marc2332/freya.git?branch=main#0120ed3fea0a2714b4ef3c72fcf400288862ccfa"
+source = "git+https://github.com/marc2332/freya.git?branch=main#d4d5157a74791c4c0557ccb5419716e6e44008d5"
 dependencies = [
  "dioxus",
  "freya-core",
@@ -1685,7 +1685,7 @@ dependencies = [
 [[package]]
 name = "freya-core"
 version = "0.4.0"
-source = "git+https://github.com/marc2332/freya.git?branch=main#0120ed3fea0a2714b4ef3c72fcf400288862ccfa"
+source = "git+https://github.com/marc2332/freya.git?branch=main#d4d5157a74791c4c0557ccb5419716e6e44008d5"
 dependencies = [
  "accesskit",
  "accesskit_winit",
@@ -1712,7 +1712,7 @@ dependencies = [
 [[package]]
 name = "freya-elements"
 version = "0.4.0"
-source = "git+https://github.com/marc2332/freya.git?branch=main#0120ed3fea0a2714b4ef3c72fcf400288862ccfa"
+source = "git+https://github.com/marc2332/freya.git?branch=main#d4d5157a74791c4c0557ccb5419716e6e44008d5"
 dependencies = [
  "dioxus-core",
  "dioxus-rsx",
@@ -1724,7 +1724,7 @@ dependencies = [
 [[package]]
 name = "freya-engine"
 version = "0.4.0"
-source = "git+https://github.com/marc2332/freya.git?branch=main#0120ed3fea0a2714b4ef3c72fcf400288862ccfa"
+source = "git+https://github.com/marc2332/freya.git?branch=main#d4d5157a74791c4c0557ccb5419716e6e44008d5"
 dependencies = [
  "bitflags 2.9.1",
  "glutin",
@@ -1734,7 +1734,7 @@ dependencies = [
 [[package]]
 name = "freya-hooks"
 version = "0.4.0"
-source = "git+https://github.com/marc2332/freya.git?branch=main#0120ed3fea0a2714b4ef3c72fcf400288862ccfa"
+source = "git+https://github.com/marc2332/freya.git?branch=main#d4d5157a74791c4c0557ccb5419716e6e44008d5"
 dependencies = [
  "bitflags 2.9.1",
  "bytes",
@@ -1757,7 +1757,7 @@ dependencies = [
 [[package]]
 name = "freya-native-core"
 version = "0.4.0"
-source = "git+https://github.com/marc2332/freya.git?branch=main#0120ed3fea0a2714b4ef3c72fcf400288862ccfa"
+source = "git+https://github.com/marc2332/freya.git?branch=main#d4d5157a74791c4c0557ccb5419716e6e44008d5"
 dependencies = [
  "dioxus-core",
  "parking_lot",
@@ -1770,7 +1770,7 @@ dependencies = [
 [[package]]
 name = "freya-native-core-macro"
 version = "0.4.0"
-source = "git+https://github.com/marc2332/freya.git?branch=main#0120ed3fea0a2714b4ef3c72fcf400288862ccfa"
+source = "git+https://github.com/marc2332/freya.git?branch=main#d4d5157a74791c4c0557ccb5419716e6e44008d5"
 dependencies = [
  "quote",
  "syn 2.0.104",
@@ -1779,7 +1779,7 @@ dependencies = [
 [[package]]
 name = "freya-router"
 version = "0.4.0"
-source = "git+https://github.com/marc2332/freya.git?branch=main#0120ed3fea0a2714b4ef3c72fcf400288862ccfa"
+source = "git+https://github.com/marc2332/freya.git?branch=main#d4d5157a74791c4c0557ccb5419716e6e44008d5"
 dependencies = [
  "dioxus-lib",
  "freya-elements",
@@ -1794,7 +1794,7 @@ dependencies = [
 [[package]]
 name = "freya-router-macro"
 version = "0.4.0"
-source = "git+https://github.com/marc2332/freya.git?branch=main#0120ed3fea0a2714b4ef3c72fcf400288862ccfa"
+source = "git+https://github.com/marc2332/freya.git?branch=main#d4d5157a74791c4c0557ccb5419716e6e44008d5"
 dependencies = [
  "base16",
  "digest",
@@ -1808,7 +1808,7 @@ dependencies = [
 [[package]]
 name = "freya-winit"
 version = "0.4.0"
-source = "git+https://github.com/marc2332/freya.git?branch=main#0120ed3fea0a2714b4ef3c72fcf400288862ccfa"
+source = "git+https://github.com/marc2332/freya.git?branch=main#d4d5157a74791c4c0557ccb5419716e6e44008d5"
 dependencies = [
  "accesskit",
  "accesskit_winit",
@@ -2378,6 +2378,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "io-uring"
+version = "0.7.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b86e202f00093dcba4275d4636b93ef9dd75d025ae560d2521b45ea28ab49013"
+dependencies = [
+ "bitflags 2.9.1",
+ "cfg-if",
+ "libc",
+]
+
+[[package]]
 name = "is-docker"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2642,6 +2653,17 @@ checksum = "1fa76a2c86f704bdb222d66965fb3d63269ce38518b83cb0575fca855ebb6316"
 dependencies = [
  "adler2",
  "simd-adler32",
+]
+
+[[package]]
+name = "mio"
+version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "78bed444cc8a2160f01cbcf811ef18cac863ad68ae8ca62092e8db51d51c761c"
+dependencies = [
+ "libc",
+ "wasi 0.11.1+wasi-snapshot-preview1",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -3438,7 +3460,7 @@ checksum = "69cdb34c158ceb288df11e18b4bd39de994f6657d83847bdffdbd7f346754b0f"
 [[package]]
 name = "ragnarok"
 version = "0.1.0"
-source = "git+https://github.com/marc2332/freya.git?branch=main#0120ed3fea0a2714b4ef3c72fcf400288862ccfa"
+source = "git+https://github.com/marc2332/freya.git?branch=main#d4d5157a74791c4c0557ccb5419716e6e44008d5"
 dependencies = [
  "euclid",
  "itertools 0.13.0",
@@ -3927,9 +3949,9 @@ dependencies = [
 
 [[package]]
 name = "shipyard"
-version = "0.8.0"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "641c9b0506c4f7877a51622e44f5f681aa3fddf2f781682b762a837a5a343594"
+checksum = "e32d57000189fd88a86dec52118d36acb8db81953aa7a924aa8d5b3b7e34811b"
 dependencies = [
  "hashbrown 0.14.5",
  "lock_api",
@@ -4310,12 +4332,16 @@ dependencies = [
 
 [[package]]
 name = "tokio"
-version = "1.45.1"
+version = "1.46.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75ef51a33ef1da925cea3e4eb122833cb377c61439ca401b770f54902b806779"
+checksum = "0cc3a2344dafbe23a245241fe8b09735b521110d30fcefbbd5feb1797ca35d17"
 dependencies = [
  "backtrace",
+ "io-uring",
+ "libc",
+ "mio",
  "pin-project-lite",
+ "slab",
  "tokio-macros",
 ]
 
@@ -4374,7 +4400,7 @@ checksum = "5d99f8c9a7727884afe522e9bd5edbfc91a3312b36a77b5fb8926e4c31a41801"
 [[package]]
 name = "torin"
 version = "0.4.0"
-source = "git+https://github.com/marc2332/freya.git?branch=main#0120ed3fea0a2714b4ef3c72fcf400288862ccfa"
+source = "git+https://github.com/marc2332/freya.git?branch=main#d4d5157a74791c4c0557ccb5419716e6e44008d5"
 dependencies = [
  "euclid",
  "rustc-hash 2.1.1",
@@ -5770,18 +5796,18 @@ checksum = "3f423a2c17029964870cfaabb1f13dfab7d092a62a29a89264f4d36990ca414a"
 
 [[package]]
 name = "zune-jpeg"
-version = "0.4.18"
+version = "0.4.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7384255a918371b5af158218d131530f694de9ad3815ebdd0453a940485cb0fa"
+checksum = "2c9e525af0a6a658e031e95f14b7f889976b74a11ba0eca5a5fc9ac8a1c43a6a"
 dependencies = [
  "zune-core",
 ]
 
 [[package]]
 name = "zvariant"
-version = "5.5.3"
+version = "5.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9d30786f75e393ee63a21de4f9074d4c038d52c5b1bb4471f955db249f9dffb1"
+checksum = "d91b3680bb339216abd84714172b5138a4edac677e641ef17e1d8cb1b3ca6e6f"
 dependencies = [
  "endi",
  "enumflags2",
@@ -5793,9 +5819,9 @@ dependencies = [
 
 [[package]]
 name = "zvariant_derive"
-version = "5.5.3"
+version = "5.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75fda702cd42d735ccd48117b1630432219c0e9616bf6cb0f8350844ee4d9580"
+checksum = "3a8c68501be459a8dbfffbe5d792acdd23b4959940fc87785fb013b32edbc208"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",
