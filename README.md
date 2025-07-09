@@ -81,10 +81,6 @@
 * [x] Streamer mode handling
 * [ ] Click a message to navigate to it
 
-## Stretch Goals
-
-* [ ] Stream PiP
-
 # Special Thanks
 
 * [Freya](https://github.com/marc2332/freya) - the main GUI library (that I may have fallen in love with)
