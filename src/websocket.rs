@@ -146,6 +146,9 @@ fn ws_stream(
 
           app_state.write().messages.push(data.message);
         }
+        "STREAMER_MODE" => {
+          app_state.write().is_censor = msg.data.get("enabled").unwrap().as_bool().unwrap_or_default();
+        }
         _ => {
           warn!("Unknown command: {}", msg.cmd);
         }
@@ -160,7 +163,7 @@ fn ws_stream(
           .unwrap_or_else(|_| error!("Failed to send message to websocket, socket closed?"));
         websocket
           .flush()
-          .unwrap_or_else(|_| error!("Failed to flush messageto websocket, socket closed?"));
+          .unwrap_or_else(|_| error!("Failed to flush message to websocket, socket closed?"));
       }
     }
   }

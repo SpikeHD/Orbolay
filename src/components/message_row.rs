@@ -2,7 +2,10 @@ use freya::prelude::*;
 
 use crate::{
   payloads::MessageNotification,
-  util::{image::circular_with_border, strip, truncate},
+  util::{
+    image::circular_with_border,
+    text::{strip, truncate},
+  },
 };
 
 #[derive(Props, Clone, PartialEq)]

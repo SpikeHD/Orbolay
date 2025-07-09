@@ -20,7 +20,7 @@ use crate::{
   app_state::AppState,
   components::{message_row::message_row, user_row::user_row, voice_controls::voice_controls},
   config::CornerAlignment,
-  payloads::MessageNotification,
+  payloads::MessageNotification, util::text::censor,
 };
 
 mod app_state;
@@ -67,7 +67,7 @@ fn main() {
   }
 
   // Close if we are already running
-  if util::is_already_running() {
+  if util::process::is_already_running() {
     MessageDialogBuilder::default()
       .set_level(MessageLevel::Error)
       .set_title("Orbolay")
@@ -210,7 +210,14 @@ fn app() -> Element {
 
       for user in app_state.read().voice_users.iter() {
         user_row {
-          user: user.clone(),
+          user: {
+            let mut u = user.clone();
+            if app_state.read().is_censor {
+              u.name = censor(&u.name);
+            }
+
+            u
+          },
           app_state: app_state
         }
       }
@@ -233,9 +240,11 @@ fn app() -> Element {
 
       opacity: if app_state.read().config.messages_semitransparent && !app_state.read().is_open { "0.5" } else { "1.0" },
 
-      for message in app_state.read().messages.iter() {
-        message_row {
-          message: message.clone()
+      if !app_state.read().is_censor {
+        for message in app_state.read().messages.iter() {
+          message_row {
+            message: message.clone(),
+          }
         }
       }
     }

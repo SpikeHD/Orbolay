@@ -4,6 +4,7 @@ use crate::{config::Config, payloads::MessageNotification, user::User, websocket
 pub struct AppState {
   pub config: Config,
   pub is_open: bool,
+  pub is_censor: bool,
   pub voice_users: Vec<User>,
   pub messages: Vec<MessageNotification>,
 
@@ -21,6 +22,7 @@ impl AppState {
     Self {
       config: Config::default(),
       is_open: false,
+      is_censor: false,
       voice_users: vec![],
       messages: vec![],
 

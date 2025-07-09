@@ -78,7 +78,7 @@
   * [x] Message notifications
 * [x] Vencord bridge plugin
 * [ ] Reconfigurable keybind
-* [ ] Streamer mode handling
+* [x] Streamer mode handling
 * [ ] Click a message to navigate to it
 
 ## Stretch Goals
