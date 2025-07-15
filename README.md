@@ -37,11 +37,19 @@
 # Installation
 
 > [!NOTE]
-> This will change. Orbolay is still in early stages!
+> These will change. Orbolay is still in early stages!
+
+## For Most People
 
 1. Download a [release](https://github.com/SpikeHD/Orbolay/releases) or the [latest actions build](https://github.com/SpikeHD/Orbolay/actions/workflows/build.yml).
 2. Ensure you are using a compatible bridge plugin ([Shelter](https://github.com/SpikeHD/shelter-plugins?tab=readme-ov-file#orbolay-bridge) / [Vencord](https://github.com/SpikeHD/vc-orbolay-bridge), also available on [Equicord](https://github.com/Equicord/Equicord))
 3. Run the executable!
+
+## With `cargo`
+
+```sh
+cargo install --locked --git https://github.com/SpikeHD/Orbolay.git
+```
 
 # How to Use
 
