@@ -5,7 +5,7 @@ use crate::{
   app_state::AppState,
   config::CornerAlignment,
   user::{User, UserVoiceState},
-  util::image::circular_with_border,
+  util::{colors, image::circular_with_border},
 };
 
 import_svg!(Deafened, "../../assets/deafened.svg", {
@@ -51,7 +51,7 @@ fn user_label(user: User) -> Element {
       cross_align: "center",
 
       height: "70%",
-      background: "#1e1f23",
+      background: colors::GRAY,
       corner_radius: "5",
       margin: "0 6 0 6",
 

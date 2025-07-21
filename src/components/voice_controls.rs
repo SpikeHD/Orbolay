@@ -2,9 +2,7 @@ use freya::prelude::*;
 use serde_json::Value;
 
 use crate::{
-  app_state::AppState,
-  user::{User, UserVoiceState},
-  websocket::BridgeMessage,
+  app_state::AppState, user::{User, UserVoiceState}, util::colors, websocket::BridgeMessage
 };
 
 import_svg!(Deafened, "../../assets/deafened.svg", {
@@ -61,9 +59,9 @@ fn control_button(props: ButtonProps) -> Element {
       corner_radius: "10",
       background: if *hovered.read() {
         if props.is_red {
-          "#3f2226"
+          colors::RED_GRAY
         } else {
-          "#37373c"
+          colors::LIGHT_GRAY
         }
       } else {
         "transparent"
@@ -95,7 +93,7 @@ pub fn voice_controls(mut props: VoiceControlsProps) -> Element {
       max_height: "60",
       max_width: "400",
 
-      background: "#1e1f23",
+      background: colors::GRAY,
       corner_radius: "10",
 
       // Mute button

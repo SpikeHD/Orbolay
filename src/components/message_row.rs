@@ -3,8 +3,7 @@ use freya::prelude::*;
 use crate::{
   payloads::MessageNotification,
   util::{
-    image::circular_with_border,
-    text::{strip, truncate},
+    colors, image::circular_with_border, text::{strip, truncate}
   },
 };
 
@@ -25,7 +24,7 @@ pub fn message_row(props: MessageRowProps) -> Element {
       margin: "6",
       corner_radius: "10",
 
-      background: "#1e1f23",
+      background: colors::GRAY,
 
       rect {
         content: "flex",
@@ -63,7 +62,7 @@ pub fn message_row(props: MessageRowProps) -> Element {
 
           label {
             font_size: "14",
-            color: "#b4b4b4",
+            color: colors::SUPERLIGHT_GRAY,
             "{truncate(strip(&props.message.body), 100)}"
           }
         }

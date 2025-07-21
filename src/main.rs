@@ -20,7 +20,7 @@ use crate::{
   app_state::AppState,
   components::{message_row::message_row, user_row::user_row, voice_controls::voice_controls},
   config::CornerAlignment,
-  payloads::MessageNotification, util::text::censor,
+  payloads::MessageNotification, util::{colors, text::censor},
 };
 
 mod app_state;
@@ -188,7 +188,7 @@ fn app() -> Element {
       position_top: "0",
       position_left: "0",
 
-      background: if app_state.read().is_open { "#22222256" } else { "transparent" },
+      background: if app_state.read().is_open { colors::TRANSPARENT_GRAY } else { "transparent" },
       width: "100%",
       height: "100%",
     }
