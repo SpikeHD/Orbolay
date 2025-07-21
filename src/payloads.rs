@@ -76,10 +76,9 @@ impl MessageNotification {
       self.icon.clone()
     };
 
-    if AVATAR_CACHE().contains_key(&icon) {
+    if let Some(img) = AVATAR_CACHE().get(&icon) {
       log!("Cache hit for icon {}", icon);
-      // We can unwrap here because we know the key exists
-      return Ok(AVATAR_CACHE().get(&icon).unwrap().clone());
+      return Ok(img.clone());
     }
 
     log!("Fetching icon from {}", icon);

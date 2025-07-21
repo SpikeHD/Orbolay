@@ -147,7 +147,7 @@ fn ws_stream(
           app_state.write().messages.push(data.message);
         }
         "STREAMER_MODE" => {
-          app_state.write().is_censor = msg.data.get("enabled").unwrap().as_bool().unwrap_or_default();
+          app_state.write().is_censor = msg.data.get("enabled").unwrap_or(&Value::from(false)).as_bool().unwrap_or_default();
         }
         _ => {
           warn!("Unknown command: {}", msg.cmd);

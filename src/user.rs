@@ -22,10 +22,9 @@ pub struct User {
 
 impl User {
   pub fn fetch_avatar(&self) -> Result<Vec<u8>, ureq::Error> {
-    if AVATAR_CACHE().contains_key(&self.avatar) {
+    if let Some(avatar) = AVATAR_CACHE().get(&self.avatar) {
       log!("Cache hit for avatar {}", self.avatar);
-      // We can unwrap here because we know the key exists
-      return Ok(AVATAR_CACHE().get(&self.avatar).unwrap().clone());
+      return Ok(avatar.clone());
     }
 
     if self.avatar.is_empty() {

@@ -13,5 +13,5 @@ pub fn strip(text: impl AsRef<str>) -> String {
 }
 
 pub fn censor(text: impl AsRef<str>) -> String {
-  format!("{}...", text.as_ref().chars().next().unwrap())
+  format!("{}...", text.as_ref().chars().next().unwrap_or('?'))
 }
