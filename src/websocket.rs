@@ -34,7 +34,14 @@ pub fn create_websocket(
 
         let recv = ws_receiver.clone();
         std::thread::spawn(move || {
-          ws_stream(stream, app_state, recv).expect("Failed to handle stream");
+          match ws_stream(stream, app_state, recv) {
+            Ok(_) => {
+              success!("Websocket stream closed");
+            }
+            Err(e) => {
+              error!("Error in websocket stream: {}", e);
+            }
+          }
         });
       }
       Err(e) => {
@@ -67,7 +74,7 @@ fn ws_stream(
     if let Ok(msg) = websocket.read() {
       if msg.is_close() {
         log!("Stream closed");
-        // Safe to assume there is only one websocket client connected, and wee can wipe state
+        // Safe to assume there is only one websocket client connected, and we can wipe state
         app_state.write().voice_users = vec![];
         break;
       }
@@ -83,7 +90,7 @@ fn ws_stream(
 
       match msg.cmd.as_str() {
         "REGISTER_CONFIG" => {
-          let data = serde_json::from_value::<Config>(msg.data)?;
+          let data = serde_json::from_value::<Config>(msg.data).unwrap_or_default();
           app_state.write().config = data;
         }
         "CHANNEL_JOINED" => {
