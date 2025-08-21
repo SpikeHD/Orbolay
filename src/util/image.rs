@@ -3,7 +3,7 @@ use skia_safe::{
   surfaces::raster_n32_premul,
 };
 
-use crate::{log, AVATAR_CACHE};
+use crate::{AVATAR_CACHE, log};
 
 static DEFAULT_AVATAR: &[u8] = include_bytes!("../../assets/discordgrey.png");
 
@@ -70,10 +70,7 @@ pub fn circular_with_border(
   )
 }
 
-pub fn fetch_icon(
-  url: &str,
-  placeholder: bool,
-) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+pub fn fetch_icon(url: &str, placeholder: bool) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
   if let Some(avatar) = AVATAR_CACHE().get(url) {
     log!("Cache hit for image {}", url);
     return Ok(avatar.clone());

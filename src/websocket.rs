@@ -33,14 +33,12 @@ pub fn create_websocket(
         log!("Accepted connection");
 
         let recv = ws_receiver.clone();
-        std::thread::spawn(move || {
-          match ws_stream(stream, app_state, recv) {
-            Ok(_) => {
-              success!("Websocket stream closed");
-            }
-            Err(e) => {
-              error!("Error in websocket stream: {}", e);
-            }
+        std::thread::spawn(move || match ws_stream(stream, app_state, recv) {
+          Ok(_) => {
+            success!("Websocket stream closed");
+          }
+          Err(e) => {
+            error!("Error in websocket stream: {}", e);
           }
         });
       }
@@ -154,7 +152,12 @@ fn ws_stream(
           app_state.write().messages.push(data.message);
         }
         "STREAMER_MODE" => {
-          app_state.write().is_censor = msg.data.get("enabled").unwrap_or(&Value::from(false)).as_bool().unwrap_or_default();
+          app_state.write().is_censor = msg
+            .data
+            .get("enabled")
+            .unwrap_or(&Value::from(false))
+            .as_bool()
+            .unwrap_or_default();
         }
         _ => {
           warn!("Unknown command: {}", msg.cmd);

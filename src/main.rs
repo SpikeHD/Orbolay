@@ -20,7 +20,8 @@ use crate::{
   app_state::AppState,
   components::{message_row::message_row, user_row::user_row, voice_controls::voice_controls},
   config::CornerAlignment,
-  payloads::MessageNotification, util::{colors, text::censor},
+  payloads::MessageNotification,
+  util::{colors, text::censor},
 };
 
 mod app_state;
@@ -245,7 +246,7 @@ fn app() -> Element {
       if !app_state.read().is_censor {
         for message in app_state.read().messages.iter() {
           message_row {
-            app_state: app_state.clone(),
+            app_state: app_state,
             message: message.clone(),
           }
         }

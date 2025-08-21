@@ -2,7 +2,10 @@ use freya::prelude::*;
 use serde_json::Value;
 
 use crate::{
-  app_state::AppState, user::{User, UserVoiceState}, util::colors, websocket::BridgeMessage
+  app_state::AppState,
+  user::{User, UserVoiceState},
+  util::colors,
+  websocket::BridgeMessage,
 };
 
 import_svg!(Deafened, "../../assets/deafened.svg", {
