@@ -3,6 +3,10 @@ use skia_safe::{
   surfaces::raster_n32_premul,
 };
 
+use crate::{log, AVATAR_CACHE};
+
+static DEFAULT_AVATAR: &[u8] = include_bytes!("../../assets/discordgrey.png");
+
 const OUTPUT_RES: (i32, i32) = (256, 256);
 
 // Take in a square image, round it out with a border
@@ -64,4 +68,25 @@ pub fn circular_with_border(
       .as_bytes()
       .to_vec(),
   )
+}
+
+pub fn fetch_icon(
+  url: &str,
+  placeholder: bool,
+) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+  if let Some(avatar) = AVATAR_CACHE().get(url) {
+    log!("Cache hit for image {}", url);
+    return Ok(avatar.clone());
+  }
+
+  if url.is_empty() && placeholder {
+    return Ok(DEFAULT_AVATAR.to_vec());
+  }
+
+  log!("Fetching avatar from {}", url);
+  let img = ureq::get(url).call()?.body_mut().read_to_vec()?;
+
+  (*AVATAR_CACHE.write()).insert(url.to_string(), img.clone());
+
+  Ok(img)
 }

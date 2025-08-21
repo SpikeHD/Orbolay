@@ -159,7 +159,9 @@ fn app() -> Element {
       body: "by SpikeHD".to_string(),
       timestamp: Some(chrono::Utc::now().timestamp().to_string()),
       icon: "https://avatars.githubusercontent.com/u/25207995?v=4".to_string(),
-      channel_id: String::new(),
+      guild_id: None,
+      channel_id: None,
+      message_id: None,
     });
 
     // Check the messages once per second, removing any that are older than 5 seconds
@@ -243,6 +245,7 @@ fn app() -> Element {
       if !app_state.read().is_censor {
         for message in app_state.read().messages.iter() {
           message_row {
+            app_state: app_state.clone(),
             message: message.clone(),
           }
         }

@@ -5,7 +5,7 @@ use crate::{
   app_state::AppState,
   config::CornerAlignment,
   user::{User, UserVoiceState},
-  util::{colors, image::circular_with_border},
+  util::{colors, image::{circular_with_border, fetch_icon}},
 };
 
 import_svg!(Deafened, "../../assets/deafened.svg", {
@@ -118,5 +118,14 @@ fn avatar(user: &User) -> Vec<u8> {
     _ => None,
   };
 
-  circular_with_border(user.fetch_avatar().unwrap_or_default(), border_color).unwrap_or_default()
+  if user.avatar.is_empty() {
+    return circular_with_border(fetch_icon("", true).unwrap_or_default(), border_color).unwrap_or_default();
+  }
+
+  let url = format!(
+    "https://cdn.discordapp.com/avatars/{}/{}.png?size=80",
+    user.id, user.avatar
+  );
+
+  circular_with_border(fetch_icon(&url, true).unwrap_or_default(), border_color).unwrap_or_default()
 }

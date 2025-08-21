@@ -64,7 +64,9 @@ pub struct MessageNotification {
   pub title: String,
   pub body: String,
   pub icon: String,
-  pub channel_id: String,
+  pub guild_id: Option<String>,
+  pub channel_id: Option<String>,
+  pub message_id: Option<String>,
   pub timestamp: Option<String>,
 }
 
