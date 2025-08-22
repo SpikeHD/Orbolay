@@ -87,7 +87,7 @@ cargo install --locked --git https://github.com/SpikeHD/Orbolay.git
 * [x] Vencord bridge plugin
 * [ ] Reconfigurable keybind
 * [x] Streamer mode handling
-* [ ] Click a message to navigate to it
+* [x] Click a message to navigate to it
 
 # Special Thanks
 
@@ -98,3 +98,4 @@ cargo install --locked --git https://github.com/SpikeHD/Orbolay.git
 # Contributing
 
 PRs (especially for compatibility), polite issues, etc. are all welcome!
+
