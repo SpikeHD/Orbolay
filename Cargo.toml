@@ -20,7 +20,7 @@ colored = "3.0.0"
 dioxus = { version = "0.6.3", features = ["hooks"] }
 display-info = "0.5.5"
 flume = "0.11.1"
-freya = { git = "https://github.com/marc2332/freya.git", branch = "main", features = [] }
+freya = { git = "https://github.com/marc2332/freya.git", rev = "881b565a4c14ddd5c8dc47ce738d2a0543a58bd4" }
 gumdrop = "0.8.1"
 native-dialog = { version = "0.9.0", features = ["windows_dpi_awareness", "windows_visual_styles"] }
 serde = "1.0.219"
@@ -31,6 +31,8 @@ tungstenite = "0.27"
 ureq = "3.0.12"
 winit = "0.30"
 
-[target.'cfg(target_os = "windows")'.dependencies]
+[target.'cfg(not(target_os = "macos"))'.dependencies]
 device_query = "4.0.0"
+
+[target.'cfg(target_os = "windows")'.dependencies]
 windows = "0.61.3"
