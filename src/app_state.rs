@@ -3,6 +3,7 @@ use crate::{config::Config, payloads::MessageNotification, user::User, websocket
 #[derive(Debug, Clone)]
 pub struct AppState {
   pub config: Config,
+  pub current_channel: String,
   pub is_open: bool,
   pub is_censor: bool,
   pub voice_users: Vec<User>,
@@ -21,6 +22,7 @@ impl AppState {
   pub fn new() -> Self {
     Self {
       config: Config::default(),
+      current_channel: String::new(),
       is_open: false,
       is_censor: false,
       voice_users: vec![],

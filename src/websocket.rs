@@ -96,12 +96,19 @@ fn ws_stream(
           let mut users = vec![];
 
           for voice_state in data.states {
-            users.push(voice_state.into());
+            users.push(voice_state.clone().into());
+
+            if voice_state.user_id == app_state.read().config.user_id {
+              // Set the current channel to the one we joined
+              app_state.write().current_channel =
+                voice_state.channel_id.clone().unwrap_or("0".to_string());
+            }
           }
 
           app_state.write().voice_users = users;
         }
         "VOICE_STATE_UPDATE" => {
+          let current_channel = app_state.read().current_channel.clone();
           let mut state = app_state.write();
           let mut data = serde_json::from_value::<UpdatePayload>(msg.data)?;
           let user = state
@@ -111,12 +118,14 @@ fn ws_stream(
 
           println!("User: {user:?}");
 
-          // If the channel is 0, then they left and we should remove them from the list
-          if data.state.channel_id.clone().unwrap_or("1".to_string()) == "0" {
-            state
-              .voice_users
-              .retain(|user| user.id != data.state.user_id);
-            continue;
+          // If the channel is not our channe, remove them from the list
+          if let Some(channel_id) = &data.state.channel_id {
+            if channel_id != &current_channel {
+              state
+                .voice_users
+                .retain(|user| user.id != data.state.user_id);
+              continue;
+            }
           }
 
           if let Some(user) = user {
@@ -137,6 +146,7 @@ fn ws_stream(
         "CHANNEL_LEFT" => {
           // User left the channel, no more need for list
           app_state.write().voice_users = vec![];
+          app_state.write().current_channel = String::new();
         }
         "MESSAGE_NOTIFICATION" => {
           let mut data = serde_json::from_value::<MessageNotificationPayload>(msg.data)?;
