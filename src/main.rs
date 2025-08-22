@@ -97,33 +97,34 @@ fn main() {
   let window_size = (monitor_size.0 + 1, monitor_size.1 + 1);
 
   launch_cfg(
-    app,
-    LaunchConfig::<f32>::new()
-      .with_decorations(false)
-      .with_background("transparent")
-      .with_transparency(true)
-      .with_window_attributes(move |w| {
-        #[cfg(target_os = "windows")]
-        return w
-          .with_skip_taskbar(true)
-          .with_inner_size(PhysicalSize::new(window_size.0, window_size.1))
-          .with_resizable(false)
-          .with_window_level(WindowLevel::AlwaysOnTop)
-          .with_position(PhysicalPosition::new(
-            monitor_position.0,
-            monitor_position.1,
-          ));
+    LaunchConfig::new().with_window(
+      WindowConfig::new(app)
+        .with_decorations(false)
+        .with_background("transparent")
+        .with_transparency(true)
+        .with_window_attributes(move |w| {
+          #[cfg(target_os = "windows")]
+          return w
+            .with_skip_taskbar(true)
+            .with_inner_size(PhysicalSize::new(window_size.0, window_size.1))
+            .with_resizable(false)
+            .with_window_level(WindowLevel::AlwaysOnTop)
+            .with_position(PhysicalPosition::new(
+              monitor_position.0,
+              monitor_position.1,
+            ));
 
-        #[cfg(not(target_os = "windows"))]
-        return w
-          .with_inner_size(PhysicalSize::new(window_size.0, window_size.1))
-          .with_resizable(false)
-          .with_window_level(WindowLevel::AlwaysOnTop)
-          .with_position(PhysicalPosition::new(
-            monitor_position.0,
-            monitor_position.1,
-          ));
-      }),
+          #[cfg(not(target_os = "windows"))]
+          return w
+            .with_inner_size(PhysicalSize::new(window_size.0, window_size.1))
+            .with_resizable(false)
+            .with_window_level(WindowLevel::AlwaysOnTop)
+            .with_position(PhysicalPosition::new(
+              monitor_position.0,
+              monitor_position.1,
+            ));
+        }),
+    ),
   );
 }
 
