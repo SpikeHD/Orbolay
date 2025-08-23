@@ -5,7 +5,11 @@ use std::net::{TcpListener, TcpStream};
 use tungstenite::{Message, Utf8Bytes, accept};
 
 use crate::{
-  app_state::AppState, config::Config, error, log, payloads::{ChannelJoinPayload, MessageNotificationPayload, UpdatePayload}, success, user::User, warn
+  app_state::AppState,
+  config::Config,
+  error, log,
+  payloads::{ChannelJoinPayload, MessageNotificationPayload, UpdatePayload},
+  success, warn,
 };
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -84,7 +88,12 @@ fn ws_stream(
 
       match msg.cmd.as_str() {
         "REGISTER_CONFIG" => {
-          let user_id = msg.data.get("userId").and_then(|v| v.as_str()).unwrap_or_default().to_string();
+          let user_id = msg
+            .data
+            .get("userId")
+            .and_then(|v| v.as_str())
+            .unwrap_or_default()
+            .to_string();
           let mut data = serde_json::from_value::<Config>(msg.data).unwrap_or_default();
 
           // Whether the config was valid or not, we still want the user_id to be set
