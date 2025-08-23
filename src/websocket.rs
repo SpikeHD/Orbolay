@@ -5,11 +5,7 @@ use std::net::{TcpListener, TcpStream};
 use tungstenite::{Message, Utf8Bytes, accept};
 
 use crate::{
-  app_state::AppState,
-  config::Config,
-  error, log,
-  payloads::{ChannelJoinPayload, MessageNotificationPayload, UpdatePayload},
-  success, warn,
+  app_state::AppState, config::Config, error, log, payloads::{ChannelJoinPayload, MessageNotificationPayload, UpdatePayload}, success, user::User, warn
 };
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -88,7 +84,12 @@ fn ws_stream(
 
       match msg.cmd.as_str() {
         "REGISTER_CONFIG" => {
-          let data = serde_json::from_value::<Config>(msg.data).unwrap_or_default();
+          let user_id = msg.data.get("userId").and_then(|v| v.as_str()).unwrap_or_default().to_string();
+          let mut data = serde_json::from_value::<Config>(msg.data).unwrap_or_default();
+
+          // Whether the config was valid or not, we still want the user_id to be set
+          data.user_id = user_id;
+
           app_state.write().config = data;
         }
         "CHANNEL_JOINED" => {
@@ -116,10 +117,8 @@ fn ws_stream(
             .iter_mut()
             .find(|user| user.id == data.state.user_id);
 
-          println!("User: {user:?}");
-
-          // If the channel is not our channe, remove them from the list
           if let Some(channel_id) = &data.state.channel_id {
+            // If the channel is not our channel, remove them from the list
             if channel_id != &current_channel {
               state
                 .voice_users
@@ -128,6 +127,7 @@ fn ws_stream(
             }
           }
 
+          // If this is an existing user in our state, update them
           if let Some(user) = user {
             // Set "streaming" to the value on the user if it is not included in the payload
             if data.state.streaming.is_none() {
@@ -140,7 +140,7 @@ fn ws_stream(
             continue;
           }
 
-          // Push them
+          // Otherwise, push them
           state.voice_users.push(data.state.into());
         }
         "CHANNEL_LEFT" => {
