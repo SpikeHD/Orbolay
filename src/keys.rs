@@ -13,6 +13,12 @@ pub fn watch_keybinds(mut app_state: Signal<AppState, SyncStorage>, platform: Pl
     let pressed = AtomicBool::new(false);
 
     loop {
+      if !app_state.read().config.is_keybind_enabled {
+        // pause for way longer
+        std::thread::sleep(std::time::Duration::from_secs(1));
+        continue;
+      }
+
       std::thread::sleep(std::time::Duration::from_millis(50));
 
       let state = DeviceState::new();

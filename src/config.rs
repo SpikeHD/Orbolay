@@ -42,6 +42,7 @@ pub struct Config {
   pub user_alignment: String,
   pub voice_semitransparent: bool,
   pub messages_semitransparent: bool,
+  pub is_keybind_enabled: bool,
 }
 
 impl Default for Config {
@@ -53,6 +54,7 @@ impl Default for Config {
       user_alignment: "topleft".into(),
       voice_semitransparent: true,
       messages_semitransparent: false,
+      is_keybind_enabled: true,
     }
   }
 }
