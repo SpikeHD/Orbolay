@@ -3,7 +3,7 @@ use skia_safe::Color;
 
 use crate::{
   app_state::AppState,
-  config::CornerAlignment,
+  config::{Alignment, CornerAlignment},
   user::{User, UserVoiceState},
   util::{
     colors,
@@ -95,7 +95,7 @@ pub fn user_row(props: UserRowProps) -> Element {
         },
 
       // Change order based on right/left alignment
-      if CornerAlignment::from_str(&props.app_state.read().config.user_alignment).left {
+      if CornerAlignment::from_str(&props.app_state.read().config.user_alignment).x == Alignment::End {
         avatar_icon {
           user: props.user.clone()
         }

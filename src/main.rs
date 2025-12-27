@@ -200,8 +200,8 @@ fn app() -> Element {
     rect {
       content: "flex",
       direction: "vertical",
-      cross_align: if CornerAlignment::from_str(&app_state.read().config.user_alignment).left { "start" } else { "end" },
-      main_align: if CornerAlignment::from_str(&app_state.read().config.user_alignment).top { "start" } else { "end" },
+      cross_align: CornerAlignment::from_str(&app_state.read().config.user_alignment).x.to_string(),
+      main_align: CornerAlignment::from_str(&app_state.read().config.user_alignment).y.to_string(),
 
       position: "absolute",
       position_top: "0",
@@ -230,8 +230,8 @@ fn app() -> Element {
     rect {
       content: "flex",
       direction: "vertical",
-      cross_align: if CornerAlignment::from_str(&app_state.read().config.message_alignment).left { "start" } else { "end" },
-      main_align: if CornerAlignment::from_str(&app_state.read().config.message_alignment).top { "start" } else { "end" },
+      cross_align: CornerAlignment::from_str(&app_state.read().config.message_alignment).x.to_string(),
+      main_align: CornerAlignment::from_str(&app_state.read().config.message_alignment).y.to_string(),
 
       position: "absolute",
       position_top: "0",

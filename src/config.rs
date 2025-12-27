@@ -1,34 +1,67 @@
 use serde::Deserialize;
 
 #[derive(Debug, Clone, Deserialize, PartialEq)]
+pub enum Alignment {
+  Start,
+  Center,
+  End,
+}
+
+impl ToString for Alignment {
+  fn to_string(&self) -> String {
+    match self {
+      Alignment::Start => "start".into(),
+      Alignment::Center => "center".into(),
+      Alignment::End => "end".into(),
+    }
+  }
+}
+
+#[derive(Debug, Clone, Deserialize, PartialEq)]
 pub struct CornerAlignment {
-  pub top: bool,
-  pub left: bool,
+  pub x: Alignment,
+  pub y: Alignment,
 }
 
 impl CornerAlignment {
   pub fn from_str(s: impl AsRef<str>) -> Self {
     match s.as_ref().to_ascii_lowercase().as_str() {
       "topleft" => CornerAlignment {
-        top: true,
-        left: true,
+        x: Alignment::Start,
+        y: Alignment::Start,
       },
       "topright" => CornerAlignment {
-        top: true,
-        left: false,
+        x: Alignment::End,
+        y: Alignment::Start,
       },
       "bottomleft" => CornerAlignment {
-        top: false,
-        left: true,
+        x: Alignment::Start,
+        y: Alignment::End,
       },
       "bottomright" => CornerAlignment {
-        top: false,
-        left: false,
+        x: Alignment::End,
+        y: Alignment::End,
+      },
+      "topcenter" => CornerAlignment {
+        x: Alignment::Center,
+        y: Alignment::Start,
+      },
+      "bottomcenter" => CornerAlignment {
+        x: Alignment::Center,
+        y: Alignment::End,
+      },
+      "centerleft" => CornerAlignment {
+        x: Alignment::Start,
+        y: Alignment::Center,
+      },
+      "centerright" => CornerAlignment {
+        x: Alignment::End,
+        y: Alignment::Center,
       },
       _ => CornerAlignment {
-        top: true,
-        left: true,
-      },
+        x: Alignment::Start,
+        y: Alignment::Start,
+      }
     }
   }
 }
