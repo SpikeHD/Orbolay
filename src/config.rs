@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use serde::Deserialize;
 
 #[derive(Debug, Clone, Deserialize, PartialEq)]
@@ -7,12 +9,12 @@ pub enum Alignment {
   End,
 }
 
-impl ToString for Alignment {
-  fn to_string(&self) -> String {
+impl Display for Alignment {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     match self {
-      Alignment::Start => "start".into(),
-      Alignment::Center => "center".into(),
-      Alignment::End => "end".into(),
+      Alignment::Start => write!(f, "start"),
+      Alignment::Center => write!(f, "center"),
+      Alignment::End => write!(f, "end"),
     }
   }
 }
@@ -61,7 +63,7 @@ impl CornerAlignment {
       _ => CornerAlignment {
         x: Alignment::Start,
         y: Alignment::Start,
-      }
+      },
     }
   }
 }
