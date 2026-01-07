@@ -135,8 +135,7 @@ fn main() {
             .with_override_redirect(true);
         }
 
-        #[cfg(not(target_os = "windows"))]
-        return w
+        w
       }),
   );
 }
