@@ -96,6 +96,15 @@ fn main() {
   #[cfg(not(target_os = "macos"))]
   let window_size = (monitor_size.0 + 1, monitor_size.1 + 1);
 
+  // If on Wayland, log a warning
+  #[cfg(target_os = "linux")]
+  {
+    let session_type = std::env::var("XDG_SESSION_TYPE").unwrap_or_default();
+    if session_type.to_lowercase() == "wayland" {
+      warn!("You are using Wayland. Orbolay will probably not work correctly.");
+    }
+  }
+
   launch_cfg(
     app,
     LaunchConfig::<f32>::new()
