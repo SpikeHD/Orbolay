@@ -32,7 +32,7 @@
 * **MacOS** - works, but cannot watch for keybinds (which means no voice controls)
 * **Linux**
   * **X11** - should work fine
-  * **Wayland** - technically works, but cannot be always-on-top, and cannot watch for keybinds (which means no voice controls)
+  * **Wayland** - technically works, you will want to use XWayland though (via `WAYLAND_DISPLAY="" orbolay`)
 
 # Installation
 
@@ -104,5 +104,3 @@ cargo install --locked --git https://github.com/SpikeHD/Orbolay.git
 # Contributing
 
 PRs (especially for compatibility), polite issues, etc. are all welcome!
-
-
