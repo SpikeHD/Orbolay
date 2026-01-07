@@ -96,17 +96,17 @@ pub fn user_row(props: UserRowProps) -> Element {
 
       // Change order based on right/left alignment
       if CornerAlignment::from_str(&props.app_state.read().config.user_alignment).x == Alignment::End {
-        avatar_icon {
+        user_label {
           user: props.user.clone()
         }
-        user_label {
+        avatar_icon {
           user: props.user.clone()
         }
       } else {
-        user_label {
+        avatar_icon {
           user: props.user.clone()
         }
-        avatar_icon {
+        user_label {
           user: props.user.clone()
         }
       }
