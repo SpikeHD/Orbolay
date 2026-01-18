@@ -31,8 +31,8 @@
 * **Windows** - 10 and 11 both work, Windows 7 might work with kernel extensions
 * **MacOS** - works, but cannot watch for keybinds (which means no voice controls)
 * **Linux**
-  * **X11** - should work fine
-  * **Wayland** - technically works, you will want to use XWayland though (via `WAYLAND_DISPLAY="" orbolay`)
+  * **X11** - should work fine, you may need to add your user to the `input` group
+  * **Wayland** - technically works, you will want to use XWayland though (via `WAYLAND_DISPLAY="" orbolay`) and you may need to add your user to the `input` group
 
 # Installation
 
@@ -104,4 +104,5 @@ cargo install --locked --git https://github.com/SpikeHD/Orbolay.git
 # Contributing
 
 PRs (especially for compatibility), polite issues, etc. are all welcome!
+
 
