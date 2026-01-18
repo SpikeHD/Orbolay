@@ -54,15 +54,15 @@ cargo install --locked --git https://github.com/SpikeHD/Orbolay.git
 ## Manual Installation
 
 1. Download a [release](https://github.com/SpikeHD/Orbolay/releases) or the [latest actions build](https://github.com/SpikeHD/Orbolay/actions/workflows/build.yml).
-2. Ensure you are using a compatible bridge plugin ([Shelter](https://github.com/SpikeHD/shelter-plugins?tab=readme-ov-file#orbolay-bridge) / [Vencord](https://github.com/SpikeHD/vc-orbolay-bridge), also available on [Equicord](https://github.com/Equicord/Equicord))
-3. Run the executable!
+2. Run the executable!
 
 # How to Use
 
 1. Run the executable
-2. If you join a VC, it should show members in the corner
-3. If you get a notification, it should show in the other corner
-4. Press <kbd>Ctrl</kbd> + <kbd>`</kbd> to open the overlay and interact with voice controls
+2. Install a compatible bridge plugin ([Shelter](https://github.com/SpikeHD/shelter-plugins?tab=readme-ov-file#orbolay-bridge) / [Vencord](https://github.com/SpikeHD/vc-orbolay-bridge), also available on [Equicord](https://github.com/Equicord/Equicord))
+3. If you join a VC, it should show members in the corner
+4. If you get a notification, it should show in the other corner
+5. Press <kbd>Ctrl</kbd> + <kbd>`</kbd> to open the overlay and interact with voice controls
 
 # Building
 
@@ -104,3 +104,4 @@ cargo install --locked --git https://github.com/SpikeHD/Orbolay.git
 # Contributing
 
 PRs (especially for compatibility), polite issues, etc. are all welcome!
+
