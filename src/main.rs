@@ -20,6 +20,7 @@ use crate::{
   app_state::AppState,
   components::{message_row::message_row, user_row::user_row, voice_controls::voice_controls},
   config::CornerAlignment,
+  manager::OverlayManager,
   payloads::MessageNotification,
   util::{colors, text::censor},
 };
@@ -30,6 +31,7 @@ mod config;
 #[cfg(not(target_os = "macos"))]
 mod keys;
 mod logger;
+mod manager;
 mod payloads;
 mod user;
 mod util;
@@ -101,7 +103,9 @@ fn main() {
   {
     let session_type = std::env::var("XDG_SESSION_TYPE").unwrap_or_default();
     if session_type.to_lowercase() == "wayland" {
-      warn!("You are using Wayland. Orbolay will probably not work correctly unless running with XWayland.");
+      warn!(
+        "You are using Wayland. Orbolay will probably not work correctly unless running with XWayland."
+      );
     }
   }
 
@@ -208,6 +212,11 @@ fn app() -> Element {
       background: if app_state.read().is_open { colors::TRANSPARENT_GRAY } else { "transparent" },
       width: "100%",
       height: "100%",
+
+      onclick: move |_e| {
+        // Close overlay using centralized manager
+        OverlayManager::close(&mut app_state, &platform.sender());
+      }
     }
 
     // Voice users

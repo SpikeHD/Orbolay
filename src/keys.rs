@@ -9,7 +9,7 @@ use std::time::{Duration, Instant};
 use freya::prelude::*;
 use rdev::{Event, EventType, Key, grab, listen};
 
-use crate::{app_state::AppState, log};
+use crate::{app_state::AppState, log, manager::OverlayManager};
 
 // TODO configurable
 static KEYBIND: [Key; 2] = [Key::ControlLeft, Key::BackQuote];
@@ -167,11 +167,7 @@ pub fn watch_keybinds(mut app_state: Signal<AppState, SyncStorage>, platform: Pl
 
       if rx.try_recv().is_ok() {
         log!("Toggling overlay");
-        app_state.write().is_open = !app_state().is_open;
-
-        platform.with_window(move |w| {
-          let _ = w.set_cursor_hittest(app_state.read().is_open);
-        });
+        OverlayManager::toggle(&mut app_state, &platform);
       }
 
       // Clear old key states (in case we missed a key release)
