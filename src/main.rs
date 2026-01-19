@@ -101,7 +101,7 @@ fn main() {
   {
     let session_type = std::env::var("XDG_SESSION_TYPE").unwrap_or_default();
     if session_type.to_lowercase() == "wayland" {
-      warn!("You are using Wayland. Orbolay will probably not work correctly.");
+      warn!("You are using Wayland. Orbolay will probably not work correctly unless running with XWayland.");
     }
   }
 
