@@ -108,6 +108,7 @@ fn main() {
   launch_cfg(
     app,
     LaunchConfig::<f32>::new()
+      .with_title("orbolay")
       .with_decorations(false)
       .with_background("transparent")
       .with_transparency(true)
