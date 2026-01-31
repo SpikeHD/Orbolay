@@ -76,25 +76,6 @@ cargo install --locked --git https://github.com/SpikeHD/Orbolay.git
 2. `cargo build --release`
 3. Binaries will be in `target/release/`
 
-# TODO
-
-* [x] Voice states
-  * [x] Usernames
-  * [x] Speaking/not speaking
-  * [x] Muted/deafened icons beside name
-  * [x] Proper avatar images
-* [x] Voice control
-  * [x] Mute
-  * [x] Deafen
-  * [x] Disconnect
-  * [x] Stop screenshare
-* [x] Notifications
-  * [x] Message notifications
-* [x] Vencord bridge plugin
-* [ ] Reconfigurable keybind
-* [x] Streamer mode handling
-* [x] Click a message to navigate to it
-
 # Special Thanks
 
 * [Freya](https://github.com/marc2332/freya) - the main GUI library (that I may have fallen in love with)
@@ -104,5 +85,3 @@ cargo install --locked --git https://github.com/SpikeHD/Orbolay.git
 # Contributing
 
 PRs (especially for compatibility), polite issues, etc. are all welcome!
-
-
