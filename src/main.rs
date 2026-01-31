@@ -18,7 +18,7 @@ use winit::{
 
 use crate::{
   app_state::AppState,
-  components::{message_row::message_row, user_row::user_row, voice_controls::voice_controls},
+  components::{message_row, user_row, voice_controls},
   config::CornerAlignment,
   manager::OverlayManager,
   payloads::MessageNotification,
