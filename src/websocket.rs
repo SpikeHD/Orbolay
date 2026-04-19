@@ -121,36 +121,35 @@ fn ws_stream(
           let current_channel = app_state.read().current_channel.clone();
           let mut state = app_state.write();
           let mut data = serde_json::from_value::<UpdatePayload>(msg.data)?;
-          let user = state
-            .voice_users
-            .iter_mut()
-            .find(|user| user.id == data.state.user_id);
 
-          match &data.state.channel_id {
-            Some(channel_id) if channel_id == &current_channel => {}
-            _ => {
-              state
-                .voice_users
-                .retain(|user| user.id != data.state.user_id);
-              continue;
+          // Check if the user is leaving the current channel
+          let is_leaving = match &data.state.channel_id {
+            Some(id) => id != &current_channel,
+            None => false, // If ID is missing, assume they are still in the channel but updating status
+          };
+
+          if is_leaving {
+            state.voice_users.retain(|u| u.id != data.state.user_id);
+          } else {
+            // Attempt to find and update the user
+            let existing_index = state.voice_users.iter().position(|u| u.id == data.state.user_id);
+
+            if let Some(index) = existing_index {
+              let user = &mut state.voice_users[index];
+
+              // Preserve streaming state if not provided in update
+              if data.state.streaming.is_none() {
+                data.state.streaming = Some(user.streaming);
+              }
+
+              // Update the user's voice state (Speaking, Muted, etc.)
+              user.voice_state = data.state.clone().into();
+              user.streaming = data.state.streaming.unwrap_or_default();
+            } else {
+              // If they aren't in the list but are in our channel, add them
+              state.voice_users.push(data.state.into());
             }
           }
-
-          // If this is an existing user in our state, update them
-          if let Some(user) = user {
-            // Set "streaming" to the value on the user if it is not included in the payload
-            if data.state.streaming.is_none() {
-              data.state.streaming = Some(user.streaming);
-            }
-
-            user.voice_state = data.state.clone().into();
-            user.streaming = data.state.streaming.unwrap_or_default();
-
-            continue;
-          }
-
-          // Otherwise, push them
-          state.voice_users.push(data.state.into());
         }
         "CHANNEL_LEFT" => {
           // User left the channel, no more need for list
