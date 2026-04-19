@@ -34,10 +34,11 @@ impl From<VoiceState> for User {
 
 impl From<VoiceState> for UserVoiceState {
   fn from(val: VoiceState) -> Self {
-    match (val.mute, val.deaf, val.speaking) {
+    // Check speaking FIRST so the highlight takes precedence
+    match (val.speaking, val.deaf, val.mute) {
+      (Some(true), _, _) => UserVoiceState::Speaking,
       (_, Some(true), _) => UserVoiceState::Deafened,
-      (Some(true), _, _) => UserVoiceState::Muted,
-      (_, _, Some(true)) => UserVoiceState::Speaking,
+      (_, _, Some(true)) => UserVoiceState::Muted,
       _ => UserVoiceState::NotSpeaking,
     }
   }
