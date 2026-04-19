@@ -120,37 +120,47 @@ fn ws_stream(
         "VOICE_STATE_UPDATE" => {
           let current_channel = app_state.read().current_channel.clone();
           let mut state = app_state.write();
-          let mut data = serde_json::from_value::<UpdatePayload>(msg.data)?;
-          let user = state
-            .voice_users
-            .iter_mut()
-            .find(|user| user.id == data.state.user_id);
 
-          match &data.state.channel_id {
-            Some(channel_id) if channel_id == &current_channel => {}
-            _ => {
-              state
-                .voice_users
-                .retain(|user| user.id != data.state.user_id);
-              continue;
+          // 1. Check to see channelId for disconnect
+          let is_explicitly_disconnected = msg.data
+          .get("state")
+          .and_then(|s| s.get("channelId"))
+          .map(|v| v.is_null())
+          .unwrap_or(false);
+
+          let data = serde_json::from_value::<UpdatePayload>(msg.data)?;
+          let user_id = data.state.user_id.clone();
+
+          // Check users moving channels
+          let is_explicitly_elsewhere = data.state.channel_id.as_ref()
+          .map(|id| id != &current_channel)
+          .unwrap_or(false);
+
+          if is_explicitly_disconnected || is_explicitly_elsewhere {
+            state.voice_users.retain(|u| u.id != user_id);
+
+            if user_id == state.config.user_id {
+              state.voice_users.clear();
+              state.current_channel = String::new();
+            }
+          } else {
+            // Check joining/updates
+            let existing_index = state.voice_users.iter().position(|u| u.id == user_id);
+
+            if let Some(index) = existing_index {
+              let user = &mut state.voice_users[index];
+
+              // Update the voice state (speaking/mute/deaf)
+              user.voice_state = data.state.clone().into();
+
+              if let Some(s) = data.state.streaming {
+                user.streaming = s;
+              }
+            } else if data.state.channel_id.as_ref() == Some(&current_channel) {
+              // New user join channel
+              state.voice_users.push(data.state.into());
             }
           }
-
-          // If this is an existing user in our state, update them
-          if let Some(user) = user {
-            // Set "streaming" to the value on the user if it is not included in the payload
-            if data.state.streaming.is_none() {
-              data.state.streaming = Some(user.streaming);
-            }
-
-            user.voice_state = data.state.clone().into();
-            user.streaming = data.state.streaming.unwrap_or_default();
-
-            continue;
-          }
-
-          // Otherwise, push them
-          state.voice_users.push(data.state.into());
         }
         "CHANNEL_LEFT" => {
           // User left the channel, no more need for list
