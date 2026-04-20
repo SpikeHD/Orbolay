@@ -35,11 +35,11 @@ jobs:
           - platform: windows-latest
             target: 'x86_64-pc-windows-msvc'
     steps:
-      - uses: actions-rust-lang/setup-rust-toolchain@v1.8
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: stable
           cache: false
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/bin/
@@ -49,7 +49,7 @@ jobs:
             target/
           key: ${{ runner.os }}-${{ matrix.config.target }}-cargo-${{ hashFiles('Cargo.lock') }}
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Dependencies
         if: matrix.config.platform == 'ubuntu-22.04'
@@ -70,14 +70,14 @@ jobs:
 
       - name: Upload
         if: matrix.config.platform != 'windows-latest'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: orbolay-${{ matrix.config.target }}
           path: target/${{ matrix.config.target }}/release/orbolay
 
       - name: Upload (Windows)
         if: matrix.config.platform == 'windows-latest'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: orbolay-${{ matrix.config.target }}
           path: target/${{ matrix.config.target }}/release/orbolay.exe
