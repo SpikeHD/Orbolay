@@ -120,20 +120,28 @@ fn ws_stream(
         "VOICE_STATE_UPDATE" => {
           let current_channel = app_state.read().current_channel.clone();
           let mut state = app_state.write();
-          let mut data = serde_json::from_value::<UpdatePayload>(msg.data)?;
+          let channel_is_null = msg
+            .data
+            .get("state")
+            .and_then(|v| v.get("channelId"))
+            .map(|v| v.is_null())
+            .unwrap_or(false);
+          let mut data = serde_json::from_value::<UpdatePayload>(msg.data.clone())?;
           let user = state
             .voice_users
             .iter_mut()
             .find(|user| user.id == data.state.user_id);
 
-          match &data.state.channel_id {
-            Some(channel_id) if channel_id == &current_channel => {}
-            _ => {
-              state
-                .voice_users
-                .retain(|user| user.id != data.state.user_id);
-              continue;
-            }
+          let should_remove = match &data.state.channel_id {
+            Some(channel_id) => channel_id != &current_channel,
+            None => channel_is_null,
+          };
+
+          if should_remove {
+            state
+              .voice_users
+              .retain(|user| user.id != data.state.user_id);
+            continue;
           }
 
           // If this is an existing user in our state, update them
