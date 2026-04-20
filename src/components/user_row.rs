@@ -21,6 +21,11 @@ import_svg!(Muted, "../../assets/muted.svg", {
   width: "16",
   margin: "0 6 0 0",
 });
+import_svg!(Streaming, "../../assets/streaming.svg", {
+  height: "16",
+  width: "16",
+  margin: "0 6 0 0",
+});
 
 #[derive(Props, Clone, PartialEq)]
 pub struct UserRowProps {
@@ -72,6 +77,10 @@ fn user_label(user: User) -> Element {
         Muted {}
       } else if user.voice_state == UserVoiceState::Deafened {
         Deafened {}
+      }
+
+      if user.streaming {
+        Streaming {}
       }
     }
   }
