@@ -1,23 +1,11 @@
 use freya::prelude::{Readable, Signal, SyncStorage, Writable};
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::net::{TcpListener, TcpStream};
 use tungstenite::{Message, Utf8Bytes, accept};
 
 use crate::{
-  app_state::AppState,
-  config::Config,
-  error, log,
-  payloads::{ChannelJoinPayload, MessageNotificationPayload, UpdatePayload},
-  success, warn,
+  app_state::AppState, config::Config, error, log, payloads::{ChannelJoinPayload, MessageNotificationPayload, UpdatePayload}, success, util::bridge::BridgeMessage, warn
 };
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct BridgeMessage {
-  pub cmd: String,
-  #[serde(flatten)]
-  pub data: Value,
-}
 
 pub fn create_websocket(
   port: u16,

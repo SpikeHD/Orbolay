@@ -29,6 +29,7 @@ mod app_state;
 mod components;
 mod config;
 mod ipc;
+mod ipc_payloads;
 #[cfg(not(target_os = "macos"))]
 mod keys;
 mod logger;

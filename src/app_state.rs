@@ -1,4 +1,5 @@
-use crate::{config::Config, payloads::MessageNotification, user::User, websocket::BridgeMessage};
+use crate::{config::Config, payloads::MessageNotification, user::User, util::bridge::BridgeMessage};
+use serde_json::Value;
 
 #[derive(Debug, Clone)]
 pub struct AppState {

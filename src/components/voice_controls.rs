@@ -4,8 +4,7 @@ use serde_json::Value;
 use crate::{
   app_state::AppState,
   user::{User, UserVoiceState},
-  util::colors,
-  websocket::BridgeMessage,
+  util::{bridge::BridgeMessage, colors},
 };
 
 import_svg!(Deafened, "../../assets/deafened.svg", {
