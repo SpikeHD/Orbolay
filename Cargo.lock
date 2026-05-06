@@ -3393,6 +3393,7 @@ dependencies = [
  "sysinfo",
  "tungstenite 0.29.0",
  "ureq",
+ "url",
  "windows 0.61.3",
  "winit",
 ]
@@ -4785,6 +4786,7 @@ dependencies = [
  "rand 0.9.4",
  "sha1",
  "thiserror 2.0.18",
+ "url",
 ]
 
 [[package]]
