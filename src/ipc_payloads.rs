@@ -46,7 +46,10 @@ impl From<VoiceState> for User {
     let voice_state = val.clone().into();
 
     User {
-      name: val.nick.or(val.user.global_name).unwrap_or(val.user.username),
+      name: val
+        .nick
+        .or(val.user.global_name)
+        .unwrap_or(val.user.username),
       id: val.user.id,
       avatar: val.user.avatar.unwrap_or_default(),
       voice_state,
@@ -78,10 +81,9 @@ pub struct VoiceConnectionPing {
 #[serde(rename_all = "camelCase")]
 pub struct VoiceConnectionStatusPayload {
   pub state: String,
-  pub hostname: String,
+  pub hostname: Option<String>,
   pub pings: Vec<VoiceConnectionPing>,
-  pub average_ping: Option<i64>,
-  pub last_ping: Option<i64>,
+  pub average_ping: Option<f32>,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
@@ -89,6 +91,13 @@ pub struct VoiceConnectionStatusPayload {
 pub struct VoiceSettingsUpdatePayload {
   pub deaf: bool,
   pub mute: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SpeakingPayload {
+  pub channel_id: String,
+  pub user_id: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]

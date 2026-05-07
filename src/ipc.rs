@@ -1,7 +1,8 @@
 use crate::ipc_payloads::{
-  NotificationCreatePayload, VoiceChannelSelectPayload, VoiceConnectionStatusPayload,
-  VoiceSettingsUpdatePayload, VoiceState,
+  NotificationCreatePayload, SpeakingPayload, VoiceChannelSelectPayload,
+  VoiceConnectionStatusPayload, VoiceSettingsUpdatePayload, VoiceState,
 };
+use crate::subscription::{subscribe, subscribe_voice_channel, unsubscribe_voice_channel};
 use crate::util::bridge::BridgeMessage;
 use crate::util::discord_auth::{build_rpc_authenticate_request, extract_auth_code};
 use crate::{
@@ -14,9 +15,9 @@ use std::io::{Read, Write};
 use std::os::unix::net::UnixStream;
 
 // IPC opcodes
-const OP_HANDSHAKE: u32 = 0;
-const OP_FRAME: u32 = 1;
-const OP_CLOSE: u32 = 2;
+pub const OP_HANDSHAKE: u32 = 0;
+pub const OP_FRAME: u32 = 1;
+pub const OP_CLOSE: u32 = 2;
 
 fn get_ipc_path() -> Option<String> {
   let candidates = [
@@ -41,11 +42,12 @@ fn get_ipc_path() -> Option<String> {
   None
 }
 
-fn ipc_write(
+pub fn ipc_write(
   stream: &mut UnixStream,
   opcode: u32,
   payload: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
+  log!("Sending payload: {:?}", payload);
   let payload_bytes = payload.as_bytes();
   let len = payload_bytes.len() as u32;
   let mut header = [0u8; 8];
@@ -56,7 +58,7 @@ fn ipc_write(
   Ok(())
 }
 
-fn ipc_read(stream: &mut UnixStream) -> Result<(u32, String), std::io::Error> {
+pub fn ipc_read(stream: &mut UnixStream) -> Result<(u32, String), std::io::Error> {
   let mut header = [0u8; 8];
   stream.read_exact(&mut header)?;
   let opcode = u32::from_le_bytes(header[0..4].try_into().unwrap());
@@ -164,6 +166,8 @@ pub fn create_ipc_connection(
               "VOICE_STATE_CREATE",
               "VOICE_STATE_DELETE",
               "VOICE_STATE_UPDATE",
+              "SPEAKING_START",
+              "SPEAKING_STOP",
               "VOICE_SETTINGS_UPDATE",
               "VOICE_CONNECTION_STATUS",
               "NOTIFICATION_CREATE",
@@ -175,7 +179,7 @@ pub fn create_ipc_connection(
               }
             }
           } else if msg.cmd == "DISPATCH" {
-            handle_ipc_message(&msg, &mut app_state)?;
+            handle_ipc_message(&mut stream, &msg, &mut app_state)?;
             continue;
           }
 
@@ -210,30 +214,80 @@ pub fn create_ipc_connection(
   Ok(())
 }
 
-pub fn handle_ipc_message(
+fn handle_ipc_message(
+  stream: &mut UnixStream,
   msg: &BridgeMessage,
   app_state: &mut Signal<AppState, SyncStorage>,
 ) -> Result<(), Box<dyn std::error::Error>> {
   log!("Handling IPC message: {:?}", msg);
 
   let mut state = app_state.write();
-  let evt = msg.data.get("evt").and_then(|v| v.as_str()).unwrap_or_default();
+  let evt = msg
+    .data
+    .get("evt")
+    .and_then(|v| v.as_str())
+    .unwrap_or_default();
   let data = msg.data.get("data").cloned().unwrap_or_default();
 
   match evt {
     "VOICE_CHANNEL_SELECT" => {
       let data = serde_json::from_value::<VoiceChannelSelectPayload>(data)?;
+
+      // Unsubscribe from old channel events
+      let old = state.current_channel.clone();
+      if !old.is_empty() && old != state.current_channel {
+        if let Err(e) = unsubscribe_voice_channel(stream, &old) {
+          error!("Failed to unsubscribe from old voice channel events: {}", e);
+        }
+      }
+
       state.current_channel = data.channel_id.unwrap_or_default();
+
+      // Subscribe to all events for the new channel
+      if !state.current_channel.is_empty() {
+        if let Err(e) = subscribe_voice_channel(stream, &state.current_channel) {
+          error!("Failed to subscribe to voice channel events: {}", e);
+        }
+      }
     }
     "VOICE_STATE_CREATE" | "VOICE_STATE_UPDATE" => {
-      let data = serde_json::from_value::<VoiceState>(data)?;
+      let data = serde_json::from_value::<VoiceState>(msg.data.clone())?;
       let user_id = data.user.id.clone();
 
       if let Some(user) = state.voice_users.iter_mut().find(|user| user.id == user_id) {
+        user.name = data
+          .nick
+          .clone()
+          .or(data.user.global_name.clone())
+          .unwrap_or(data.user.username.clone());
+        user.avatar = data.user.avatar.clone().unwrap_or_default();
         user.voice_state = data.clone().into();
         user.streaming = false;
       } else {
         state.voice_users.push(data.into());
+      }
+    }
+    "SPEAKING_START" => {
+      let data = serde_json::from_value::<SpeakingPayload>(msg.data.clone())?;
+      if let Some(user) = state
+        .voice_users
+        .iter_mut()
+        .find(|user| user.id == data.user_id)
+      {
+        user.voice_state = crate::user::UserVoiceState::Speaking;
+      }
+    }
+    "SPEAKING_STOP" => {
+      let data = serde_json::from_value::<SpeakingPayload>(msg.data.clone())?;
+      let is_current_user = data.user_id == state.config.user_id;
+      if let Some(user) = state
+        .voice_users
+        .iter_mut()
+        .find(|user| user.id == data.user_id)
+      {
+        if !is_current_user {
+          user.voice_state = crate::user::UserVoiceState::NotSpeaking;
+        }
       }
     }
     "VOICE_STATE_DELETE" => {
@@ -270,7 +324,11 @@ pub fn handle_ipc_message(
       let data = serde_json::from_value::<NotificationCreatePayload>(data)?;
       let mut notification = data.message;
       notification.timestamp = Some(chrono::Utc::now().timestamp().to_string());
-      notification.icon = data.icon_url.clone().unwrap_or(notification.icon).replace(".webp", ".png");
+      notification.icon = data
+        .icon_url
+        .clone()
+        .unwrap_or(notification.icon)
+        .replace(".webp", ".png");
       let messages_len = state.messages.len();
 
       if messages_len > 3 {
@@ -287,13 +345,20 @@ pub fn handle_ipc_message(
   Ok(())
 }
 
-fn subscribe(mut stream: &mut UnixStream, event: &str, data: Option<Value>) -> Result<(), Box<dyn std::error::Error>> {
-  let subscribe_msg = serde_json::json!({
-      "cmd": "SUBSCRIBE",
-      "evt": event,
-      "args": data.unwrap_or_default(),
-      "nonce": event,
-  });
-  ipc_write(&mut stream, OP_FRAME, &subscribe_msg.to_string())?;
+fn set_muted(
+  stream: &mut UnixStream,
+  muted: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+  let data = serde_json::json!({ "mute": muted });
+  subscribe(stream, "SET_VOICE_SETTINGS", Some(data))?;
+  Ok(())
+}
+
+fn set_deafened(
+  stream: &mut UnixStream,
+  deafened: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+  let data = serde_json::json!({ "deaf": deafened });
+  subscribe(stream, "SET_VOICE_SETTINGS", Some(data))?;
   Ok(())
 }

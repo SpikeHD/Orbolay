@@ -35,6 +35,7 @@ mod keys;
 mod logger;
 mod manager;
 mod payloads;
+mod subscription;
 mod user;
 mod util;
 mod websocket;

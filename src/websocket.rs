@@ -4,7 +4,13 @@ use std::net::{TcpListener, TcpStream};
 use tungstenite::{Message, Utf8Bytes, accept};
 
 use crate::{
-  app_state::AppState, config::Config, error, log, payloads::{ChannelJoinPayload, MessageNotificationPayload, UpdatePayload}, success, util::bridge::BridgeMessage, warn
+  app_state::AppState,
+  config::Config,
+  error, log,
+  payloads::{ChannelJoinPayload, MessageNotificationPayload, UpdatePayload},
+  success,
+  util::bridge::BridgeMessage,
+  warn,
 };
 
 pub fn create_websocket(

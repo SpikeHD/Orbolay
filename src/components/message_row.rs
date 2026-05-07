@@ -4,7 +4,10 @@ use crate::{
   app_state::AppState,
   payloads::MessageNotification,
   util::{
-    bridge::BridgeMessage, colors, image::{circular_with_border, fetch_icon}, text::{strip, truncate}
+    bridge::BridgeMessage,
+    colors,
+    image::{circular_with_border, fetch_icon},
+    text::{strip, truncate},
   },
 };
 
