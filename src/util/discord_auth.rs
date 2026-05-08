@@ -3,13 +3,6 @@ use url::Url;
 
 use crate::log;
 
-#[derive(Debug, Clone)]
-pub struct DiscordRpcAuthConfig {
-  pub client_id: String,
-  pub scopes: Vec<String>,
-  pub prompt: String,
-}
-
 pub fn build_rpc_authorize_request(client_id: impl Into<String>) -> serde_json::Value {
   json!({
     "cmd": "AUTHORIZE",

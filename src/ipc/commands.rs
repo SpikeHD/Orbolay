@@ -1,4 +1,3 @@
-
 use std::os::unix::net::UnixStream;
 
 use dioxus::prelude::{Signal, SyncStorage};
@@ -8,14 +7,15 @@ use serde_json::Value;
 use crate::app_state::AppState;
 use crate::error;
 use crate::ipc::{
-  handle_ipc_message, handle_ui_message, ipc_read, ipc_write, subscribe_voice_channel,
-  subscribe_voice_global, OP_CLOSE, OP_FRAME, OP_HANDSHAKE, ReadyPayload,
-  SelectedVoiceChannelPayload,
+  OP_CLOSE, OP_FRAME, OP_HANDSHAKE, ReadyPayload, SelectedVoiceChannelPayload, handle_ipc_message,
+  handle_ui_message, ipc_read, ipc_write, subscribe_voice_channel, subscribe_voice_global,
 };
 use crate::log;
 use crate::success;
 use crate::util::bridge::BridgeMessage;
-use crate::util::discord_auth::{build_rpc_authenticate_request, build_rpc_authorize_request, extract_auth_code};
+use crate::util::discord_auth::{
+  build_rpc_authenticate_request, build_rpc_authorize_request, extract_auth_code,
+};
 
 fn get_ipc_path() -> Option<String> {
   let candidates = [
@@ -147,7 +147,10 @@ pub fn create_ipc_connection(
             if let Some(channel_id) = data.id {
               app_state.write().current_channel = channel_id.clone();
               if let Err(e) = subscribe_voice_channel(&mut stream, &channel_id) {
-                error!("Failed to subscribe to existing voice channel events: {}", e);
+                error!(
+                  "Failed to subscribe to existing voice channel events: {}",
+                  e
+                );
               }
             }
             continue;

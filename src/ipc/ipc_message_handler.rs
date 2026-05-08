@@ -7,9 +7,9 @@ use freya::prelude::Writable;
 use crate::app_state::AppState;
 use crate::error;
 use crate::ipc::{
-  subscribe_voice_channel, unsubscribe_voice_channel, NotificationCreatePayload,
-  SpeakingPayload, SelectedVoiceChannelPayload, VoiceChannelSelectPayload,
-  VoiceConnectionStatusPayload, VoiceSettingsUpdatePayload, VoiceState,
+  NotificationCreatePayload, SpeakingPayload, VoiceChannelSelectPayload,
+  VoiceConnectionStatusPayload, VoiceSettingsUpdatePayload, VoiceState, subscribe_voice_channel,
+  unsubscribe_voice_channel,
 };
 use crate::log;
 
@@ -29,15 +29,6 @@ pub fn handle_ipc_message(
   log!("Handling event: {} - {:?}", evt, msg);
 
   match evt {
-    "GET_SELECTED_VOICE_CHANNEL" => {
-      let data = serde_json::from_value::<SelectedVoiceChannelPayload>(data)?;
-      if let Some(channel_id) = data.id {
-        state.current_channel = channel_id.clone();
-        if let Err(e) = subscribe_voice_channel(stream, &channel_id) {
-          error!("Failed to subscribe to existing voice channel events: {}", e);
-        }
-      }
-    }
     "VOICE_CHANNEL_SELECT" => {
       let data = serde_json::from_value::<VoiceChannelSelectPayload>(data)?;
       let new_channel = data.channel_id.unwrap_or_default();
@@ -104,7 +95,11 @@ pub fn handle_ipc_message(
     "VOICE_SETTINGS_UPDATE" => {
       let data = serde_json::from_value::<VoiceSettingsUpdatePayload>(data)?;
       let current_user_id = state.config.user_id.clone();
-      if let Some(user) = state.voice_users.iter_mut().find(|user| user.id == current_user_id) {
+      if let Some(user) = state
+        .voice_users
+        .iter_mut()
+        .find(|user| user.id == current_user_id)
+      {
         user.voice_state = if data.deaf {
           crate::user::UserVoiceState::Deafened
         } else if data.mute {

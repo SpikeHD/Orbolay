@@ -2,7 +2,7 @@ use std::os::unix::net::UnixStream;
 
 use serde_json::Value;
 
-use crate::{ipc::{OP_FRAME, ipc_write}};
+use crate::ipc::{OP_FRAME, ipc_write};
 
 pub fn subscribe(
   mut stream: &mut UnixStream,
@@ -64,9 +64,7 @@ pub fn subscribe_voice_channel(
   Ok(())
 }
 
-pub fn subscribe_voice_global(
-  stream: &mut UnixStream,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub fn subscribe_voice_global(stream: &mut UnixStream) -> Result<(), Box<dyn std::error::Error>> {
   subscribe(stream, "VOICE_CHANNEL_SELECT", None)?;
   subscribe(stream, "VOICE_SETTINGS_UPDATE", None)?;
   subscribe(stream, "VOICE_CONNECTION_STATUS", None)?;

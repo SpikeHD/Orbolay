@@ -1,8 +1,5 @@
 use crate::{
-  config::Config,
-  payloads::MessageNotification,
-  user::User,
-  util::bridge::BridgeMessage,
+  config::Config, payloads::MessageNotification, user::User, util::bridge::BridgeMessage,
 };
 
 #[derive(Debug, Clone)]
