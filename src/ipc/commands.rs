@@ -60,20 +60,17 @@ pub fn create_ipc_connection(
     match ipc_read(&mut stream) {
       Ok((OP_FRAME, payload)) => {
         log!("Received during handshake: {}", payload);
-        if let Ok(msg) = serde_json::from_str::<Value>(&payload) {
-          if msg["evt"] == "READY" {
-            if let Some(data) = msg.get("data") {
-              if let Ok(ready) = serde_json::from_value::<ReadyPayload>(data.clone()) {
-                if let Some(user) = ready.user {
+        if let Ok(msg) = serde_json::from_str::<Value>(&payload)
+          && msg["evt"] == "READY" {
+            if let Some(data) = msg.get("data")
+              && let Ok(ready) = serde_json::from_value::<ReadyPayload>(data.clone())
+                && let Some(user) = ready.user {
                   app_state.write().config.user_id = user.id;
                 }
-              }
-            }
 
             success!("IPC connected and ready");
             break;
           }
-        }
       }
       Ok((OP_CLOSE, payload)) => {
         return Err(format!("Discord closed connection during handshake: {}", payload).into());

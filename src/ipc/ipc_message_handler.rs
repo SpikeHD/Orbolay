@@ -34,11 +34,10 @@ pub fn handle_ipc_message(
       let new_channel = data.channel_id.unwrap_or_default();
       let old_channel = state.current_channel.clone();
 
-      if old_channel != new_channel && !old_channel.is_empty() {
-        if let Err(e) = unsubscribe_voice_channel(stream, &old_channel) {
+      if old_channel != new_channel && !old_channel.is_empty()
+        && let Err(e) = unsubscribe_voice_channel(stream, &old_channel) {
           error!("Failed to unsubscribe from old voice channel events: {}", e);
         }
-      }
 
       state.current_channel = new_channel;
 

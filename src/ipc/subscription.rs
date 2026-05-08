@@ -5,7 +5,7 @@ use serde_json::Value;
 use crate::ipc::{OP_FRAME, ipc_write};
 
 pub fn subscribe(
-  mut stream: &mut UnixStream,
+  stream: &mut UnixStream,
   event: &str,
   data: Option<Value>,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -15,12 +15,12 @@ pub fn subscribe(
     "args": data.unwrap_or_else(|| serde_json::json!({})),
     "nonce": event,
   });
-  ipc_write(&mut stream, OP_FRAME, &subscribe_msg.to_string())?;
+  ipc_write(stream, OP_FRAME, &subscribe_msg.to_string())?;
   Ok(())
 }
 
 pub fn unsubscribe(
-  mut stream: &mut UnixStream,
+  stream: &mut UnixStream,
   event: &str,
   data: Option<Value>,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -30,7 +30,7 @@ pub fn unsubscribe(
     "args": data.unwrap_or_else(|| serde_json::json!({})),
     "nonce": event,
   });
-  ipc_write(&mut stream, OP_FRAME, &unsubscribe_msg.to_string())?;
+  ipc_write(stream, OP_FRAME, &unsubscribe_msg.to_string())?;
   Ok(())
 }
 
