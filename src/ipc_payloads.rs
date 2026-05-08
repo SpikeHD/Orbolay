@@ -6,6 +6,20 @@ use crate::{
 };
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
+pub struct RpcUser {
+  pub id: String,
+  pub username: String,
+  pub global_name: Option<String>,
+  pub avatar: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+pub struct ReadyPayload {
+  pub v: i32,
+  pub user: Option<RpcUser>,
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct VoiceChannelSelectPayload {
   pub channel_id: Option<String>,
   pub guild_id: Option<String>,

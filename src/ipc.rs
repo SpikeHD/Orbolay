@@ -1,6 +1,7 @@
 use crate::ipc_payloads::{
-  NotificationCreatePayload, SpeakingPayload, VoiceChannelSelectPayload,
-  VoiceConnectionStatusPayload, VoiceSettingsUpdatePayload, VoiceState,
+  NotificationCreatePayload, ReadyPayload, SpeakingPayload,
+  VoiceChannelSelectPayload, VoiceConnectionStatusPayload, VoiceSettingsUpdatePayload,
+  VoiceState,
 };
 use crate::subscription::{
   subscribe, subscribe_voice_channel, subscribe_voice_global, unsubscribe_voice_channel,
@@ -97,6 +98,13 @@ pub fn create_ipc_connection(
         log!("Received during handshake: {}", payload);
         if let Ok(msg) = serde_json::from_str::<Value>(&payload) {
           if msg["evt"] == "READY" {
+            if let Some(data) = msg.get("data") {
+              if let Ok(ready) = serde_json::from_value::<ReadyPayload>(data.clone()) {
+                if let Some(user) = ready.user {
+                  app_state.write().config.user_id = user.id;
+                }
+              }
+            }
             success!("IPC connected and ready");
             break;
           }
@@ -110,10 +118,7 @@ pub fn create_ipc_connection(
           || e.kind() == std::io::ErrorKind::TimedOut =>
       {
         if let Ok(msg) = receiver.try_recv() {
-          let payload = serde_json::to_string(&msg)?;
-          log!("Sending message: {}", payload);
-          ipc_write(&mut stream, OP_FRAME, &payload)
-            .unwrap_or_else(|_| error!("Failed to send message over IPC"));
+          handle_ui_message(&mut stream, &msg, &mut app_state)?;
         }
       }
       Err(e) => {
@@ -192,11 +197,9 @@ pub fn create_ipc_connection(
         if e.kind() == std::io::ErrorKind::WouldBlock
           || e.kind() == std::io::ErrorKind::TimedOut =>
       {
+        // Handle UI messages
         if let Ok(msg) = receiver.try_recv() {
-          let payload = serde_json::to_string(&msg)?;
-          log!("Sending message: {}", payload);
-          ipc_write(&mut stream, OP_FRAME, &payload)
-            .unwrap_or_else(|_| error!("Failed to send message over IPC"));
+          handle_ui_message(&mut stream, &msg, &mut app_state)?;
         }
       }
       Err(e) => {
@@ -205,6 +208,48 @@ pub fn create_ipc_connection(
         break;
       }
       _ => {}
+    }
+  }
+
+  Ok(())
+}
+
+fn handle_ui_message(
+  stream: &mut UnixStream,
+  msg: &BridgeMessage,
+  app_state: &mut Signal<AppState, SyncStorage>,
+) -> Result<(), Box<dyn std::error::Error>> {
+  let mut state = app_state.write();
+
+  match msg.cmd.as_str() {
+    "TOGGLE_MUTE" => {
+      let muted = state
+        .voice_users
+        .iter()
+        .find(|user| user.id == state.config.user_id)
+        .map(|user| user.voice_state == crate::user::UserVoiceState::Muted)
+        .unwrap_or(false);
+      set_muted(stream, !muted)?;
+    }
+    "TOGGLE_DEAF" => {
+      let deafened = state
+        .voice_users
+        .iter()
+        .find(|user| user.id == state.config.user_id)
+        .map(|user| user.voice_state == crate::user::UserVoiceState::Deafened)
+        .unwrap_or(false);
+      set_deafened(stream, !deafened)?;
+    }
+    "DISCONNECT" => {
+      disconnect(stream)?;
+      state.current_channel = String::new();
+      state.voice_users.clear();
+    }
+    "STOP_STREAM" => {
+      stop_streaming(stream)?;
+    }
+    _ => {
+      log!("Unknown UI command: {}", msg.cmd);
     }
   }
 
@@ -260,7 +305,7 @@ fn handle_ipc_message(
         user.voice_state = data.clone().into();
         user.streaming = false;
       } else {
-        state.voice_users.push(data.into());
+        state.voice_users.push(data.clone().into());
       }
     }
     "SPEAKING_START" => {
@@ -275,15 +320,12 @@ fn handle_ipc_message(
     }
     "SPEAKING_STOP" => {
       let data = serde_json::from_value::<SpeakingPayload>(data)?;
-      let is_current_user = data.user_id == state.config.user_id;
       if let Some(user) = state
         .voice_users
         .iter_mut()
         .find(|user| user.id == data.user_id)
       {
-        if !is_current_user {
-          user.voice_state = crate::user::UserVoiceState::NotSpeaking;
-        }
+        user.voice_state = crate::user::UserVoiceState::NotSpeaking;
       }
     }
     "VOICE_STATE_DELETE" => {
@@ -336,8 +378,12 @@ fn set_muted(
   stream: &mut UnixStream,
   muted: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
-  let data = serde_json::json!({ "mute": muted });
-  subscribe(stream, "SET_VOICE_SETTINGS", Some(data))?;
+  let data = serde_json::json!({ "mute": muted});
+  ipc_write(stream, OP_FRAME, &serde_json::to_string(&serde_json::json!({
+    "cmd": "SET_VOICE_SETTINGS",
+    "args": data,
+    "nonce": "SET_VOICE_SETTINGS"
+  }))?)?;
   Ok(())
 }
 
@@ -345,7 +391,31 @@ fn set_deafened(
   stream: &mut UnixStream,
   deafened: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
-  let data = serde_json::json!({ "deaf": deafened });
-  subscribe(stream, "SET_VOICE_SETTINGS", Some(data))?;
+  let data = serde_json::json!({ "deaf": deafened});
+  ipc_write(stream, OP_FRAME, &serde_json::to_string(&serde_json::json!({
+    "cmd": "SET_VOICE_SETTINGS",
+    "args": data,
+    "nonce": "SET_VOICE_SETTINGS"
+  }))?)?;
+  Ok(())
+}
+
+fn stop_streaming(
+  stream: &mut UnixStream,
+) -> Result<(), Box<dyn std::error::Error>> {
+  let data = serde_json::json!({ "streaming": false });
+  // TODO
+  Ok(())
+}
+
+fn disconnect(
+  stream: &mut UnixStream,
+) -> Result<(), Box<dyn std::error::Error>> {
+  let payload = serde_json::json!({ "channel_id": Value::Null });
+  ipc_write(stream, OP_FRAME, &serde_json::to_string(&serde_json::json!({
+    "cmd": "VOICE_CHANNEL_SELECT",
+    "args": payload,
+    "nonce": "VOICE_CHANNEL_SELECT"
+  }))?)?;
   Ok(())
 }

@@ -46,8 +46,6 @@ pub fn extract_auth_code(code: &str) -> Option<String> {
       .ok()?;
     let body = response.body_mut();
     let body = body.read_to_string().ok()?;
-    log!("Response: {:?}", response);
-    log!("Body: {}", body);
     let parsed: serde_json::Value = serde_json::from_str(&body).ok()?;
     if let Some(token) = parsed.get("access_token").and_then(|t| t.as_str()) {
       return Some(token.to_string());
