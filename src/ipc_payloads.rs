@@ -26,6 +26,12 @@ pub struct VoiceChannelSelectPayload {
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
+pub struct SelectedVoiceChannelPayload {
+  pub id: Option<String>,
+  pub guild_id: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct VoiceStateUser {
   pub id: String,
   pub username: String,

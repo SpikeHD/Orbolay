@@ -1,7 +1,5 @@
 use crate::ipc_payloads::{
-  NotificationCreatePayload, ReadyPayload, SpeakingPayload,
-  VoiceChannelSelectPayload, VoiceConnectionStatusPayload, VoiceSettingsUpdatePayload,
-  VoiceState,
+  NotificationCreatePayload, ReadyPayload, SelectedVoiceChannelPayload, SpeakingPayload, VoiceChannelSelectPayload, VoiceConnectionStatusPayload, VoiceSettingsUpdatePayload, VoiceState
 };
 use crate::subscription::{
   subscribe, subscribe_voice_channel, subscribe_voice_global, unsubscribe_voice_channel,
@@ -105,6 +103,7 @@ pub fn create_ipc_connection(
                 }
               }
             }
+
             success!("IPC connected and ready");
             break;
           }
@@ -172,13 +171,22 @@ pub fn create_ipc_connection(
               error!("Failed to subscribe to global voice events: {}", e);
             }
 
-            let current_channel = app_state.write().current_channel.clone();
-            if !current_channel.is_empty() {
-              if let Err(e) = subscribe_voice_channel(&mut stream, &current_channel) {
-                error!("Failed to subscribe to current voice channel events: {}", e);
+            let request = serde_json::json!({
+              "cmd": "GET_SELECTED_VOICE_CHANNEL",
+              "nonce": "GET_SELECTED_VOICE_CHANNEL",
+            });
+            ipc_write(&mut stream, OP_FRAME, &request.to_string())?;
+
+            continue;
+          } else if msg.cmd == "GET_SELECTED_VOICE_CHANNEL" {
+            let data = msg.data.get("data").cloned().unwrap_or_default();
+            let data = serde_json::from_value::<SelectedVoiceChannelPayload>(data)?;
+            if let Some(channel_id) = data.id {
+              app_state.write().current_channel = channel_id.clone();
+              if let Err(e) = subscribe_voice_channel(&mut stream, &channel_id) {
+                error!("Failed to subscribe to existing voice channel events: {}", e);
               }
             }
-
             continue;
           } else if msg.cmd == "DISPATCH" {
             handle_ipc_message(&mut stream, &msg, &mut app_state)?;
@@ -403,7 +411,6 @@ fn set_deafened(
 fn stop_streaming(
   stream: &mut UnixStream,
 ) -> Result<(), Box<dyn std::error::Error>> {
-  let data = serde_json::json!({ "streaming": false });
   // TODO
   Ok(())
 }
