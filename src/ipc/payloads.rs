@@ -1,7 +1,6 @@
 use serde::Deserialize;
 
 use crate::{
-  payloads::MessageNotification,
   user::{User, UserVoiceState},
 };
 
