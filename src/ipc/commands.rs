@@ -31,9 +31,11 @@ fn get_ipc_path() -> Option<String> {
   ];
 
   for dir in candidates.into_iter().flatten() {
-    let path = format!("{}/discord-ipc-0", dir);
-    if std::path::Path::new(&path).exists() {
-      return Some(path);
+    for i in 0..10 {
+      let path = format!("{}/discord-ipc-{}", dir, i);
+      if std::path::Path::new(&path).exists() {
+        return Some(path);
+      }
     }
   }
   None
