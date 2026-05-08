@@ -29,7 +29,7 @@ mod app_state;
 mod components;
 mod config;
 mod ipc;
-mod ipc_payloads;
+mod websocket;
 #[cfg(not(target_os = "macos"))]
 mod keys;
 mod logger;
@@ -38,7 +38,6 @@ mod payloads;
 mod subscription;
 mod user;
 mod util;
-mod websocket;
 
 const GIT_HASH: Option<&str> = option_env!("GIT_HASH");
 const APP_NAME: Option<&str> = option_env!("CARGO_PKG_NAME");

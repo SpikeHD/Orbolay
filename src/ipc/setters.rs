@@ -1,0 +1,55 @@
+use std::os::unix::net::UnixStream;
+
+use serde_json::Value;
+
+use crate::ipc::{ipc_write, OP_FRAME};
+
+pub fn set_muted(
+  stream: &mut UnixStream,
+  muted: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+  let data = serde_json::json!({ "mute": muted });
+  ipc_write(stream, OP_FRAME, &serde_json::to_string(&serde_json::json!({
+    "cmd": "SET_VOICE_SETTINGS",
+    "args": data,
+    "nonce": "SET_VOICE_SETTINGS"
+  }))?)?;
+  Ok(())
+}
+
+pub fn set_deafened(
+  stream: &mut UnixStream,
+  deafened: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+  let data = serde_json::json!({ "deaf": deafened });
+  ipc_write(stream, OP_FRAME, &serde_json::to_string(&serde_json::json!({
+    "cmd": "SET_VOICE_SETTINGS",
+    "args": data,
+    "nonce": "SET_VOICE_SETTINGS"
+  }))?)?;
+  Ok(())
+}
+
+pub fn stop_streaming(
+  stream: &mut UnixStream,
+) -> Result<(), Box<dyn std::error::Error>> {
+  let data = serde_json::json!({ "streaming": false });
+  ipc_write(stream, OP_FRAME, &serde_json::to_string(&serde_json::json!({
+    "cmd": "SET_USER_VOICE_SETTINGS",
+    "args": data,
+    "nonce": "SET_USER_VOICE_SETTINGS"
+  }))?)?;
+  Ok(())
+}
+
+pub fn disconnect(
+  stream: &mut UnixStream,
+) -> Result<(), Box<dyn std::error::Error>> {
+  let payload = serde_json::json!({ "channel_id": Value::Null });
+  ipc_write(stream, OP_FRAME, &serde_json::to_string(&serde_json::json!({
+    "cmd": "VOICE_CHANNEL_SELECT",
+    "args": payload,
+    "nonce": "VOICE_CHANNEL_SELECT"
+  }))?)?;
+  Ok(())
+}
