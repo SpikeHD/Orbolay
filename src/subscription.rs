@@ -2,7 +2,7 @@ use std::os::unix::net::UnixStream;
 
 use serde_json::Value;
 
-use crate::ipc::{OP_FRAME, ipc_write};
+use crate::{ipc::{OP_FRAME, ipc_write}};
 
 pub fn subscribe(
   mut stream: &mut UnixStream,
@@ -12,7 +12,7 @@ pub fn subscribe(
   let subscribe_msg = serde_json::json!({
     "cmd": "SUBSCRIBE",
     "evt": event,
-    "args": data.unwrap_or_default(),
+    "args": data.unwrap_or_else(|| serde_json::json!({})),
     "nonce": event,
   });
   ipc_write(&mut stream, OP_FRAME, &subscribe_msg.to_string())?;
@@ -27,7 +27,7 @@ pub fn unsubscribe(
   let unsubscribe_msg = serde_json::json!({
     "cmd": "UNSUBSCRIBE",
     "evt": event,
-    "args": data.unwrap_or_default(),
+    "args": data.unwrap_or_else(|| serde_json::json!({})),
     "nonce": event,
   });
   ipc_write(&mut stream, OP_FRAME, &unsubscribe_msg.to_string())?;
@@ -61,6 +61,16 @@ pub fn subscribe_voice_channel(
   subscribe_channel(stream, "VOICE_STATE_DELETE", channel_id)?;
   subscribe_channel(stream, "SPEAKING_START", channel_id)?;
   subscribe_channel(stream, "SPEAKING_STOP", channel_id)?;
+  Ok(())
+}
+
+pub fn subscribe_voice_global(
+  stream: &mut UnixStream,
+) -> Result<(), Box<dyn std::error::Error>> {
+  subscribe(stream, "VOICE_CHANNEL_SELECT", None)?;
+  subscribe(stream, "VOICE_SETTINGS_UPDATE", None)?;
+  subscribe(stream, "VOICE_CONNECTION_STATUS", None)?;
+  subscribe(stream, "NOTIFICATION_CREATE", None)?;
   Ok(())
 }
 

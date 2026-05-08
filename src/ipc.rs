@@ -2,7 +2,9 @@ use crate::ipc_payloads::{
   NotificationCreatePayload, SpeakingPayload, VoiceChannelSelectPayload,
   VoiceConnectionStatusPayload, VoiceSettingsUpdatePayload, VoiceState,
 };
-use crate::subscription::{subscribe, subscribe_voice_channel, unsubscribe_voice_channel};
+use crate::subscription::{
+  subscribe, subscribe_voice_channel, subscribe_voice_global, unsubscribe_voice_channel,
+};
 use crate::util::bridge::BridgeMessage;
 use crate::util::discord_auth::{build_rpc_authenticate_request, extract_auth_code};
 use crate::{
@@ -161,23 +163,18 @@ pub fn create_ipc_connection(
           } else if msg.cmd == "AUTHENTICATE" {
             // We are authorized! Subscribe to events that mirror the websocket implementation.
             success!("Authorized with Discord, subscribing to events");
-            for event in &[
-              "VOICE_CHANNEL_SELECT",
-              "VOICE_STATE_CREATE",
-              "VOICE_STATE_DELETE",
-              "VOICE_STATE_UPDATE",
-              "SPEAKING_START",
-              "SPEAKING_STOP",
-              "VOICE_SETTINGS_UPDATE",
-              "VOICE_CONNECTION_STATUS",
-              "NOTIFICATION_CREATE",
-            ] {
-              if let Err(e) = subscribe(&mut stream, event, None) {
-                error!("Failed to subscribe to {}: {}", event, e);
-              } else {
-                log!("Subscribed to {}", event);
+            if let Err(e) = subscribe_voice_global(&mut stream) {
+              error!("Failed to subscribe to global voice events: {}", e);
+            }
+
+            let current_channel = app_state.write().current_channel.clone();
+            if !current_channel.is_empty() {
+              if let Err(e) = subscribe_voice_channel(&mut stream, &current_channel) {
+                error!("Failed to subscribe to current voice channel events: {}", e);
               }
             }
+
+            continue;
           } else if msg.cmd == "DISPATCH" {
             handle_ipc_message(&mut stream, &msg, &mut app_state)?;
             continue;
@@ -219,8 +216,6 @@ fn handle_ipc_message(
   msg: &BridgeMessage,
   app_state: &mut Signal<AppState, SyncStorage>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-  log!("Handling IPC message: {:?}", msg);
-
   let mut state = app_state.write();
   let evt = msg
     .data
@@ -229,21 +224,22 @@ fn handle_ipc_message(
     .unwrap_or_default();
   let data = msg.data.get("data").cloned().unwrap_or_default();
 
+  log!("Handling event: {} - {:?}", evt, msg);
+
   match evt {
     "VOICE_CHANNEL_SELECT" => {
       let data = serde_json::from_value::<VoiceChannelSelectPayload>(data)?;
+      let new_channel = data.channel_id.unwrap_or_default();
+      let old_channel = state.current_channel.clone();
 
-      // Unsubscribe from old channel events
-      let old = state.current_channel.clone();
-      if !old.is_empty() && old != state.current_channel {
-        if let Err(e) = unsubscribe_voice_channel(stream, &old) {
+      if old_channel != new_channel && !old_channel.is_empty() {
+        if let Err(e) = unsubscribe_voice_channel(stream, &old_channel) {
           error!("Failed to unsubscribe from old voice channel events: {}", e);
         }
       }
 
-      state.current_channel = data.channel_id.unwrap_or_default();
+      state.current_channel = new_channel;
 
-      // Subscribe to all events for the new channel
       if !state.current_channel.is_empty() {
         if let Err(e) = subscribe_voice_channel(stream, &state.current_channel) {
           error!("Failed to subscribe to voice channel events: {}", e);
@@ -251,7 +247,7 @@ fn handle_ipc_message(
       }
     }
     "VOICE_STATE_CREATE" | "VOICE_STATE_UPDATE" => {
-      let data = serde_json::from_value::<VoiceState>(msg.data.clone())?;
+      let data = serde_json::from_value::<VoiceState>(data)?;
       let user_id = data.user.id.clone();
 
       if let Some(user) = state.voice_users.iter_mut().find(|user| user.id == user_id) {
@@ -268,7 +264,7 @@ fn handle_ipc_message(
       }
     }
     "SPEAKING_START" => {
-      let data = serde_json::from_value::<SpeakingPayload>(msg.data.clone())?;
+      let data = serde_json::from_value::<SpeakingPayload>(data)?;
       if let Some(user) = state
         .voice_users
         .iter_mut()
@@ -278,7 +274,7 @@ fn handle_ipc_message(
       }
     }
     "SPEAKING_STOP" => {
-      let data = serde_json::from_value::<SpeakingPayload>(msg.data.clone())?;
+      let data = serde_json::from_value::<SpeakingPayload>(data)?;
       let is_current_user = data.user_id == state.config.user_id;
       if let Some(user) = state
         .voice_users
@@ -291,29 +287,20 @@ fn handle_ipc_message(
       }
     }
     "VOICE_STATE_DELETE" => {
-      let user_id = msg
-        .data
-        .get("user")
-        .and_then(|v| v.get("id"))
-        .and_then(|v| v.as_str())
-        .unwrap_or_default();
-      state.voice_users.retain(|user| user.id != user_id);
+      let data = serde_json::from_value::<VoiceState>(data)?;
+      state.voice_users.retain(|user| user.id != data.user.id);
     }
     "VOICE_SETTINGS_UPDATE" => {
       let data = serde_json::from_value::<VoiceSettingsUpdatePayload>(data)?;
-
-      let voice_state = if data.deaf {
-        Some(crate::user::UserVoiceState::Deafened)
-      } else if data.mute {
-        Some(crate::user::UserVoiceState::Muted)
-      } else {
-        None
-      };
-
-      if let Some(voice_state) = voice_state {
-        for user in &mut state.voice_users {
-          user.voice_state = voice_state.clone();
-        }
+      let current_user_id = state.config.user_id.clone();
+      if let Some(user) = state.voice_users.iter_mut().find(|user| user.id == current_user_id) {
+        user.voice_state = if data.deaf {
+          crate::user::UserVoiceState::Deafened
+        } else if data.mute {
+          crate::user::UserVoiceState::Muted
+        } else {
+          crate::user::UserVoiceState::NotSpeaking
+        };
       }
     }
     "VOICE_CONNECTION_STATUS" => {

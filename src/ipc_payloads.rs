@@ -6,14 +6,12 @@ use crate::{
 };
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct VoiceChannelSelectPayload {
   pub channel_id: Option<String>,
   pub guild_id: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct VoiceStateUser {
   pub id: String,
   pub username: String,
@@ -22,7 +20,6 @@ pub struct VoiceStateUser {
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct VoiceStateState {
   pub mute: bool,
   pub deaf: bool,
@@ -32,7 +29,6 @@ pub struct VoiceStateState {
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct VoiceState {
   pub nick: Option<String>,
   pub mute: bool,
@@ -71,14 +67,12 @@ impl From<VoiceState> for UserVoiceState {
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct VoiceConnectionPing {
   pub time: i64,
   pub value: i64,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct VoiceConnectionStatusPayload {
   pub state: String,
   pub hostname: Option<String>,
@@ -87,21 +81,18 @@ pub struct VoiceConnectionStatusPayload {
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct VoiceSettingsUpdatePayload {
   pub deaf: bool,
   pub mute: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct SpeakingPayload {
   pub channel_id: String,
   pub user_id: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct NotificationCreatePayload {
   pub channel_id: String,
   pub message: MessageNotification,
