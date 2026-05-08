@@ -80,6 +80,8 @@ cargo install --locked --git https://github.com/SpikeHD/Orbolay.git
 
 * [Freya](https://github.com/marc2332/freya) - the main GUI library (that I may have fallen in love with)
 * [Dioxus](https://dioxuslabs.com/) - framework for things like signals and `rsx!`
+* [Discover](https://github.com/trigg/Discover) - a fantastic reference for some of the IPC-related stuff
+* [docs.discord.food](https://docs.discord.food/) - incredible reference for undocumented Discord APIs
 * Everyone else who contributes positively to the Rust ecosystem :)
 
 # Contributing
