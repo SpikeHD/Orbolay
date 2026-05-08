@@ -1,5 +1,5 @@
 use dioxus::prelude::{Signal, SyncStorage};
-use std::os::unix::net::UnixStream;
+use interprocess::local_socket::prelude::*;
 
 use freya::prelude::Writable;
 
@@ -9,7 +9,7 @@ use crate::log;
 use crate::util::bridge::BridgeMessage;
 
 pub fn handle_ui_message(
-  stream: &mut UnixStream,
+  stream: &mut LocalSocketStream,
   msg: &BridgeMessage,
   app_state: &mut Signal<AppState, SyncStorage>,
 ) -> Result<(), Box<dyn std::error::Error>> {

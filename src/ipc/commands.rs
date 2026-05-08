@@ -1,7 +1,10 @@
-use std::os::unix::net::UnixStream;
-
+#[cfg(unix)]
+use interprocess::local_socket::{GenericFilePath, Name};
+use interprocess::local_socket::{GenericNamespaced, ToFsName, ToNsName, prelude::*};
 use dioxus::prelude::{Signal, SyncStorage};
 use freya::prelude::Writable;
+#[cfg(unix)]
+use interprocess::os::unix::local_socket::FilesystemUdSocket;
 use serde_json::Value;
 
 use crate::app_state::AppState;
@@ -49,8 +52,12 @@ pub fn create_ipc_connection(
   let ipc_path = get_ipc_path().ok_or("Could not find Discord IPC socket")?;
   log!("Connecting to Discord IPC at {}", ipc_path);
 
-  let mut stream = UnixStream::connect(&ipc_path)?;
-  stream.set_read_timeout(Some(std::time::Duration::from_millis(50)))?;
+  #[cfg(unix)]
+  let name = ipc_path.to_fs_name::<GenericFilePath>()?;
+  #[cfg(windows)]
+  let name = ipc_path.to_ns_name::<GenericNamespaced>()?;
+
+  let mut stream = LocalSocketStream::connect(name)?;
 
   let handshake = serde_json::json!({
     "v": 1,

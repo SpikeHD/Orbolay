@@ -1,10 +1,9 @@
-use std::os::unix::net::UnixStream;
-
+use interprocess::local_socket::prelude::*;
 use serde_json::Value;
 
 use crate::ipc::{OP_FRAME, ipc_write};
 
-pub fn set_muted(stream: &mut UnixStream, muted: bool) -> Result<(), Box<dyn std::error::Error>> {
+pub fn set_muted(stream: &mut LocalSocketStream, muted: bool) -> Result<(), Box<dyn std::error::Error>> {
   let data = serde_json::json!({ "mute": muted });
   ipc_write(
     stream,
@@ -19,7 +18,7 @@ pub fn set_muted(stream: &mut UnixStream, muted: bool) -> Result<(), Box<dyn std
 }
 
 pub fn set_deafened(
-  stream: &mut UnixStream,
+  stream: &mut LocalSocketStream,
   deafened: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
   let data = serde_json::json!({ "deaf": deafened });
@@ -35,7 +34,7 @@ pub fn set_deafened(
   Ok(())
 }
 
-pub fn stop_streaming(stream: &mut UnixStream) -> Result<(), Box<dyn std::error::Error>> {
+pub fn stop_streaming(stream: &mut LocalSocketStream) -> Result<(), Box<dyn std::error::Error>> {
   let data = serde_json::json!({ "streaming": false });
   ipc_write(
     stream,
@@ -49,7 +48,7 @@ pub fn stop_streaming(stream: &mut UnixStream) -> Result<(), Box<dyn std::error:
   Ok(())
 }
 
-pub fn disconnect(stream: &mut UnixStream) -> Result<(), Box<dyn std::error::Error>> {
+pub fn disconnect(stream: &mut LocalSocketStream) -> Result<(), Box<dyn std::error::Error>> {
   let payload = serde_json::json!({ "channel_id": Value::Null });
   ipc_write(
     stream,

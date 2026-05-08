@@ -8,7 +8,7 @@ pub fn build_rpc_authorize_request(client_id: impl Into<String>) -> serde_json::
     "cmd": "AUTHORIZE",
     "args": {
       "client_id": client_id.into(),
-      "scopes": ["rpc", "rpc.screenshare.read", "messages.read", "rpc.notifications.read"],
+      "scopes": ["rpc", "messages.read", "rpc.notifications.read"],
       "prompt": "none"
     },
     "nonce": "helloworld"

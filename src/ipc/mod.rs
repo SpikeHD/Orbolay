@@ -16,7 +16,7 @@ pub use subscription::{
 pub use ui_message_handler::handle_ui_message;
 
 use std::io::{Read, Write};
-use std::os::unix::net::UnixStream;
+use interprocess::local_socket::prelude::*;
 
 // IPC opcodes
 pub const OP_HANDSHAKE: u32 = 0;
@@ -24,7 +24,7 @@ pub const OP_FRAME: u32 = 1;
 pub const OP_CLOSE: u32 = 2;
 
 pub fn ipc_write(
-  stream: &mut UnixStream,
+  stream: &mut LocalSocketStream,
   opcode: u32,
   payload: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -38,7 +38,7 @@ pub fn ipc_write(
   Ok(())
 }
 
-pub fn ipc_read(stream: &mut UnixStream) -> Result<(u32, String), std::io::Error> {
+pub fn ipc_read(stream: &mut LocalSocketStream) -> Result<(u32, String), std::io::Error> {
   let mut header = [0u8; 8];
   stream.read_exact(&mut header)?;
   let opcode = u32::from_le_bytes(header[0..4].try_into().unwrap());

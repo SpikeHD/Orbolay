@@ -1,6 +1,5 @@
 use dioxus::prelude::{Signal, SyncStorage};
-
-use std::os::unix::net::UnixStream;
+use interprocess::local_socket::prelude::*;
 
 use freya::prelude::Writable;
 
@@ -15,7 +14,7 @@ use crate::log;
 use crate::payloads::MessageNotification;
 
 pub fn handle_ipc_message(
-  stream: &mut UnixStream,
+  stream: &mut LocalSocketStream,
   msg: &crate::util::bridge::BridgeMessage,
   app_state: &mut Signal<AppState, SyncStorage>,
 ) -> Result<(), Box<dyn std::error::Error>> {
