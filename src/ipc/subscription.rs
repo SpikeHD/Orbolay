@@ -59,6 +59,7 @@ pub fn subscribe_voice_channel(
   subscribe_channel(stream, "VOICE_STATE_CREATE", channel_id)?;
   subscribe_channel(stream, "VOICE_STATE_UPDATE", channel_id)?;
   subscribe_channel(stream, "VOICE_STATE_DELETE", channel_id)?;
+  subscribe_channel(stream, "SCREENSHARE_STATE_UPDATE", channel_id)?;
   subscribe_channel(stream, "SPEAKING_START", channel_id)?;
   subscribe_channel(stream, "SPEAKING_STOP", channel_id)?;
   Ok(())
@@ -79,6 +80,7 @@ pub fn unsubscribe_voice_channel(
   unsubscribe_channel(stream, "VOICE_STATE_CREATE", channel_id)?;
   unsubscribe_channel(stream, "VOICE_STATE_UPDATE", channel_id)?;
   unsubscribe_channel(stream, "VOICE_STATE_DELETE", channel_id)?;
+  unsubscribe_channel(stream, "SCREENSHARE_STATE_UPDATE", channel_id)?;
   unsubscribe_channel(stream, "SPEAKING_START", channel_id)?;
   unsubscribe_channel(stream, "SPEAKING_STOP", channel_id)?;
   Ok(())

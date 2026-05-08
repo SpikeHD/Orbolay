@@ -12,6 +12,7 @@ use crate::ipc::{
   unsubscribe_voice_channel,
 };
 use crate::log;
+use crate::payloads::MessageNotification;
 
 pub fn handle_ipc_message(
   stream: &mut UnixStream,
@@ -34,10 +35,12 @@ pub fn handle_ipc_message(
       let new_channel = data.channel_id.unwrap_or_default();
       let old_channel = state.current_channel.clone();
 
-      if old_channel != new_channel && !old_channel.is_empty()
-        && let Err(e) = unsubscribe_voice_channel(stream, &old_channel) {
-          error!("Failed to unsubscribe from old voice channel events: {}", e);
-        }
+      if old_channel != new_channel
+        && !old_channel.is_empty()
+        && let Err(e) = unsubscribe_voice_channel(stream, &old_channel)
+      {
+        error!("Failed to unsubscribe from old voice channel events: {}", e);
+      }
 
       state.current_channel = new_channel;
 
@@ -114,13 +117,20 @@ pub fn handle_ipc_message(
     }
     "NOTIFICATION_CREATE" => {
       let data = serde_json::from_value::<NotificationCreatePayload>(data)?;
-      let mut notification = data.message;
-      notification.timestamp = Some(chrono::Utc::now().timestamp().to_string());
-      notification.icon = data
-        .icon_url
-        .clone()
-        .unwrap_or(notification.icon)
-        .replace(".webp", ".png");
+      let message = data.message.as_ref();
+      let notification = MessageNotification {
+        guild_id: message.and_then(|m| m.guild_id.clone()),
+        channel_id: message.and_then(|m| m.channel_id.clone()),
+        message_id: message.and_then(|m| m.id.clone()),
+        title: data.title.clone(),
+        body: data.body.clone(),
+        timestamp: Some(chrono::Utc::now().timestamp().to_string()),
+        icon: data
+          .icon_url
+          .clone()
+          .unwrap_or(String::new())
+          .replace(".webp", ".png"),
+      };
       let messages_len = state.messages.len();
 
       if messages_len > 3 {

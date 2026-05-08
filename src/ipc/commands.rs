@@ -61,16 +61,18 @@ pub fn create_ipc_connection(
       Ok((OP_FRAME, payload)) => {
         log!("Received during handshake: {}", payload);
         if let Ok(msg) = serde_json::from_str::<Value>(&payload)
-          && msg["evt"] == "READY" {
-            if let Some(data) = msg.get("data")
-              && let Ok(ready) = serde_json::from_value::<ReadyPayload>(data.clone())
-                && let Some(user) = ready.user {
-                  app_state.write().config.user_id = user.id;
-                }
-
-            success!("IPC connected and ready");
-            break;
+          && msg["evt"] == "READY"
+        {
+          if let Some(data) = msg.get("data")
+            && let Ok(ready) = serde_json::from_value::<ReadyPayload>(data.clone())
+            && let Some(user) = ready.user
+          {
+            app_state.write().config.user_id = user.id;
           }
+
+          success!("IPC connected and ready");
+          break;
+        }
       }
       Ok((OP_CLOSE, payload)) => {
         return Err(format!("Discord closed connection during handshake: {}", payload).into());
@@ -140,8 +142,8 @@ pub fn create_ipc_connection(
             continue;
           } else if msg.cmd == "GET_SELECTED_VOICE_CHANNEL" {
             let data = msg.data.get("data").cloned().unwrap_or_default();
-            let data = serde_json::from_value::<SelectedVoiceChannelPayload>(data)?;
-            if let Some(channel_id) = data.id {
+            let data = serde_json::from_value::<SelectedVoiceChannelPayload>(data).ok();
+            if let Some(channel_id) = data.and_then(|d| d.id) {
               app_state.write().current_channel = channel_id.clone();
               if let Err(e) = subscribe_voice_channel(&mut stream, &channel_id) {
                 error!(

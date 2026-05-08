@@ -113,9 +113,15 @@ pub struct SpeakingPayload {
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
+pub struct MessageNotificationInner {
+  pub id: Option<String>,
+  pub guild_id: Option<String>,
+  pub channel_id: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct NotificationCreatePayload {
-  pub channel_id: String,
-  pub message: MessageNotification,
+  pub message: Option<MessageNotificationInner>,
   pub icon_url: Option<String>,
   pub title: String,
   pub body: String,
