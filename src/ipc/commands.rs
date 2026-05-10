@@ -36,7 +36,7 @@ fn get_ipc_path() -> Option<String> {
 
   #[cfg(windows)]
   let candidates = [
-    "\\\\?\\pipe\\".to_string(),
+    Some("\\\\?\\pipe\\".to_string()),
   ];
 
   for dir in candidates.into_iter().flatten() {
