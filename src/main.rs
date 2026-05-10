@@ -56,10 +56,8 @@ pub struct Args {
   #[options(help = "Enable various debugging features")]
   debug: bool,
 
-  #[options(
-    help = "Use \"lite\" mode, which does not require a custom client mod. Works by pretending to be StreamKit"
-  )]
-  lite: bool,
+  #[options(help = "Force websocket mode instead of IPC")]
+  websocket: bool,
 }
 
 fn main() {
@@ -167,12 +165,22 @@ fn app() -> Element {
     });
 
     std::thread::spawn(move || {
-      if args.lite {
-        ipc::create_ipc_connection(app_state, ws_receiver, "207646673902501888".into())
-          .expect("Failed to start lite IPC connection");
-      } else {
-        websocket::create_websocket(args.port, app_state, ws_receiver)
-          .expect("Failed to start websocket server");
+      let client_id = String::from("207646673902501888");
+      let ws_port = args.port;
+
+      if args.websocket {
+        if let Err(e) = websocket::create_websocket(ws_port, app_state, ws_receiver) {
+          error!("Websocket server failed on port {}: {}", ws_port, e);
+        }
+        return;
+      }
+
+      let ipc_receiver = ws_receiver.clone();
+      if let Err(e) = ipc::create_ipc_connection(app_state, ipc_receiver, client_id) {
+        warn!("IPC connection failed: {}", e);
+        if let Err(e) = websocket::create_websocket(ws_port, app_state, ws_receiver) {
+          error!("Websocket server failed on port {}: {}", ws_port, e);
+        }
       }
     });
 

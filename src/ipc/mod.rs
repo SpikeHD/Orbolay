@@ -44,8 +44,7 @@ pub fn ipc_read(stream: &mut LocalSocketStream) -> Result<(u32, String), std::io
   match stream.read_exact(&mut header) {
     Ok(()) => {}
     Err(e)
-      if e.kind() == std::io::ErrorKind::WouldBlock
-        || e.kind() == std::io::ErrorKind::TimedOut =>
+      if e.kind() == std::io::ErrorKind::WouldBlock || e.kind() == std::io::ErrorKind::TimedOut =>
     {
       return Err(e);
     }

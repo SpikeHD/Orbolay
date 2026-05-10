@@ -4,9 +4,9 @@ use serde_json::Value;
 use std::time::Duration;
 
 #[cfg(unix)]
-use interprocess::local_socket::{prelude::*, GenericFilePath, ToFsName};
+use interprocess::local_socket::{GenericFilePath, ToFsName, prelude::*};
 #[cfg(windows)]
-use interprocess::local_socket::{prelude::*, GenericNamespaced, ToNsName};
+use interprocess::local_socket::{GenericNamespaced, ToNsName, prelude::*};
 
 use crate::app_state::AppState;
 use crate::error;
@@ -133,10 +133,10 @@ pub fn create_ipc_connection(
   loop {
     match ipc_read(&mut stream) {
       Ok((OP_FRAME, payload)) => {
-        if let Ok(msg) = serde_json::from_str::<BridgeMessage>(&payload) {
-          if let Err(e) = handle_command(&mut stream, &msg, &mut app_state) {
-            error!("Error handling IPC command: {}", e);
-          }
+        if let Ok(msg) = serde_json::from_str::<BridgeMessage>(&payload)
+          && let Err(e) = handle_command(&mut stream, &msg, &mut app_state)
+        {
+          error!("Error handling IPC command: {}", e);
         }
       }
       Ok((OP_CLOSE, payload)) => {
@@ -166,7 +166,7 @@ pub fn create_ipc_connection(
 }
 
 pub fn handle_command(
-  mut stream: &mut LocalSocketStream,
+  stream: &mut LocalSocketStream,
   msg: &BridgeMessage,
   app_state: &mut Signal<AppState, SyncStorage>,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -174,13 +174,13 @@ pub fn handle_command(
     "AUTHENTICATE" => {
       success!("Authorized with Discord, subscribing to events");
 
-      subscribe_voice_global(&mut stream)?;
+      subscribe_voice_global(stream)?;
 
       let request = serde_json::json!({
         "cmd": "GET_SELECTED_VOICE_CHANNEL",
         "nonce": "GET_SELECTED_VOICE_CHANNEL",
       });
-      ipc_write(&mut stream, OP_FRAME, &request.to_string())?;
+      ipc_write(stream, OP_FRAME, &request.to_string())?;
     }
     "AUTHORIZE" => {
       let code = msg
@@ -203,7 +203,7 @@ pub fn handle_command(
       log!("Got StreamKit access token");
 
       let auth_msg = build_rpc_authenticate_request(&streamkit_code);
-      ipc_write(&mut stream, OP_FRAME, &serde_json::to_string(&auth_msg)?)?;
+      ipc_write(stream, OP_FRAME, &serde_json::to_string(&auth_msg)?)?;
 
       log!("Sent second stage of auth flow");
     }
@@ -212,7 +212,7 @@ pub fn handle_command(
       let data = serde_json::from_value::<SelectedVoiceChannelPayload>(data).ok();
       if let Some(channel_id) = data.and_then(|d| d.id) {
         app_state.write().current_channel = channel_id.clone();
-        subscribe_voice_channel(&mut stream, &channel_id)?;
+        subscribe_voice_channel(stream, &channel_id)?;
       }
     }
     "DISPATCH" => {
