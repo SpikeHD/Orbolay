@@ -21,6 +21,7 @@ use crate::util::discord_auth::{
 };
 
 fn get_ipc_path() -> Option<String> {
+  #[cfg(unix)]
   let candidates = [
     std::env::var("XDG_RUNTIME_DIR").ok(),
     Some(format!(
@@ -33,9 +34,18 @@ fn get_ipc_path() -> Option<String> {
     Some("/tmp".to_string()),
   ];
 
+  #[cfg(windows)]
+  let candidates = [
+    "\\\\?\\pipe\\".to_string(),
+  ];
+
   for dir in candidates.into_iter().flatten() {
     for i in 0..10 {
+      #[cfg(unix)]
       let path = format!("{}/discord-ipc-{}", dir, i);
+      #[cfg(windows)]
+      let path = format!("{}discord-ipc-{}", dir, i);
+
       if std::path::Path::new(&path).exists() {
         return Some(path);
       }
