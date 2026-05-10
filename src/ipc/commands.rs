@@ -1,6 +1,7 @@
 use dioxus::prelude::{Signal, SyncStorage};
 use freya::prelude::Writable;
 use serde_json::Value;
+use std::time::Duration;
 
 #[cfg(unix)]
 use interprocess::local_socket::{prelude::*, GenericFilePath, ToFsName};
@@ -51,7 +52,7 @@ fn try_create_stream() -> Result<LocalSocketStream, Box<dyn std::error::Error>> 
     for i in 0..10 {
       let path = format!("discord-ipc-{}", i);
       let path = path.to_ns_name::<GenericNamespaced>()?;
-      
+
       if let Ok(stream) = LocalSocketStream::connect(path) {
         return Ok(stream);
       }
@@ -61,12 +62,25 @@ fn try_create_stream() -> Result<LocalSocketStream, Box<dyn std::error::Error>> 
   Err("Could not connect to any Discord IPC socket".into())
 }
 
+fn drain_ui_messages(
+  stream: &mut LocalSocketStream,
+  receiver: &flume::Receiver<BridgeMessage>,
+  app_state: &mut Signal<AppState, SyncStorage>,
+) -> Result<(), Box<dyn std::error::Error>> {
+  while let Ok(msg) = receiver.try_recv() {
+    handle_ui_message(stream, &msg, app_state)?;
+  }
+
+  Ok(())
+}
+
 pub fn create_ipc_connection(
   mut app_state: Signal<AppState, SyncStorage>,
   receiver: flume::Receiver<BridgeMessage>,
   client_id: String,
 ) -> Result<(), Box<dyn std::error::Error>> {
   let mut stream = try_create_stream()?;
+  stream.set_nonblocking(true)?;
 
   let handshake = serde_json::json!({
     "v": 1,
@@ -99,9 +113,7 @@ pub fn create_ipc_connection(
         if e.kind() == std::io::ErrorKind::WouldBlock
           || e.kind() == std::io::ErrorKind::TimedOut =>
       {
-        if let Ok(msg) = receiver.try_recv() {
-          handle_ui_message(&mut stream, &msg, &mut app_state)?;
-        }
+        // No IPC data right now
       }
       Err(e) => {
         error!("IPC read error: {}", e);
@@ -110,6 +122,9 @@ pub fn create_ipc_connection(
       }
       _ => {}
     }
+
+    drain_ui_messages(&mut stream, &receiver, &mut app_state)?;
+    std::thread::sleep(Duration::from_millis(10));
   }
 
   let auth_msg = build_rpc_authorize_request(&client_id);
@@ -133,9 +148,7 @@ pub fn create_ipc_connection(
         if e.kind() == std::io::ErrorKind::WouldBlock
           || e.kind() == std::io::ErrorKind::TimedOut =>
       {
-        if let Ok(msg) = receiver.try_recv() {
-          handle_ui_message(&mut stream, &msg, &mut app_state)?;
-        }
+        // No IPC data right now
       }
       Err(e) => {
         error!("IPC read error: {}", e);
@@ -144,6 +157,9 @@ pub fn create_ipc_connection(
       }
       _ => {}
     }
+
+    drain_ui_messages(&mut stream, &receiver, &mut app_state)?;
+    std::thread::sleep(Duration::from_millis(10));
   }
 
   Ok(())

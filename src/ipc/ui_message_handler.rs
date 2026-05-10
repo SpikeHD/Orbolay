@@ -15,6 +15,8 @@ pub fn handle_ui_message(
 ) -> Result<(), Box<dyn std::error::Error>> {
   let mut state = app_state.write();
 
+  log!("Handling UI message: {:?}", msg);
+
   match msg.cmd.as_str() {
     "TOGGLE_MUTE" => {
       let muted = state
