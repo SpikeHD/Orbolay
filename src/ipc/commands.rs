@@ -20,38 +20,45 @@ use crate::util::discord_auth::{
   build_rpc_authenticate_request, build_rpc_authorize_request, extract_auth_code,
 };
 
-fn get_ipc_path() -> Option<String> {
+fn try_create_stream() -> Result<LocalSocketStream, Box<dyn std::error::Error>> {
   #[cfg(unix)]
-  let candidates = [
-    std::env::var("XDG_RUNTIME_DIR").ok(),
-    Some(format!(
-      "{}/app/com.discordapp.Discord/",
-      std::env::var("XDG_RUNTIME_DIR").unwrap_or_else(|_| "/tmp".into())
-    )),
-    std::env::var("TMPDIR").ok(),
-    std::env::var("TMP").ok(),
-    std::env::var("TEMP").ok(),
-    Some("/tmp".to_string()),
-  ];
+  {
+    let candidates = [
+      std::env::var("XDG_RUNTIME_DIR").ok(),
+      Some(format!(
+        "{}/app/com.discordapp.Discord/",
+        std::env::var("XDG_RUNTIME_DIR").unwrap_or_else(|_| "/tmp".into())
+      )),
+      std::env::var("TMPDIR").ok(),
+      std::env::var("TMP").ok(),
+      std::env::var("TEMP").ok(),
+      Some("/tmp".to_string()),
+    ];
 
-  #[cfg(windows)]
-  let candidates = [
-    Some("\\\\?\\pipe\\".to_string()),
-  ];
+    for dir in candidates.into_iter().flatten() {
+      for i in 0..10 {
+        let path = format!("{}/discord-ipc-{}", dir, i);
 
-  for dir in candidates.into_iter().flatten() {
-    for i in 0..10 {
-      #[cfg(unix)]
-      let path = format!("{}/discord-ipc-{}", dir, i);
-      #[cfg(windows)]
-      let path = format!("{}discord-ipc-{}", dir, i);
-
-      if std::path::Path::new(&path).exists() {
-        return Some(path);
+        if let Ok(stream) = LocalSocketStream::connect(path.to_fs_name::<GenericFilePath>()?) {
+          return Ok(stream);
+        }
       }
     }
   }
-  None
+
+  #[cfg(windows)]
+  {
+    for i in 0..10 {
+      let path = format!("discord-ipc-{}", i);
+      let path = path.to_ns_name::<GenericNamespaced>()?;
+      
+      if let Ok(stream) = LocalSocketStream::connect(path) {
+        return Ok(stream);
+      }
+    }
+  }
+
+  Err("Could not connect to any Discord IPC socket".into())
 }
 
 pub fn create_ipc_connection(
@@ -59,15 +66,7 @@ pub fn create_ipc_connection(
   receiver: flume::Receiver<BridgeMessage>,
   client_id: String,
 ) -> Result<(), Box<dyn std::error::Error>> {
-  let ipc_path = get_ipc_path().ok_or("Could not find Discord IPC socket")?;
-  log!("Connecting to Discord IPC at {}", ipc_path);
-
-  #[cfg(unix)]
-  let name = ipc_path.to_fs_name::<GenericFilePath>()?;
-  #[cfg(windows)]
-  let name = ipc_path.to_ns_name::<GenericNamespaced>()?;
-
-  let mut stream = LocalSocketStream::connect(name)?;
+  let mut stream = try_create_stream()?;
 
   let handshake = serde_json::json!({
     "v": 1,
