@@ -122,8 +122,8 @@ fn main() {
       .with_decorations(false)
       .with_background("transparent")
       .with_transparency(true)
-      .with_window_attributes(move |w| {
-        let w = w
+      .with_window_attributes(move |mut w| {
+        w = w
           .with_inner_size(PhysicalSize::new(window_size.0, window_size.1))
           .with_resizable(false)
           .with_window_level(WindowLevel::AlwaysOnTop)

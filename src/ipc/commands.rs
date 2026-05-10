@@ -1,9 +1,11 @@
 use dioxus::prelude::{Signal, SyncStorage};
 use freya::prelude::Writable;
-#[cfg(unix)]
-use interprocess::local_socket::GenericFilePath;
-use interprocess::local_socket::{ToFsName, prelude::*};
 use serde_json::Value;
+
+#[cfg(unix)]
+use interprocess::local_socket::{prelude::*, GenericFilePath, ToFsName};
+#[cfg(windows)]
+use interprocess::local_socket::{prelude::*, GenericNamespaced, ToNsName};
 
 use crate::app_state::AppState;
 use crate::error;
@@ -108,64 +110,9 @@ pub fn create_ipc_connection(
     match ipc_read(&mut stream) {
       Ok((OP_FRAME, payload)) => {
         if let Ok(msg) = serde_json::from_str::<BridgeMessage>(&payload) {
-          if msg.cmd == "AUTHORIZE" {
-            let code = msg
-              .data
-              .get("data")
-              .and_then(|v| v.get("code"))
-              .and_then(|v| v.as_str())
-              .unwrap_or_default()
-              .to_string();
-
-            log!("Received auth code");
-
-            let streamkit_code = match extract_auth_code(&code) {
-              Some(token) => token,
-              None => {
-                error!("Failed to extract access token from StreamKit response");
-                continue;
-              }
-            };
-
-            log!("Got StreamKit access token");
-
-            let auth_msg = build_rpc_authenticate_request(&streamkit_code);
-            ipc_write(&mut stream, OP_FRAME, &serde_json::to_string(&auth_msg)?)?;
-
-            log!("Sent second stage of auth flow");
-            continue;
-          } else if msg.cmd == "AUTHENTICATE" {
-            success!("Authorized with Discord, subscribing to events");
-            if let Err(e) = subscribe_voice_global(&mut stream) {
-              error!("Failed to subscribe to global voice events: {}", e);
-            }
-
-            let request = serde_json::json!({
-              "cmd": "GET_SELECTED_VOICE_CHANNEL",
-              "nonce": "GET_SELECTED_VOICE_CHANNEL",
-            });
-            ipc_write(&mut stream, OP_FRAME, &request.to_string())?;
-
-            continue;
-          } else if msg.cmd == "GET_SELECTED_VOICE_CHANNEL" {
-            let data = msg.data.get("data").cloned().unwrap_or_default();
-            let data = serde_json::from_value::<SelectedVoiceChannelPayload>(data).ok();
-            if let Some(channel_id) = data.and_then(|d| d.id) {
-              app_state.write().current_channel = channel_id.clone();
-              if let Err(e) = subscribe_voice_channel(&mut stream, &channel_id) {
-                error!(
-                  "Failed to subscribe to existing voice channel events: {}",
-                  e
-                );
-              }
-            }
-            continue;
-          } else if msg.cmd == "DISPATCH" {
-            handle_ipc_message(&mut stream, &msg, &mut app_state)?;
-            continue;
+          if let Err(e) = handle_command(&mut stream, &msg, &mut app_state) {
+            error!("Error handling IPC command: {}", e);
           }
-
-          log!("Unhandled bridge message: {:?}", msg);
         }
       }
       Ok((OP_CLOSE, payload)) => {
@@ -187,6 +134,67 @@ pub fn create_ipc_connection(
         break;
       }
       _ => {}
+    }
+  }
+
+  Ok(())
+}
+
+pub fn handle_command(
+  mut stream: &mut LocalSocketStream,
+  msg: &BridgeMessage,
+  app_state: &mut Signal<AppState, SyncStorage>,
+) -> Result<(), Box<dyn std::error::Error>> {
+  match msg.cmd.as_str() {
+    "AUTHENTICATE" => {
+      success!("Authorized with Discord, subscribing to events");
+
+      subscribe_voice_global(&mut stream)?;
+
+      let request = serde_json::json!({
+        "cmd": "GET_SELECTED_VOICE_CHANNEL",
+        "nonce": "GET_SELECTED_VOICE_CHANNEL",
+      });
+      ipc_write(&mut stream, OP_FRAME, &request.to_string())?;
+    }
+    "AUTHORIZE" => {
+      let code = msg
+        .data
+        .get("data")
+        .and_then(|v| v.get("code"))
+        .and_then(|v| v.as_str())
+        .unwrap_or_default()
+        .to_string();
+
+      log!("Received auth code");
+
+      let streamkit_code = match extract_auth_code(&code) {
+        Some(token) => token,
+        None => {
+          return Err("Failed to extract access token from StreamKit response".into());
+        }
+      };
+
+      log!("Got StreamKit access token");
+
+      let auth_msg = build_rpc_authenticate_request(&streamkit_code);
+      ipc_write(&mut stream, OP_FRAME, &serde_json::to_string(&auth_msg)?)?;
+
+      log!("Sent second stage of auth flow");
+    }
+    "GET_SELECTED_VOICE_CHANNEL" => {
+      let data = msg.data.get("data").cloned().unwrap_or_default();
+      let data = serde_json::from_value::<SelectedVoiceChannelPayload>(data).ok();
+      if let Some(channel_id) = data.and_then(|d| d.id) {
+        app_state.write().current_channel = channel_id.clone();
+        subscribe_voice_channel(&mut stream, &channel_id)?;
+      }
+    }
+    "DISPATCH" => {
+      handle_ipc_message(stream, msg, app_state)?;
+    }
+    _ => {
+      log!("Unhandled command: {}", msg.cmd);
     }
   }
 
