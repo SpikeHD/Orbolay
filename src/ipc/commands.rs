@@ -1,10 +1,8 @@
-#[cfg(unix)]
-use interprocess::local_socket::{GenericFilePath, Name};
-use interprocess::local_socket::{GenericNamespaced, ToFsName, ToNsName, prelude::*};
 use dioxus::prelude::{Signal, SyncStorage};
 use freya::prelude::Writable;
 #[cfg(unix)]
-use interprocess::os::unix::local_socket::FilesystemUdSocket;
+use interprocess::local_socket::GenericFilePath;
+use interprocess::local_socket::{ToFsName, prelude::*};
 use serde_json::Value;
 
 use crate::app_state::AppState;

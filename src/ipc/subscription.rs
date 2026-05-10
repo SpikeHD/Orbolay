@@ -64,7 +64,9 @@ pub fn subscribe_voice_channel(
   Ok(())
 }
 
-pub fn subscribe_voice_global(stream: &mut LocalSocketStream) -> Result<(), Box<dyn std::error::Error>> {
+pub fn subscribe_voice_global(
+  stream: &mut LocalSocketStream,
+) -> Result<(), Box<dyn std::error::Error>> {
   subscribe(stream, "VOICE_CHANNEL_SELECT", None)?;
   subscribe(stream, "VOICE_SETTINGS_UPDATE", None)?;
   subscribe(stream, "VOICE_CONNECTION_STATUS", None)?;

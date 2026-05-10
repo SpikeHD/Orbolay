@@ -15,8 +15,8 @@ pub use subscription::{
 };
 pub use ui_message_handler::handle_ui_message;
 
-use std::io::{Read, Write};
 use interprocess::local_socket::prelude::*;
+use std::io::{Read, Write};
 
 // IPC opcodes
 pub const OP_HANDSHAKE: u32 = 0;

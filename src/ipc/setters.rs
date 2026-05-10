@@ -3,7 +3,10 @@ use serde_json::Value;
 
 use crate::ipc::{OP_FRAME, ipc_write};
 
-pub fn set_muted(stream: &mut LocalSocketStream, muted: bool) -> Result<(), Box<dyn std::error::Error>> {
+pub fn set_muted(
+  stream: &mut LocalSocketStream,
+  muted: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
   let data = serde_json::json!({ "mute": muted });
   ipc_write(
     stream,

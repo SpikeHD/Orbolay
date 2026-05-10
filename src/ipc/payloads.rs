@@ -1,8 +1,6 @@
 use serde::Deserialize;
 
-use crate::{
-  user::{User, UserVoiceState},
-};
+use crate::user::{User, UserVoiceState};
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct RpcUser {

@@ -4,6 +4,7 @@ use freya::prelude::*;
 pub struct OverlayManager;
 
 impl OverlayManager {
+  #[cfg(not(target_os = "macos"))]
   pub fn toggle(app_state: &mut Signal<AppState, SyncStorage>, platform: &PlatformSender) {
     let new_state = !app_state.read().is_open;
     Self::set_state(app_state, platform, new_state);
