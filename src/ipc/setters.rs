@@ -57,9 +57,9 @@ pub fn disconnect(stream: &mut LocalSocketStream) -> Result<(), Box<dyn std::err
     stream,
     OP_FRAME,
     &serde_json::to_string(&serde_json::json!({
-      "cmd": "VOICE_CHANNEL_SELECT",
+      "cmd": "SELECT_VOICE_CHANNEL",
       "args": payload,
-      "nonce": "VOICE_CHANNEL_SELECT"
+      "nonce": "SELECT_VOICE_CHANNEL"
     }))?,
   )?;
   Ok(())
