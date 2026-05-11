@@ -1,4 +1,6 @@
-use crate::{config::Config, payloads::MessageNotification, user::User, websocket::BridgeMessage};
+use crate::{
+  config::Config, payloads::MessageNotification, user::User, util::bridge::BridgeMessage,
+};
 
 #[derive(Debug, Clone)]
 pub struct AppState {

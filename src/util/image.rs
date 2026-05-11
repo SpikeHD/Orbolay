@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use skia_safe::{
   ClipOp, Color, Data, EncodedImageFormat, Image, Paint, PaintStyle, Path, Point, Rect,
   surfaces::raster_n32_premul,

@@ -1,0 +1,227 @@
+use dioxus::prelude::{Signal, SyncStorage};
+use freya::prelude::Writable;
+use serde_json::Value;
+use std::time::Duration;
+
+#[cfg(unix)]
+use interprocess::local_socket::{GenericFilePath, ToFsName, prelude::*};
+#[cfg(windows)]
+use interprocess::local_socket::{GenericNamespaced, ToNsName, prelude::*};
+
+use crate::app_state::AppState;
+use crate::error;
+use crate::ipc::{
+  OP_CLOSE, OP_FRAME, OP_HANDSHAKE, ReadyPayload, SelectedVoiceChannelPayload, handle_ipc_message,
+  handle_ui_message, ipc_read, ipc_write, subscribe_voice_channel, subscribe_voice_global,
+};
+use crate::log;
+use crate::success;
+use crate::util::bridge::BridgeMessage;
+use crate::util::discord_auth::{
+  build_rpc_authenticate_request, build_rpc_authorize_request, extract_auth_code,
+};
+
+fn try_create_stream() -> Result<LocalSocketStream, Box<dyn std::error::Error>> {
+  #[cfg(unix)]
+  {
+    let candidates = [
+      std::env::var("XDG_RUNTIME_DIR").ok(),
+      Some(format!(
+        "{}/app/com.discordapp.Discord/",
+        std::env::var("XDG_RUNTIME_DIR").unwrap_or_else(|_| "/tmp".into())
+      )),
+      std::env::var("TMPDIR").ok(),
+      std::env::var("TMP").ok(),
+      std::env::var("TEMP").ok(),
+      Some("/tmp".to_string()),
+    ];
+
+    for dir in candidates.into_iter().flatten() {
+      for i in 0..10 {
+        let path = format!("{}/discord-ipc-{}", dir, i);
+
+        if let Ok(stream) = LocalSocketStream::connect(path.to_fs_name::<GenericFilePath>()?) {
+          return Ok(stream);
+        }
+      }
+    }
+  }
+
+  #[cfg(windows)]
+  {
+    for i in 0..10 {
+      let path = format!("discord-ipc-{}", i);
+      let path = path.to_ns_name::<GenericNamespaced>()?;
+
+      if let Ok(stream) = LocalSocketStream::connect(path) {
+        return Ok(stream);
+      }
+    }
+  }
+
+  Err("Could not connect to any Discord IPC socket".into())
+}
+
+fn drain_ui_messages(
+  stream: &mut LocalSocketStream,
+  receiver: &flume::Receiver<BridgeMessage>,
+  app_state: &mut Signal<AppState, SyncStorage>,
+) -> Result<(), Box<dyn std::error::Error>> {
+  while let Ok(msg) = receiver.try_recv() {
+    handle_ui_message(stream, &msg, app_state)?;
+  }
+
+  Ok(())
+}
+
+pub fn create_ipc_connection(
+  mut app_state: Signal<AppState, SyncStorage>,
+  receiver: flume::Receiver<BridgeMessage>,
+  client_id: String,
+) -> Result<(), Box<dyn std::error::Error>> {
+  let mut stream = try_create_stream()?;
+  stream.set_nonblocking(true)?;
+
+  let handshake = serde_json::json!({
+    "v": 1,
+    "client_id": client_id,
+  });
+  ipc_write(&mut stream, OP_HANDSHAKE, &handshake.to_string())?;
+
+  loop {
+    match ipc_read(&mut stream) {
+      Ok((OP_FRAME, payload)) => {
+        log!("Received during handshake: {}", payload);
+        if let Ok(msg) = serde_json::from_str::<Value>(&payload)
+          && msg["evt"] == "READY"
+        {
+          if let Some(data) = msg.get("data")
+            && let Ok(ready) = serde_json::from_value::<ReadyPayload>(data.clone())
+            && let Some(user) = ready.user
+          {
+            app_state.write().config.user_id = user.id;
+          }
+
+          success!("IPC connected and ready");
+          break;
+        }
+      }
+      Ok((OP_CLOSE, payload)) => {
+        return Err(format!("Discord closed connection during handshake: {}", payload).into());
+      }
+      Err(e)
+        if e.kind() == std::io::ErrorKind::WouldBlock
+          || e.kind() == std::io::ErrorKind::TimedOut =>
+      {
+        // No IPC data right now
+      }
+      Err(e) => {
+        error!("IPC read error: {}", e);
+        app_state.write().voice_users = vec![];
+        break;
+      }
+      _ => {}
+    }
+
+    drain_ui_messages(&mut stream, &receiver, &mut app_state)?;
+    std::thread::sleep(Duration::from_millis(10));
+  }
+
+  let auth_msg = build_rpc_authorize_request(&client_id);
+  ipc_write(&mut stream, OP_FRAME, &serde_json::to_string(&auth_msg)?)?;
+
+  loop {
+    match ipc_read(&mut stream) {
+      Ok((OP_FRAME, payload)) => {
+        if let Ok(msg) = serde_json::from_str::<BridgeMessage>(&payload)
+          && let Err(e) = handle_command(&mut stream, &msg, &mut app_state)
+        {
+          error!("Error handling IPC command: {}", e);
+        }
+      }
+      Ok((OP_CLOSE, payload)) => {
+        log!("Stream closed: {}", payload);
+        app_state.write().voice_users = vec![];
+        break;
+      }
+      Err(e)
+        if e.kind() == std::io::ErrorKind::WouldBlock
+          || e.kind() == std::io::ErrorKind::TimedOut =>
+      {
+        // No IPC data right now
+      }
+      Err(e) => {
+        error!("IPC read error: {}", e);
+        app_state.write().voice_users = vec![];
+        break;
+      }
+      _ => {}
+    }
+
+    drain_ui_messages(&mut stream, &receiver, &mut app_state)?;
+    std::thread::sleep(Duration::from_millis(10));
+  }
+
+  Ok(())
+}
+
+pub fn handle_command(
+  stream: &mut LocalSocketStream,
+  msg: &BridgeMessage,
+  app_state: &mut Signal<AppState, SyncStorage>,
+) -> Result<(), Box<dyn std::error::Error>> {
+  match msg.cmd.as_str() {
+    "AUTHENTICATE" => {
+      success!("Authorized with Discord, subscribing to events");
+
+      subscribe_voice_global(stream)?;
+
+      let request = serde_json::json!({
+        "cmd": "GET_SELECTED_VOICE_CHANNEL",
+        "nonce": "GET_SELECTED_VOICE_CHANNEL",
+      });
+      ipc_write(stream, OP_FRAME, &request.to_string())?;
+    }
+    "AUTHORIZE" => {
+      let code = msg
+        .data
+        .get("data")
+        .and_then(|v| v.get("code"))
+        .and_then(|v| v.as_str())
+        .unwrap_or_default()
+        .to_string();
+
+      log!("Received auth code");
+
+      let streamkit_code = match extract_auth_code(&code) {
+        Some(token) => token,
+        None => {
+          return Err("Failed to extract access token from StreamKit response".into());
+        }
+      };
+
+      log!("Got StreamKit access token");
+
+      let auth_msg = build_rpc_authenticate_request(&streamkit_code);
+      ipc_write(stream, OP_FRAME, &serde_json::to_string(&auth_msg)?)?;
+
+      log!("Sent second stage of auth flow");
+    }
+    "GET_SELECTED_VOICE_CHANNEL" => {
+      let data = msg.data.get("data").cloned().unwrap_or_default();
+      let data = serde_json::from_value::<SelectedVoiceChannelPayload>(data).ok();
+      if let Some(channel_id) = data.and_then(|d| d.id) {
+        app_state.write().current_channel = channel_id.clone();
+        subscribe_voice_channel(stream, &channel_id)?;
+      }
+    }
+    "DISPATCH" => {
+      handle_ipc_message(stream, msg, app_state)?;
+    }
+    _ => {
+      log!("Unhandled command: {}", msg.cmd);
+    }
+  }
+
+  Ok(())
+}

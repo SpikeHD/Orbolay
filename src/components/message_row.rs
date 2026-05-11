@@ -4,11 +4,11 @@ use crate::{
   app_state::AppState,
   payloads::MessageNotification,
   util::{
+    bridge::BridgeMessage,
     colors,
     image::{circular_with_border, fetch_icon},
     text::{strip, truncate},
   },
-  websocket::BridgeMessage,
 };
 
 #[derive(Props, Clone, PartialEq)]

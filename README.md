@@ -58,11 +58,16 @@ cargo install --locked --git https://github.com/SpikeHD/Orbolay.git
 
 # How to Use
 
+## With Official Clients
+
+1. Run the executable
+2. Press <kbd>Ctrl</kbd> + <kbd>`</kbd> to open the overlay and interact with voice controls
+
+## With Modded Clients
+
 1. Run the executable
 2. Install a compatible bridge plugin ([Shelter](https://github.com/SpikeHD/shelter-plugins?tab=readme-ov-file#orbolay-bridge) / [Vencord](https://github.com/SpikeHD/vc-orbolay-bridge), also available on [Equicord](https://github.com/Equicord/Equicord))
-3. If you join a VC, it should show members in the corner
-4. If you get a notification, it should show in the other corner
-5. Press <kbd>Ctrl</kbd> + <kbd>`</kbd> to open the overlay and interact with voice controls
+3. Press <kbd>Ctrl</kbd> + <kbd>`</kbd> to open the overlay and interact with voice controls
 
 # Building
 
@@ -80,6 +85,8 @@ cargo install --locked --git https://github.com/SpikeHD/Orbolay.git
 
 * [Freya](https://github.com/marc2332/freya) - the main GUI library (that I may have fallen in love with)
 * [Dioxus](https://dioxuslabs.com/) - framework for things like signals and `rsx!`
+* [Discover](https://github.com/trigg/Discover) - a fantastic reference for some of the IPC-related stuff
+* [docs.discord.food](https://docs.discord.food/) - incredible reference for undocumented Discord APIs
 * Everyone else who contributes positively to the Rust ecosystem :)
 
 # Contributing
