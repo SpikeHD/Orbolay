@@ -40,25 +40,11 @@ pub fn ipc_write(
 
 pub fn ipc_read(stream: &mut LocalSocketStream) -> Result<(u32, String), std::io::Error> {
   let mut header = [0u8; 8];
-
-  match stream.read_exact(&mut header) {
-    Ok(()) => {}
-    Err(e)
-      if e.kind() == std::io::ErrorKind::WouldBlock || e.kind() == std::io::ErrorKind::TimedOut =>
-    {
-      return Err(e);
-    }
-    Err(e) => return Err(e),
-  }
-
+  stream.read_exact(&mut header)?;
   let opcode = u32::from_le_bytes(header[0..4].try_into().unwrap());
   let len = u32::from_le_bytes(header[4..8].try_into().unwrap()) as usize;
   let mut payload = vec![0u8; len];
-
-  if len > 0 {
-    stream.read_exact(&mut payload)?;
-  }
-
+  stream.read_exact(&mut payload)?;
   let s = String::from_utf8(payload)
     .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
   Ok((opcode, s))
