@@ -3,6 +3,7 @@ use freya::prelude::Writable;
 use serde_json::Value;
 use std::time::Duration;
 
+use interprocess::TryClone;
 #[cfg(unix)]
 use interprocess::local_socket::{GenericFilePath, ToFsName, prelude::*};
 #[cfg(windows)]
@@ -74,13 +75,27 @@ fn drain_ui_messages(
   Ok(())
 }
 
+fn ui_message_loop(
+  mut stream: LocalSocketStream,
+  receiver: flume::Receiver<BridgeMessage>,
+  mut app_state: Signal<AppState, SyncStorage>,
+) {
+  loop {
+    if let Err(e) = drain_ui_messages(&mut stream, &receiver, &mut app_state) {
+      error!("UI message handler failed: {}", e);
+      break;
+    }
+
+    std::thread::sleep(Duration::from_millis(10));
+  }
+}
+
 pub fn create_ipc_connection(
   mut app_state: Signal<AppState, SyncStorage>,
   receiver: flume::Receiver<BridgeMessage>,
   client_id: String,
 ) -> Result<(), Box<dyn std::error::Error>> {
   let mut stream = try_create_stream()?;
-  stream.set_nonblocking(true)?;
 
   let handshake = serde_json::json!({
     "v": 1,
@@ -123,9 +138,13 @@ pub fn create_ipc_connection(
       _ => {}
     }
 
-    drain_ui_messages(&mut stream, &receiver, &mut app_state)?;
     std::thread::sleep(Duration::from_millis(10));
   }
+
+  let ui_stream = stream.try_clone()?;
+  let ui_receiver = receiver.clone();
+  let ui_app_state = app_state;
+  std::thread::spawn(move || ui_message_loop(ui_stream, ui_receiver, ui_app_state));
 
   let auth_msg = build_rpc_authorize_request(&client_id);
   ipc_write(&mut stream, OP_FRAME, &serde_json::to_string(&auth_msg)?)?;
@@ -144,12 +163,6 @@ pub fn create_ipc_connection(
         app_state.write().voice_users = vec![];
         break;
       }
-      Err(e)
-        if e.kind() == std::io::ErrorKind::WouldBlock
-          || e.kind() == std::io::ErrorKind::TimedOut =>
-      {
-        // No IPC data right now
-      }
       Err(e) => {
         error!("IPC read error: {}", e);
         app_state.write().voice_users = vec![];
@@ -157,9 +170,6 @@ pub fn create_ipc_connection(
       }
       _ => {}
     }
-
-    drain_ui_messages(&mut stream, &receiver, &mut app_state)?;
-    std::thread::sleep(Duration::from_millis(10));
   }
 
   Ok(())
