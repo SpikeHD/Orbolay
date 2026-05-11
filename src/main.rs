@@ -100,7 +100,7 @@ fn main() {
   );
   // https://discourse.glfw.org/t/black-screen-when-setting-window-to-transparent-and-size-to-1920x1080/2585/4
   #[cfg(not(target_os = "macos"))]
-  let window_size = (monitor_size.0 + 1, monitor_size.1 + 1);
+  let window_size = (monitor_size.0 + 1, monitor_size.1 - 1);
 
   // If on Wayland, log a warning
   #[cfg(target_os = "linux")]
