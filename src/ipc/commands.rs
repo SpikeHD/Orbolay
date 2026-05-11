@@ -83,7 +83,7 @@ fn ui_message_loop(
   loop {
     if let Err(e) = drain_ui_messages(&mut stream, &receiver, &mut app_state) {
       error!("UI message handler failed: {}", e);
-      break;
+      continue;
     }
 
     std::thread::sleep(Duration::from_millis(10));
