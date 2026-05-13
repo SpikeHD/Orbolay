@@ -185,7 +185,7 @@ fn app() -> Element {
     create_notification_thread(app_state);
 
     // Write informational message to the app_state messages list
-    app_state.write().messages.push(MessageNotification {
+    app_state.write().notify(MessageNotification {
       title: format!(
         "Orbolay v{} (rev {})",
         APP_VERSION.unwrap_or("0.0.0"),

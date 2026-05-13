@@ -14,6 +14,7 @@ use crate::ipc::{
   handle_ui_message, ipc_read, ipc_write, subscribe_voice_channel, subscribe_voice_global,
 };
 use crate::log;
+use crate::payloads::MessageNotification;
 use crate::success;
 use crate::util::bridge::BridgeMessage;
 use crate::util::discord_auth::{build_rpc_authenticate_request, extract_auth_code};
@@ -72,62 +73,83 @@ fn drain_ui_messages(
   Ok(())
 }
 
-fn ui_message_loop(
-  mut stream: LocalSocketStream,
-  receiver: flume::Receiver<BridgeMessage>,
-  mut app_state: Signal<AppState, SyncStorage>,
-) {
-  loop {
-    if let Err(e) = drain_ui_messages(&mut stream, &receiver, &mut app_state) {
-      error!("UI message handler failed: {}", e);
-      continue;
-    }
-
-    std::thread::sleep(Duration::from_millis(10));
-  }
-}
-
 pub fn create_ipc_connection(
   mut app_state: Signal<AppState, SyncStorage>,
   receiver: flume::Receiver<BridgeMessage>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-  let mut stream = try_create_stream()?;
-
   let handshake = serde_json::json!({
     "v": 1,
     "client_id": CLIENT_ID,
   });
-  ipc_write(&mut stream, OP_HANDSHAKE, &handshake.to_string())?;
-
-  let ui_stream = stream.try_clone()?;
-  let ui_receiver = receiver.clone();
-  let ui_app_state = app_state;
-  std::thread::spawn(move || ui_message_loop(ui_stream, ui_receiver, ui_app_state));
 
   loop {
-    match ipc_read(&mut stream) {
-      Ok((OP_FRAME, payload)) => {
-        if let Ok(msg) = serde_json::from_str::<BridgeMessage>(&payload)
-          && let Err(e) = handle_command(&mut stream, &msg, &mut app_state)
-        {
-          error!("Error handling IPC command: {}", e);
-        }
-      }
-      Ok((OP_CLOSE, payload)) => {
-        log!("Stream closed: {}", payload);
-        app_state.write().voice_users = vec![];
-        break;
-      }
+    let mut stream = match try_create_stream() {
+      Ok(s) => s,
       Err(e) => {
-        error!("IPC read error: {}", e);
-        app_state.write().voice_users = vec![];
-        break;
+        error!("Failed to connect to Discord IPC socket: {}", e);
+        std::thread::sleep(Duration::from_secs(10));
+        continue;
       }
-      _ => {}
-    }
-  }
+    };
 
-  Ok(())
+    ipc_write(&mut stream, OP_HANDSHAKE, &handshake.to_string())?;
+
+    let ui_receiver = receiver.clone();
+    let mut ui_app_state = app_state;
+    let mut ui_stream = stream.try_clone()?;
+    let (tx, rx) = flume::unbounded();
+
+    // Thread to handle UI messages
+    std::thread::spawn(move || {
+      loop {
+        if let Err(e) = drain_ui_messages(&mut ui_stream, &ui_receiver, &mut ui_app_state) {
+          error!("UI message handler failed: {}", e);
+          continue;
+        }
+
+        if let Ok(()) = rx.try_recv() {
+          // Kill the thread
+          return;
+        }
+
+        std::thread::sleep(Duration::from_millis(10));
+      }
+    });
+
+    loop {
+      match ipc_read(&mut stream) {
+        Ok((OP_FRAME, payload)) => {
+          if let Ok(msg) = serde_json::from_str::<BridgeMessage>(&payload)
+            && let Err(e) = handle_command(&mut stream, &msg, &mut app_state)
+          {
+            error!("Error handling IPC command: {}", e);
+          }
+        }
+        Ok((OP_CLOSE, payload)) => {
+          log!("Stream closed: {}", payload);
+          app_state.write().voice_users = vec![];
+          break;
+        }
+        Err(e) => {
+          error!("IPC read error: {}", e);
+          app_state.write().voice_users = vec![];
+          break;
+        }
+        _ => {}
+      }
+    }
+
+    tx.send(())?;
+
+    app_state.write().notify(MessageNotification {
+      title: "Disconnected".into(),
+      body: "The connection to the Discord client has been closed, retrying in 10 seconds...".into(),
+      icon: "".into(),
+      ..Default::default()
+    });
+
+    std::thread::sleep(Duration::from_secs(10));
+  }
 }
 
 pub fn handle_command(

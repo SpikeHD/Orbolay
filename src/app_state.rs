@@ -39,4 +39,15 @@ impl AppState {
       sender.send(message).unwrap_or_default();
     }
   }
+
+  pub fn notify(&mut self, notification: MessageNotification) {
+    let messages_len = self.messages.len();
+
+    // Keep the last 3 elements
+    if messages_len > 3 {
+      self.messages.drain(0..messages_len - 3);
+    }
+
+    self.messages.push(notification);
+  }
 }

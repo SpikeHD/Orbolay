@@ -70,6 +70,20 @@ pub struct MessageNotification {
   pub timestamp: Option<String>,
 }
 
+impl Default for MessageNotification {
+  fn default() -> Self {
+    Self {
+      title: String::new(),
+      body: String::new(),
+      icon: String::new(),
+      guild_id: None,
+      channel_id: None,
+      message_id: None,
+      timestamp: Some(chrono::Utc::now().timestamp().to_string()),
+    }
+  }
+}
+
 impl MessageNotification {
   pub fn fetch_icon(&self) -> Result<Vec<u8>, ureq::Error> {
     let icon = if self.icon.starts_with("/") {
