@@ -24,8 +24,8 @@
 * Voice channel member list and status (who is speaking/muted/deafened/etc)
 * Custom notifications
 * Mute/deafen/disconnect controls
-* Customizable visuals and layout
-* Works with any modded client (including web!)
+* Customizable layout
+* Works with any official or modded client (including web!)
 
 # Compatibility
 
