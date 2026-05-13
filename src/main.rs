@@ -21,7 +21,9 @@ use crate::{
   components::{message_row, user_row, voice_controls},
   config::CornerAlignment,
   manager::OverlayManager,
+  notifications::create_notification_thread,
   payloads::MessageNotification,
+  transport::create_transport_thread,
   util::{colors, text::censor},
 };
 
@@ -33,7 +35,9 @@ mod ipc;
 mod keys;
 mod logger;
 mod manager;
+mod notifications;
 mod payloads;
+mod transport;
 mod user;
 mod util;
 mod websocket;
@@ -173,27 +177,12 @@ fn app() -> Element {
       }
     });
 
-    std::thread::spawn(move || {
-      let ws_port = args.port;
-
-      if args.websocket {
-        if let Err(e) = websocket::create_websocket(ws_port, app_state, ws_receiver) {
-          error!("Websocket server failed on port {}: {}", ws_port, e);
-        }
-        return;
-      }
-
-      let ipc_receiver = ws_receiver.clone();
-      if let Err(e) = ipc::create_ipc_connection(app_state, ipc_receiver) {
-        warn!("IPC connection failed: {}", e);
-        if let Err(e) = websocket::create_websocket(ws_port, app_state, ws_receiver) {
-          error!("Websocket server failed on port {}: {}", ws_port, e);
-        }
-      }
-    });
+    create_transport_thread(app_state, args.clone(), ws_receiver);
 
     #[cfg(not(target_os = "macos"))]
     keys::watch_keybinds(app_state, platform.sender());
+
+    create_notification_thread(app_state);
 
     // Write informational message to the app_state messages list
     app_state.write().messages.push(MessageNotification {
@@ -208,24 +197,6 @@ fn app() -> Element {
       guild_id: None,
       channel_id: None,
       message_id: None,
-    });
-
-    // Check the messages once per second, removing any that are older than 5 seconds
-    std::thread::spawn(move || {
-      loop {
-        std::thread::sleep(std::time::Duration::from_secs(1));
-
-        let current_timestamp = chrono::Utc::now().timestamp();
-        app_state.write().messages.retain(|message| {
-          let msg = message.clone();
-          if let Some(message_timestamp) = msg.timestamp {
-            let timestamp = message_timestamp.parse::<i64>().unwrap_or(0);
-            return current_timestamp - timestamp < 5;
-          }
-
-          true
-        });
-      }
     });
   });
 

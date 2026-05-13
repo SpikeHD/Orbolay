@@ -62,7 +62,6 @@ fn ws_stream(
     // TODO find a better way to do this
     std::thread::sleep(std::time::Duration::from_millis(50));
 
-    // Read from the stream
     if let Ok(msg) = websocket.read() {
       if msg.is_close() {
         log!("Stream closed");
@@ -78,111 +77,8 @@ fn ws_stream(
       let msg = msg.to_string();
       let msg: BridgeMessage = serde_json::from_str(&msg)?;
 
-      log!("Received message: {:?}", msg);
-
-      match msg.cmd.as_str() {
-        "REGISTER_CONFIG" => {
-          let user_id = msg
-            .data
-            .get("userId")
-            .and_then(|v| v.as_str())
-            .unwrap_or_default()
-            .to_string();
-          let mut data = serde_json::from_value::<Config>(msg.data).unwrap_or_default();
-
-          // Whether the config was valid or not, we still want the user_id to be set
-          data.user_id = user_id;
-
-          app_state.write().config = data;
-        }
-        "CHANNEL_JOINED" => {
-          let data = serde_json::from_value::<ChannelJoinPayload>(msg.data)?;
-          let mut users = vec![];
-
-          for voice_state in data.states {
-            users.push(voice_state.clone().into());
-
-            if voice_state.user_id == app_state.read().config.user_id {
-              // Set the current channel to the one we joined
-              app_state.write().current_channel =
-                voice_state.channel_id.clone().unwrap_or("0".to_string());
-            }
-          }
-
-          app_state.write().voice_users = users;
-        }
-        "VOICE_STATE_UPDATE" => {
-          let current_channel = app_state.read().current_channel.clone();
-          let mut state = app_state.write();
-          let channel_is_null = msg
-            .data
-            .get("state")
-            .and_then(|v| v.get("channelId"))
-            .map(|v| v.is_null())
-            .unwrap_or(false);
-          let mut data = serde_json::from_value::<UpdatePayload>(msg.data.clone())?;
-          let user = state
-            .voice_users
-            .iter_mut()
-            .find(|user| user.id == data.state.user_id);
-
-          let should_remove = match &data.state.channel_id {
-            Some(channel_id) => channel_id != &current_channel,
-            None => channel_is_null,
-          };
-
-          if should_remove {
-            state
-              .voice_users
-              .retain(|user| user.id != data.state.user_id);
-            continue;
-          }
-
-          // If this is an existing user in our state, update them
-          if let Some(user) = user {
-            // Set "streaming" to the value on the user if it is not included in the payload
-            if data.state.streaming.is_none() {
-              data.state.streaming = Some(user.streaming);
-            }
-
-            user.voice_state = data.state.clone().into();
-            user.streaming = data.state.streaming.unwrap_or_default();
-
-            continue;
-          }
-
-          // Otherwise, push them
-          state.voice_users.push(data.state.into());
-        }
-        "CHANNEL_LEFT" => {
-          // User left the channel, no more need for list
-          app_state.write().voice_users = vec![];
-          app_state.write().current_channel = String::new();
-        }
-        "MESSAGE_NOTIFICATION" => {
-          let mut data = serde_json::from_value::<MessageNotificationPayload>(msg.data)?;
-          data.message.timestamp = Some(chrono::Utc::now().timestamp().to_string());
-          data.message.icon = data.message.icon.replace(".webp", ".png");
-          let messages_len = app_state.read().messages.len();
-
-          // Keep the last 3 elements
-          if messages_len > 3 {
-            app_state.write().messages.drain(0..messages_len - 3);
-          }
-
-          app_state.write().messages.push(data.message);
-        }
-        "STREAMER_MODE" => {
-          app_state.write().is_censor = msg
-            .data
-            .get("enabled")
-            .unwrap_or(&Value::from(false))
-            .as_bool()
-            .unwrap_or_default();
-        }
-        _ => {
-          warn!("Unknown command: {}", msg.cmd);
-        }
+      if let Err(e) = handle_ws_message(&msg, &mut app_state) {
+        error!("Failed to handle websocket message: {}", e);
       }
     } else {
       // Try to retrieve something to send to the websocket
@@ -198,5 +94,121 @@ fn ws_stream(
       }
     }
   }
+  Ok(())
+}
+
+pub fn handle_ws_message(
+  msg: &BridgeMessage,
+  app_state: &mut Signal<AppState, SyncStorage>,
+) -> Result<(), Box<dyn std::error::Error>> {
+  log!("Received message: {:?}", msg);
+
+  let data = msg.data.clone();
+
+  match msg.cmd.as_str() {
+    "REGISTER_CONFIG" => {
+      let user_id = msg
+        .data
+        .get("userId")
+        .and_then(|v| v.as_str())
+        .unwrap_or_default()
+        .to_string();
+      let mut data = serde_json::from_value::<Config>(data).unwrap_or_default();
+
+      // Whether the config was valid or not, we still want the user_id to be set
+      data.user_id = user_id;
+
+      app_state.write().config = data;
+    }
+    "CHANNEL_JOINED" => {
+      let data = serde_json::from_value::<ChannelJoinPayload>(data)?;
+      let mut users = vec![];
+
+      for voice_state in data.states {
+        users.push(voice_state.clone().into());
+
+        if voice_state.user_id == app_state.read().config.user_id {
+          // Set the current channel to the one we joined
+          app_state.write().current_channel =
+            voice_state.channel_id.clone().unwrap_or("0".to_string());
+        }
+      }
+
+      app_state.write().voice_users = users;
+    }
+    "VOICE_STATE_UPDATE" => {
+      let current_channel = app_state.read().current_channel.clone();
+      let mut state = app_state.write();
+      let channel_is_null = msg
+        .data
+        .get("state")
+        .and_then(|v| v.get("channelId"))
+        .map(|v| v.is_null())
+        .unwrap_or(false);
+      let mut data = serde_json::from_value::<UpdatePayload>(msg.data.clone())?;
+      let user = state
+        .voice_users
+        .iter_mut()
+        .find(|user| user.id == data.state.user_id);
+
+      let should_remove = match &data.state.channel_id {
+        Some(channel_id) => channel_id != &current_channel,
+        None => channel_is_null,
+      };
+
+      if should_remove {
+        state
+          .voice_users
+          .retain(|user| user.id != data.state.user_id);
+        return Ok(());
+      }
+
+      // If this is an existing user in our state, update them
+      if let Some(user) = user {
+        // Set "streaming" to the value on the user if it is not included in the payload
+        if data.state.streaming.is_none() {
+          data.state.streaming = Some(user.streaming);
+        }
+
+        user.voice_state = data.state.clone().into();
+        user.streaming = data.state.streaming.unwrap_or_default();
+
+        return Ok(());
+      }
+
+      // Otherwise, push them
+      state.voice_users.push(data.state.into());
+    }
+    "CHANNEL_LEFT" => {
+      // User left the channel, no more need for list
+      app_state.write().voice_users = vec![];
+      app_state.write().current_channel = String::new();
+    }
+    "MESSAGE_NOTIFICATION" => {
+      let mut data = serde_json::from_value::<MessageNotificationPayload>(data)?;
+      data.message.timestamp = Some(chrono::Utc::now().timestamp().to_string());
+      data.message.icon = data.message.icon.replace(".webp", ".png");
+      let messages_len = app_state.read().messages.len();
+
+      // Keep the last 3 elements
+      if messages_len > 3 {
+        app_state.write().messages.drain(0..messages_len - 3);
+      }
+
+      app_state.write().messages.push(data.message);
+    }
+    "STREAMER_MODE" => {
+      app_state.write().is_censor = msg
+        .data
+        .get("enabled")
+        .unwrap_or(&Value::from(false))
+        .as_bool()
+        .unwrap_or_default();
+    }
+    _ => {
+      warn!("Unknown command: {}", msg.cmd);
+    }
+  }
+
   Ok(())
 }

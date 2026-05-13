@@ -11,7 +11,7 @@ use rdev::{Event, EventType, Key, grab, listen};
 
 use crate::{app_state::AppState, log, manager::OverlayManager};
 
-// TODO configurable
+// TODO make configurable
 static KEYBIND: [Key; 2] = [Key::ControlLeft, Key::BackQuote];
 
 #[derive(Debug, Clone)]

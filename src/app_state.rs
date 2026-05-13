@@ -7,7 +7,7 @@ pub struct AppState {
   pub config: Config,
   pub current_channel: String,
   pub is_open: bool,
-  pub is_censor: bool,
+  pub is_censor: bool, // Used in modded clients but not IPC
   pub voice_users: Vec<User>,
   pub messages: Vec<MessageNotification>,
 
