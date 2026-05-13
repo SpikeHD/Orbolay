@@ -1,6 +1,5 @@
 use dioxus::prelude::{Signal, SyncStorage};
 use freya::prelude::Writable;
-use serde_json::Value;
 use std::time::Duration;
 
 use interprocess::TryClone;
@@ -10,17 +9,15 @@ use interprocess::local_socket::{GenericFilePath, ToFsName, prelude::*};
 use interprocess::local_socket::{GenericNamespaced, ToNsName, prelude::*};
 
 use crate::app_state::AppState;
-use crate::error;
 use crate::ipc::{
-  OP_CLOSE, OP_FRAME, OP_HANDSHAKE, ReadyPayload, SelectedVoiceChannelPayload, handle_ipc_message,
+  OP_CLOSE, OP_FRAME, OP_HANDSHAKE, SelectedVoiceChannelPayload, handle_ipc_message,
   handle_ui_message, ipc_read, ipc_write, subscribe_voice_channel, subscribe_voice_global,
 };
 use crate::log;
 use crate::success;
 use crate::util::bridge::BridgeMessage;
-use crate::util::discord_auth::{
-  build_rpc_authenticate_request, build_rpc_authorize_request, extract_auth_code,
-};
+use crate::util::discord_auth::{build_rpc_authenticate_request, extract_auth_code};
+use crate::{CLIENT_ID, error};
 
 fn try_create_stream() -> Result<LocalSocketStream, Box<dyn std::error::Error>> {
   #[cfg(unix)]
@@ -93,61 +90,19 @@ fn ui_message_loop(
 pub fn create_ipc_connection(
   mut app_state: Signal<AppState, SyncStorage>,
   receiver: flume::Receiver<BridgeMessage>,
-  client_id: String,
 ) -> Result<(), Box<dyn std::error::Error>> {
   let mut stream = try_create_stream()?;
 
   let handshake = serde_json::json!({
     "v": 1,
-    "client_id": client_id,
+    "client_id": CLIENT_ID,
   });
   ipc_write(&mut stream, OP_HANDSHAKE, &handshake.to_string())?;
-
-  loop {
-    match ipc_read(&mut stream) {
-      Ok((OP_FRAME, payload)) => {
-        log!("Received during handshake: {}", payload);
-        if let Ok(msg) = serde_json::from_str::<Value>(&payload)
-          && msg["evt"] == "READY"
-        {
-          if let Some(data) = msg.get("data")
-            && let Ok(ready) = serde_json::from_value::<ReadyPayload>(data.clone())
-            && let Some(user) = ready.user
-          {
-            app_state.write().config.user_id = user.id;
-          }
-
-          success!("IPC connected and ready");
-          break;
-        }
-      }
-      Ok((OP_CLOSE, payload)) => {
-        return Err(format!("Discord closed connection during handshake: {}", payload).into());
-      }
-      Err(e)
-        if e.kind() == std::io::ErrorKind::WouldBlock
-          || e.kind() == std::io::ErrorKind::TimedOut =>
-      {
-        // No IPC data right now
-      }
-      Err(e) => {
-        error!("IPC read error: {}", e);
-        app_state.write().voice_users = vec![];
-        break;
-      }
-      _ => {}
-    }
-
-    std::thread::sleep(Duration::from_millis(10));
-  }
 
   let ui_stream = stream.try_clone()?;
   let ui_receiver = receiver.clone();
   let ui_app_state = app_state;
   std::thread::spawn(move || ui_message_loop(ui_stream, ui_receiver, ui_app_state));
-
-  let auth_msg = build_rpc_authorize_request(&client_id);
-  ipc_write(&mut stream, OP_FRAME, &serde_json::to_string(&auth_msg)?)?;
 
   loop {
     match ipc_read(&mut stream) {

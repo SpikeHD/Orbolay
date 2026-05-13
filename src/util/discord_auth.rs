@@ -1,13 +1,13 @@
 use serde_json::json;
 use url::Url;
 
-use crate::log;
+use crate::{CLIENT_ID, log};
 
-pub fn build_rpc_authorize_request(client_id: impl Into<String>) -> serde_json::Value {
+pub fn build_rpc_authorize_request() -> serde_json::Value {
   json!({
     "cmd": "AUTHORIZE",
     "args": {
-      "client_id": client_id.into(),
+      "client_id": CLIENT_ID,
       "scopes": ["rpc", "messages.read", "rpc.notifications.read"],
       "prompt": "none"
     },

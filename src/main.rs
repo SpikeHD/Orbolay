@@ -41,12 +41,16 @@ mod websocket;
 const GIT_HASH: Option<&str> = option_env!("GIT_HASH");
 const APP_NAME: Option<&str> = option_env!("CARGO_PKG_NAME");
 const APP_VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
+const CLIENT_ID: &str = "207646673902501888";
 
 pub static STATE: GlobalSignal<AppState> = GlobalSignal::new(AppState::new);
 pub static AVATAR_CACHE: GlobalSignal<HashMap<String, Vec<u8>>> = GlobalSignal::new(HashMap::new);
 
 #[derive(Debug, Clone, Options)]
 pub struct Args {
+  #[options(help = "Display usage information")]
+  help: bool,
+
   #[options(help = "The port to run the websocket server on", default = "6888")]
   port: u16,
 
@@ -62,6 +66,11 @@ pub struct Args {
 
 fn main() {
   let args = Args::parse_args_default_or_exit();
+
+  if args.help_requested() {
+    println!("{}", Args::usage());
+    std::process::exit(0);
+  }
 
   if args.version {
     println!(
@@ -165,7 +174,6 @@ fn app() -> Element {
     });
 
     std::thread::spawn(move || {
-      let client_id = String::from("207646673902501888");
       let ws_port = args.port;
 
       if args.websocket {
@@ -176,7 +184,7 @@ fn app() -> Element {
       }
 
       let ipc_receiver = ws_receiver.clone();
-      if let Err(e) = ipc::create_ipc_connection(app_state, ipc_receiver, client_id) {
+      if let Err(e) = ipc::create_ipc_connection(app_state, ipc_receiver) {
         warn!("IPC connection failed: {}", e);
         if let Err(e) = websocket::create_websocket(ws_port, app_state, ws_receiver) {
           error!("Websocket server failed on port {}: {}", ws_port, e);

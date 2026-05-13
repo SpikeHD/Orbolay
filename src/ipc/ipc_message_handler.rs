@@ -4,14 +4,15 @@ use interprocess::local_socket::prelude::*;
 use freya::prelude::Writable;
 
 use crate::app_state::AppState;
-use crate::error;
 use crate::ipc::{
-  NotificationCreatePayload, SpeakingPayload, VoiceChannelSelectPayload,
-  VoiceConnectionStatusPayload, VoiceSettingsUpdatePayload, VoiceState, subscribe_voice_channel,
-  unsubscribe_voice_channel,
+  NotificationCreatePayload, OP_FRAME, ReadyPayload, SpeakingPayload, VoiceChannelSelectPayload,
+  VoiceConnectionStatusPayload, VoiceSettingsUpdatePayload, VoiceState, ipc_write,
+  subscribe_voice_channel, unsubscribe_voice_channel,
 };
 use crate::log;
 use crate::payloads::MessageNotification;
+use crate::util::discord_auth::build_rpc_authorize_request;
+use crate::{error, success};
 
 pub fn handle_ipc_message(
   stream: &mut LocalSocketStream,
@@ -29,6 +30,18 @@ pub fn handle_ipc_message(
   log!("Handling event: {} - {:?}", evt, msg);
 
   match evt {
+    "READY" => {
+      if let Ok(ready) = serde_json::from_value::<ReadyPayload>(data.clone())
+        && let Some(user) = ready.user
+      {
+        state.config.user_id = user.id;
+      }
+
+      success!("IPC connected and ready");
+
+      let auth_msg = build_rpc_authorize_request();
+      ipc_write(stream, OP_FRAME, &serde_json::to_string(&auth_msg)?)?;
+    }
     "VOICE_CHANNEL_SELECT" => {
       let data = serde_json::from_value::<VoiceChannelSelectPayload>(data)?;
       let new_channel = data.channel_id.unwrap_or_default();
