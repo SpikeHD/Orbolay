@@ -15,7 +15,8 @@
 </div>
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/d7adf8d3-96e5-4159-ac1d-7afb131e1fc1" />
+  <img width="100%" alt="image" src="https://github.com/user-attachments/assets/1db1c839-c5c6-4106-b661-8e937dedcec6" />
+  <img width="100%" alt="image" src="https://github.com/user-attachments/assets/c37acdd6-9bfa-4822-aedf-49326f099f7f" />
 </div>
 
 # Features
