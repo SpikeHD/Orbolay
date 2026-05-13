@@ -41,8 +41,8 @@ pub fn ipc_write(
 pub fn ipc_read(stream: &mut LocalSocketStream) -> Result<(u32, String), std::io::Error> {
   let mut header = [0u8; 8];
   stream.read_exact(&mut header)?;
-  let opcode = u32::from_le_bytes(header[0..4].try_into().unwrap());
-  let len = u32::from_le_bytes(header[4..8].try_into().unwrap()) as usize;
+  let opcode = u32::from_le_bytes(header[0..4].try_into().expect("slice is always 4 bytes"));
+  let len = u32::from_le_bytes(header[4..8].try_into().expect("slice is always 4 bytes")) as usize;
   let mut payload = vec![0u8; len];
   stream.read_exact(&mut payload)?;
   let s = String::from_utf8(payload)
