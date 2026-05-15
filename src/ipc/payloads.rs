@@ -56,7 +56,7 @@ pub struct VoiceState {
 
 impl From<VoiceState> for User {
   fn from(val: VoiceState) -> Self {
-    let voice_state = val.clone().into();
+    let voice_state = UserVoiceState::from(&val);
 
     User {
       name: val
@@ -73,6 +73,18 @@ impl From<VoiceState> for User {
 
 impl From<VoiceState> for UserVoiceState {
   fn from(val: VoiceState) -> Self {
+    if val.voice_state.deaf || val.voice_state.self_deaf {
+      UserVoiceState::Deafened
+    } else if val.voice_state.mute || val.voice_state.self_mute {
+      UserVoiceState::Muted
+    } else {
+      UserVoiceState::NotSpeaking
+    }
+  }
+}
+
+impl From<&VoiceState> for UserVoiceState {
+  fn from(val: &VoiceState) -> Self {
     if val.voice_state.deaf || val.voice_state.self_deaf {
       UserVoiceState::Deafened
     } else if val.voice_state.mute || val.voice_state.self_mute {

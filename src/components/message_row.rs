@@ -57,7 +57,7 @@ pub fn message_row(mut props: MessageRowProps) -> Element {
           margin: "0 0 0 10",
 
           sampling: "trilinear",
-          image_data: dynamic_bytes(icon(&props.message.icon.clone())),
+          image_data: dynamic_bytes(icon(&props.message.icon)),
         }
 
         rect {

@@ -11,6 +11,7 @@ use crate::ipc::{
 };
 use crate::log;
 use crate::payloads::MessageNotification;
+use crate::user::UserVoiceState;
 use crate::util::discord_auth::build_rpc_authorize_request;
 use crate::{error, success};
 
@@ -31,7 +32,7 @@ pub fn handle_ipc_message(
 
   match evt {
     "READY" => {
-      if let Ok(ready) = serde_json::from_value::<ReadyPayload>(data.clone())
+      if let Ok(ready) = serde_json::from_value::<ReadyPayload>(data)
         && let Some(user) = ready.user
       {
         state.config.user_id = user.id;
@@ -72,14 +73,15 @@ pub fn handle_ipc_message(
       if let Some(user) = state.voice_users.iter_mut().find(|user| user.id == user_id) {
         user.name = data
           .nick
-          .clone()
-          .or(data.user.global_name.clone())
-          .unwrap_or(data.user.username.clone());
+          .as_ref()
+          .or(data.user.global_name.as_ref())
+          .cloned()
+          .unwrap_or_else(|| data.user.username.clone());
         user.avatar = data.user.avatar.clone().unwrap_or_default();
-        user.voice_state = data.clone().into();
+        user.voice_state = UserVoiceState::from(&data);
         user.streaming = false;
       } else {
-        state.voice_users.push(data.clone().into());
+        state.voice_users.push(data.into());
       }
     }
     "SPEAKING_START" => {

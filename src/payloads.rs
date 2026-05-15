@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use serde::Deserialize;
 
 use crate::{
@@ -87,20 +89,20 @@ impl Default for MessageNotification {
 impl MessageNotification {
   pub fn fetch_icon(&self) -> Result<Vec<u8>, ureq::Error> {
     let icon = if self.icon.starts_with("/") {
-      format!("https://discord.com{}", self.icon)
+      Cow::Owned(format!("https://discord.com{}", self.icon))
     } else {
-      self.icon.clone()
+      Cow::Borrowed(&self.icon)
     };
 
-    if let Some(img) = AVATAR_CACHE().get(&icon) {
+    if let Some(img) = AVATAR_CACHE().get(icon.as_ref()) {
       log!("Cache hit for icon {}", icon);
       return Ok(img.clone());
     }
 
     log!("Fetching icon from {}", icon);
-    let img = ureq::get(&icon).call()?.body_mut().read_to_vec()?;
+    let img = ureq::get(icon.as_ref()).call()?.body_mut().read_to_vec()?;
 
-    (*AVATAR_CACHE.write()).insert(icon.clone(), img.clone());
+    (*AVATAR_CACHE.write()).insert(icon.into_owned(), img.clone());
 
     Ok(img)
   }
