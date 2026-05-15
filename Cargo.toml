@@ -5,8 +5,11 @@ edition = "2024"
 rust-version = "1.95"
 
 [profile.release]
+opt-level = 3
 lto = true
-strip = "debuginfo"
+codegen-units = 1
+strip = true
+panic = "abort"
 
 [package.metadata.packager]
 product-name = "Orbolay"

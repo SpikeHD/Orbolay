@@ -143,7 +143,8 @@ pub fn create_ipc_connection(
 
     app_state.write().notify(MessageNotification {
       title: "Disconnected".into(),
-      body: "The connection to the Discord client has been closed, retrying in 10 seconds...".into(),
+      body: "The connection to the Discord client has been closed, retrying in 10 seconds..."
+        .into(),
       icon: "".into(),
       ..Default::default()
     });
