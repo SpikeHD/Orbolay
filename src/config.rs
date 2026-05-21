@@ -66,6 +66,20 @@ impl CornerAlignment {
       },
     }
   }
+
+  pub fn padding(&self, offset_x: i32, offset_y: i32) -> String {
+    let (top, bottom) = match self.y {
+      Alignment::Start => (offset_y, 0),
+      Alignment::End => (0, offset_y),
+      Alignment::Center => (0, 0),
+    };
+    let (left, right) = match self.x {
+      Alignment::Start => (offset_x, 0),
+      Alignment::End => (0, offset_x),
+      Alignment::Center => (0, 0),
+    };
+    format!("{top} {right} {bottom} {left}")
+  }
 }
 
 #[derive(Debug, Clone, Deserialize, PartialEq)]
@@ -75,6 +89,14 @@ pub struct Config {
   pub user_id: String,
   pub message_alignment: String,
   pub user_alignment: String,
+  #[serde(default)]
+  pub message_offset_x: i32,
+  #[serde(default)]
+  pub message_offset_y: i32,
+  #[serde(default)]
+  pub user_offset_x: i32,
+  #[serde(default)]
+  pub user_offset_y: i32,
   pub voice_semitransparent: bool,
   pub messages_semitransparent: bool,
   pub is_keybind_enabled: bool,
@@ -87,6 +109,10 @@ impl Default for Config {
       user_id: String::new(),
       message_alignment: "topright".into(),
       user_alignment: "topleft".into(),
+      message_offset_x: 0,
+      message_offset_y: 0,
+      user_offset_x: 0,
+      user_offset_y: 0,
       voice_semitransparent: true,
       messages_semitransparent: false,
       is_keybind_enabled: true,

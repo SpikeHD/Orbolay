@@ -234,6 +234,9 @@ fn app() -> Element {
       height: "100%",
       width: "100%",
 
+      padding: CornerAlignment::from_str(&app_state.read().config.user_alignment)
+        .padding(app_state.read().config.user_offset_x, app_state.read().config.user_offset_y),
+
       for user in app_state.read().voice_users.iter() {
         user_row {
           user: {
@@ -263,6 +266,9 @@ fn app() -> Element {
       background: "transparent",
       height: "100%",
       width: "100%",
+
+      padding: CornerAlignment::from_str(&app_state.read().config.message_alignment)
+        .padding(app_state.read().config.message_offset_x, app_state.read().config.message_offset_y),
 
       opacity: if app_state.read().config.messages_semitransparent && !app_state.read().is_open { "0.5" } else { "1.0" },
 
