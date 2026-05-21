@@ -150,11 +150,13 @@ fn main() {
 
         #[cfg(target_os = "linux")]
         {
+          use winit::platform::wayland::WindowAttributesExtWayland;
           use winit::platform::x11::{WindowAttributesExtX11, WindowType};
 
-          w = w
+          w = WindowAttributesExtX11::with_name(w, "orbolay", "orbolay")
             .with_x11_window_type(vec![WindowType::Utility])
             .with_override_redirect(true);
+          w = WindowAttributesExtWayland::with_name(w, "orbolay", "orbolay");
         }
 
         w
