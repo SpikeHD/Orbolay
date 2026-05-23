@@ -39,12 +39,27 @@
 
 ## With Package Managers
 
+> [!WARNING]
+> I **DO NOT** maintain Orbolay packages myself, but some kind people maintain them on their own spare time. Check the package repository for yourself if you are skeptical of it's legitimacy!
+
 > [!NOTE]
 > Maintaining an `orbolay` package somewhere else? Let me know in an issue and I will add it here!
+
+### Windows (scoop)
+```sh
+scoop bucket add turbo 'https://github.com/Small-Ku/turbo-bucket.git
+scoop install turbo/orbolay
+```
 
 ### Arch
 ```sh
 yay -S orbolay-bin
+```
+
+### Void
+```sh
+echo "repository=https://void.creations.works" | sudo tee /etc/xbps.d/creations.conf
+sudo xbps-install -S orbolay
 ```
 
 ### `cargo`
