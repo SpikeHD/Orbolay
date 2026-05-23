@@ -78,7 +78,7 @@ With your client open:
 
 ## Hyprland
 
-To use Orbolay with Hyprland, you will need to manually set some window rules (taken from #22). Note that this prevents the keybind and clickable controls from working:
+To use Orbolay with Hyprland, you will need to manually set some window rules (taken from [#22](https://github.com/SpikeHD/Orbolay/issues/22)). Note that this prevents the keybind and clickable controls from working:
 
 ```lua
 -- Orbolay
