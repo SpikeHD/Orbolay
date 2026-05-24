@@ -166,6 +166,7 @@ fn app() -> impl IntoElement {
   use_hook(move || {
     let (ws_sender, ws_receiver) = flume::unbounded::<crate::util::bridge::BridgeMessage>();
     let (redraw_tx, redraw_rx) = flume::unbounded::<()>();
+    #[cfg(not(target_os = "macos"))]
     let (keybind_tx, keybind_rx) = flume::unbounded::<keys::KeyEvent>();
 
     app_state.write().ws_sender = Some(ws_sender);
@@ -232,6 +233,7 @@ fn app() -> impl IntoElement {
       }
     }
 
+    #[cfg(not(target_os = "macos"))]
     spawn_forever(async move {
       while let Ok(event) = keybind_rx.recv_async().await {
         match event {
