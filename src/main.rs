@@ -15,19 +15,13 @@ use winit::{
 };
 
 use crate::{
-  app_state::{AppState, SharedAppState},
-  components::{MessageRow, UserRow, VoiceControls},
-  config::CornerAlignment,
-  manager::OverlayManager,
-  notifications::create_notification_thread,
-  payloads::MessageNotification,
-  transport::create_transport_thread,
-  util::{colors, text::censor},
+  app_state::{AppState, SharedAppState}, components::{MessageRow, UserRow, VoiceControls}, config::{CornerAlignment, load_config}, configurator::open_configurator, manager::OverlayManager, notifications::create_notification_thread, payloads::MessageNotification, transport::create_transport_thread, util::{colors, text::censor}
 };
 
 mod app_state;
 mod components;
 mod config;
+mod configurator;
 mod ipc;
 #[cfg(not(target_os = "macos"))]
 mod keys;
@@ -164,12 +158,16 @@ fn app() -> impl IntoElement {
   use_hook(move || {
     let (ws_sender, ws_receiver) = flume::unbounded::<crate::util::bridge::BridgeMessage>();
     let (redraw_tx, redraw_rx) = flume::unbounded::<()>();
-    let (overlay_tx, overlay_rx) = flume::unbounded::<()>();
+    let (keybind_tx, keybind_rx) = flume::unbounded::<keys::KeyEvent>();
 
     app_state.write().ws_sender = Some(ws_sender);
 
     // Shared state for background threads
-    let shared: SharedAppState = std::sync::Arc::new(std::sync::RwLock::new(AppState::new()));
+    let mut initial = AppState::new();
+    if let Some(saved) = load_config() {
+      initial.config = saved;
+    }
+    let shared: SharedAppState = std::sync::Arc::new(std::sync::RwLock::new(initial));
 
     if !args.debug {
       Platform::get().with_window(None, |w| {
@@ -178,7 +176,7 @@ fn app() -> impl IntoElement {
     }
 
     #[cfg(not(target_os = "macos"))]
-    keys::watch_keybinds(shared.clone(), overlay_tx);
+    keys::watch_keybinds(shared.clone(), keybind_tx);
 
     create_transport_thread(shared.clone(), redraw_tx.clone(), args.clone(), ws_receiver);
     create_notification_thread(shared.clone(), redraw_tx.clone());
@@ -198,9 +196,10 @@ fn app() -> impl IntoElement {
     });
 
     // sync SharedAppState -> AppState on every redraw signal
+    let shared_sync = shared.clone();
     spawn_forever(async move {
       while let Ok(()) = redraw_rx.recv_async().await {
-        let synced = shared.read().unwrap().clone();
+        let synced = shared_sync.read().unwrap().clone();
         let ws_sender = app_state.read().ws_sender.clone();
         let is_open = app_state.read().is_open;
         *app_state.write() = AppState {
@@ -211,13 +210,26 @@ fn app() -> impl IntoElement {
       }
     });
 
-    // toggle is_open in AppState when keybind fires
+    // Handle keybind events
+    let shared_cfg = shared.clone();
+    let redraw_tx_cfg = redraw_tx.clone();
     spawn_forever(async move {
-      while let Ok(()) = overlay_rx.recv_async().await {
-        let current = app_state.read().is_open;
-        app_state.write().is_open = !current;
+      while let Ok(event) = keybind_rx.recv_async().await {
+        match event {
+          keys::KeyEvent::ToggleOverlay => {
+            let current = app_state.read().is_open;
+            app_state.write().is_open = !current;
+          }
+          keys::KeyEvent::OpenConfigurator if app_state.read().is_open => {
+            open_configurator(shared_cfg.clone(), redraw_tx_cfg.clone());
+            app_state.write().is_open = false;
+          }
+          _ => {}
+        }
       }
     });
+
+    open_configurator(shared.clone(), redraw_tx.clone());
 
     redraw_tx.send(()).ok();
   });

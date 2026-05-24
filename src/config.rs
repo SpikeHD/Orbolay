@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
 use freya::prelude::{Alignment, Gaps};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, PartialEq)]
 pub enum AxisAlignment {
@@ -93,7 +93,7 @@ impl CornerAlignment {
   }
 }
 
-#[derive(Debug, Clone, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Config {
   #[serde(default)]
@@ -136,4 +136,28 @@ impl Default for Config {
       is_keybind_enabled: None,
     }
   }
+}
+
+fn config_dir() -> Option<std::path::PathBuf> {
+  Some(dirs::config_dir()?.join("orbolay"))
+}
+
+pub fn save_config(config: &Config) {
+  let Some(dir) = config_dir() else { return };
+  if std::fs::create_dir_all(&dir).is_err() {
+    return;
+  }
+  if let Ok(json) = serde_json::to_string_pretty(config) {
+    std::fs::write(dir.join("config.json"), json).ok();
+  }
+}
+
+pub fn load_config() -> Option<Config> {
+  let dir = config_dir()?;
+  let json = std::fs::read_to_string(dir.join("config.json")).ok()?;
+  serde_json::from_str(&json).ok()
+}
+
+pub fn is_first_run() -> bool {
+  load_config().is_none()
 }
