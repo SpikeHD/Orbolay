@@ -14,8 +14,17 @@ impl InputControl {
 
 impl Component for InputControl {
   fn render(&self) -> impl IntoElement {
+    let focus = use_focus();
+    let focus_status = use_focus_status(focus);
     let on_change = self.on_change.clone();
     let value = use_state(|| self.initial.clone().unwrap_or_default());
-    Input::new(value).on_submit(move |v| on_change.call(v))
+
+    use_side_effect(move || {
+      if !focus_status.read().is_focused() {
+        on_change.call(value.read().clone());
+      }
+    });
+
+    Input::new(value).a11y_id(focus.a11y_id())
   }
 }
