@@ -1,9 +1,6 @@
-use dioxus::prelude::{Signal, SyncStorage};
 use interprocess::local_socket::prelude::*;
 
-use freya::prelude::Writable;
-
-use crate::app_state::AppState;
+use crate::app_state::SharedAppState;
 use crate::ipc::{
   NotificationCreatePayload, OP_FRAME, ReadyPayload, SpeakingPayload, VoiceChannelSelectPayload,
   VoiceConnectionStatusPayload, VoiceSettingsUpdatePayload, VoiceState, ipc_write,
@@ -18,9 +15,10 @@ use crate::{error, success};
 pub fn handle_ipc_message(
   stream: &mut LocalSocketStream,
   msg: &crate::util::bridge::BridgeMessage,
-  app_state: &mut Signal<AppState, SyncStorage>,
+  shared: SharedAppState,
+  redraw_tx: &flume::Sender<()>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-  let mut state = app_state.write();
+  let mut state = shared.write().unwrap();
   let evt = msg
     .data
     .get("evt")
@@ -29,6 +27,8 @@ pub fn handle_ipc_message(
   let data = msg.data.get("data").cloned().unwrap_or_default();
 
   log!("Handling event: {} - {:?}", evt, msg);
+
+  let mut changed = true;
 
   match evt {
     "READY" => {
@@ -128,6 +128,7 @@ pub fn handle_ipc_message(
     "VOICE_CONNECTION_STATUS" => {
       let data = serde_json::from_value::<VoiceConnectionStatusPayload>(data)?;
       log!("Avg ping: {}ms", data.average_ping.unwrap_or_default());
+      changed = false;
     }
     "NOTIFICATION_CREATE" => {
       let data = serde_json::from_value::<NotificationCreatePayload>(data)?;
@@ -145,17 +146,18 @@ pub fn handle_ipc_message(
           .unwrap_or(String::new())
           .replace(".webp", ".png"),
       };
-      let messages_len = state.messages.len();
-
-      if messages_len > 3 {
-        state.messages.drain(0..messages_len - 3);
-      }
-
-      state.messages.push(notification);
+      state.notify(notification);
     }
     _ => {
       log!("Unknown IPC command: {}", msg.cmd);
+      changed = false;
     }
+  }
+
+  drop(state);
+
+  if changed {
+    let _ = redraw_tx.send(());
   }
 
   Ok(())

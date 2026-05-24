@@ -4,7 +4,6 @@ pub enum UserVoiceState {
   NotSpeaking,
   Muted,
   Deafened,
-  Unknown,
 }
 
 #[derive(Clone, Debug, PartialEq)]

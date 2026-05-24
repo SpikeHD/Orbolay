@@ -7,158 +7,123 @@ use crate::{
   util::{bridge::BridgeMessage, colors},
 };
 
-import_svg!(Deafened, "../../assets/deafened.svg", {
-  height: "24",
-  width: "24",
-});
-import_svg!(Deafen, "../../assets/deafen.svg", {
-  height: "24",
-  width: "24",
-});
-import_svg!(Muted, "../../assets/muted.svg", {
-  height: "24",
-  width: "24",
-});
-import_svg!(Mute, "../../assets/mute.svg", {
-  height: "24",
-  width: "24",
-});
-import_svg!(Disconnect, "../../assets/disconnect.svg", {
-  height: "24",
-  width: "24",
-});
-import_svg!(StopStream, "../../assets/stopstream.svg", {
-  height: "24",
-  width: "24",
-});
+static DEAFENED_SVG: &[u8] = include_bytes!("../../assets/deafened.svg");
+static DEAFEN_SVG: &[u8] = include_bytes!("../../assets/deafen.svg");
+static MUTED_SVG: &[u8] = include_bytes!("../../assets/muted.svg");
+static MUTE_SVG: &[u8] = include_bytes!("../../assets/mute.svg");
+static DISCONNECT_SVG: &[u8] = include_bytes!("../../assets/disconnect.svg");
+static STOP_STREAM_SVG: &[u8] = include_bytes!("../../assets/stopstream.svg");
 
-#[derive(Props, Clone, PartialEq)]
-pub struct VoiceControlsProps {
-  pub user: User,
-  pub app_state: Signal<AppState, SyncStorage>,
+#[derive(PartialEq)]
+struct ControlButton {
+  icon: &'static [u8],
+  is_red: bool,
+  on_click: EventHandler<()>,
 }
 
-#[derive(Props, Clone, PartialEq)]
-pub struct ButtonProps {
-  pub icon: Element,
-  pub is_red: bool,
-  pub onclick: Callback<MouseEvent>,
-}
+impl Component for ControlButton {
+  fn render(&self) -> impl IntoElement {
+    let mut hovered = use_state(|| false);
+    let is_red = self.is_red;
+    let icon = self.icon;
+    let on_click = self.on_click.clone();
 
-fn control_button(props: ButtonProps) -> Element {
-  let mut hovered = use_signal(|| false);
-
-  rsx! {
-    rect {
-      content: "flex",
-      direction: "vertical",
-      main_align: "center",
-      cross_align: "center",
-      height: "100%",
-      width: "20%",
-      margin: "6",
-      padding: "6",
-      corner_radius: "10",
-      background: if *hovered.read() {
-        if props.is_red {
+    rect()
+      .direction(Direction::Vertical)
+      .main_align(Alignment::Center)
+      .cross_align(Alignment::Center)
+      .height(Size::fill())
+      .width(Size::percent(20.))
+      .margin(Gaps::new_all(6.))
+      .padding(Gaps::new_all(6.))
+      .corner_radius(CornerRadius::new_all(10.))
+      .background(if *hovered.read() {
+        if is_red {
           colors::RED_GRAY
         } else {
           colors::LIGHT_GRAY
         }
       } else {
-        "transparent"
-      },
-
-      onclick: move |e| {
-        props.onclick.call(e);
-      },
-      onmouseenter: move |_| {
-        (*hovered.write()) = true;
-      },
-      onmouseleave: move |_| {
-        (*hovered.write()) = false;
-      },
-
-      {props.icon}
-    }
+        Color::TRANSPARENT
+      })
+      .on_press(move |_| on_click.call(()))
+      .on_pointer_enter(move |_| *hovered.write() = true)
+      .on_pointer_leave(move |_| *hovered.write() = false)
+      .child(svg(icon).width(Size::px(24.)).height(Size::px(24.)))
   }
 }
 
-pub fn voice_controls(mut props: VoiceControlsProps) -> Element {
-  rsx! {
-    rect {
-      content: "flex",
-      direction: "horizontal",
-      main_align: "center",
-      cross_align: "center",
-      height: "auto",
-      max_height: "60",
-      max_width: "400",
+#[derive(PartialEq)]
+pub struct VoiceControls {
+  pub user: User,
+  pub app_state: State<AppState>,
+}
 
-      background: colors::GRAY,
-      corner_radius: "10",
+impl Component for VoiceControls {
+  fn render(&self) -> impl IntoElement {
+    let mut app_state = self.app_state;
+    let is_muted = self.user.voice_state == UserVoiceState::Muted;
+    let is_deafened = self.user.voice_state == UserVoiceState::Deafened;
+    let is_streaming = self.user.streaming;
 
-      // Mute button
-      control_button {
-        icon: rsx! {
-          if props.user.voice_state == UserVoiceState::Muted || props.user.voice_state == UserVoiceState::Deafened {
-            Muted {}
-          } else {
-            Mute {}
-          }
+    rect()
+      .direction(Direction::Horizontal)
+      .main_align(Alignment::Center)
+      .cross_align(Alignment::Center)
+      .height(Size::auto())
+      .max_height(Size::px(60.))
+      .max_width(Size::px(400.))
+      .background(colors::GRAY)
+      .corner_radius(CornerRadius::new_all(10.))
+      .child(ControlButton {
+        icon: if is_muted || is_deafened {
+          MUTED_SVG
+        } else {
+          MUTE_SVG
         },
-        is_red: props.user.voice_state == UserVoiceState::Muted || props.user.voice_state == UserVoiceState::Deafened,
-        onclick: move |_| {
-          (*props.app_state.write()).send(BridgeMessage {
+        is_red: is_muted || is_deafened,
+        on_click: (move |()| {
+          app_state.write().send(BridgeMessage {
             cmd: "TOGGLE_MUTE".to_string(),
             data: Value::Null,
           })
-        }
-      }
-
-      // Deafen button
-      control_button {
-        icon: rsx! {
-          if props.user.voice_state == UserVoiceState::Deafened {
-            Deafened {}
-          } else {
-            Deafen {}
-          }
-        },
-        is_red: props.user.voice_state == UserVoiceState::Deafened,
-        onclick: move |_| {
-          (*props.app_state.write()).send(BridgeMessage {
+        })
+        .into(),
+      })
+      .child(ControlButton {
+        icon: if is_deafened { DEAFENED_SVG } else { DEAFEN_SVG },
+        is_red: is_deafened,
+        on_click: (move |()| {
+          app_state.write().send(BridgeMessage {
             cmd: "TOGGLE_DEAF".to_string(),
             data: Value::Null,
           })
-        }
-      }
-
-      // Disconnect button
-      control_button {
-        icon: rsx! { Disconnect {} },
+        })
+        .into(),
+      })
+      .child(ControlButton {
+        icon: DISCONNECT_SVG,
         is_red: true,
-        onclick: move |_| {
-          (*props.app_state.write()).send(BridgeMessage {
+        on_click: (move |()| {
+          app_state.write().send(BridgeMessage {
             cmd: "DISCONNECT".to_string(),
             data: Value::Null,
           })
-        }
-      }
-
-      // Stop stream button
-      if props.user.streaming {
-        control_button {
-          icon: rsx! { StopStream {} },
+        })
+        .into(),
+      })
+      .maybe(is_streaming, |el| {
+        el.child(ControlButton {
+          icon: STOP_STREAM_SVG,
           is_red: true,
-          onclick: move |_| {
-            (*props.app_state.write()).send(BridgeMessage {
+          on_click: (move |()| {
+            app_state.write().send(BridgeMessage {
               cmd: "STOP_STREAM".to_string(),
               data: Value::Null,
             })
-          }
-        }
-      }
-    }
+          })
+          .into(),
+        })
+      })
   }
 }

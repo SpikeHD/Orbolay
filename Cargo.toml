@@ -19,18 +19,17 @@ log-level = "debug"
 formats = ["all"]
 
 [dependencies]
+bytes = "1"
 chrono = "0.4.41"
 colored = "3.0.0"
-dioxus = { version = "0.6.3", features = ["hooks"] }
 display-info = "0.5.5"
 flume = "0.12"
-freya = { git = "https://github.com/marc2332/freya.git", rev = "881b565a4c14ddd5c8dc47ce738d2a0543a58bd4" }
+freya = { git = "https://github.com/marc2332/freya.git", branch = "main", features = ["engine"] }
 gumdrop = "0.8.1"
 interprocess = "2.4.2"
 native-dialog = { version = "0.9.0", features = ["windows_dpi_awareness", "windows_visual_styles"] }
 serde = "1.0.219"
 serde_json = "1.0.141"
-skia-safe = "0.87"
 sysinfo = { version = "0.38.4", default-features = false, features = ["user", "system"] }
 tungstenite = { version = "0.29", features = ["url"] }
 ureq = "3.0.12"

@@ -6,85 +6,78 @@ use crate::{
   util::{
     bridge::BridgeMessage,
     colors,
-    image::{circular_with_border, fetch_icon},
+    image::{circular_with_border, fetch_icon, image_from_bytes},
     text::{strip, truncate},
   },
 };
 
-#[derive(Props, Clone, PartialEq)]
-pub struct MessageRowProps {
-  pub app_state: Signal<AppState, SyncStorage>,
+#[derive(PartialEq)]
+pub struct MessageRow {
+  pub app_state: State<AppState>,
   pub message: MessageNotification,
 }
 
-pub fn message_row(mut props: MessageRowProps) -> Element {
-  rsx! {
-    rect {
-      content: "flex",
-      direction: "horizontal",
-      main_align: "start",
-      cross_align: "center",
-      height: "70",
-      max_width: "400",
-      margin: "6",
-      corner_radius: "10",
+impl Component for MessageRow {
+  fn render(&self) -> impl IntoElement {
+    let mut app_state = self.app_state;
+    let message = self.message.clone();
 
-      background: colors::GRAY,
-
-      // Navigate when clicked
-      onclick: move |_| {
-        (*props.app_state.write()).send(BridgeMessage {
+    rect()
+      .direction(Direction::Horizontal)
+      .main_align(Alignment::Start)
+      .cross_align(Alignment::Center)
+      .height(Size::px(70.))
+      .max_width(Size::px(400.))
+      .margin(Gaps::new_all(6.))
+      .corner_radius(CornerRadius::new_all(10.))
+      .background(colors::GRAY)
+      .on_press(move |_| {
+        app_state.write().send(BridgeMessage {
           cmd: "NAVIGATE".to_string(),
           data: serde_json::json!({
-            "guild_id": props.message.guild_id,
-            "channel_id": props.message.channel_id,
-            "message_id": props.message.message_id,
-          })
+            "guild_id": message.guild_id,
+            "channel_id": message.channel_id,
+            "message_id": message.message_id,
+          }),
         })
-      },
-
-      rect {
-        content: "flex",
-        direction: "horizontal",
-        main_align: "start",
-        cross_align: "center",
-        width: "auto",
-        height: "100%",
-
-        image {
-          width: "54",
-          height: "54",
-          margin: "0 0 0 10",
-
-          sampling: "trilinear",
-          image_data: dynamic_bytes(icon(&props.message.icon)),
-        }
-
-        rect {
-          content: "flex",
-          direction: "vertical",
-          main_align: "start",
-          cross_align: "start",
-          height: "100%",
-          width: "80%",
-          margin: "6 0 6 6",
-
-          label {
-            font_size: "14",
-            font_weight: "bold",
-            color: "white",
-            margin: "0 0 4 0",
-            "{props.message.title}"
-          }
-
-          label {
-            font_size: "14",
-            color: colors::SUPERLIGHT_GRAY,
-            "{truncate(strip(&props.message.body), 100)}"
-          }
-        }
-      }
-    }
+      })
+      .child(
+        rect()
+          .direction(Direction::Horizontal)
+          .main_align(Alignment::Start)
+          .cross_align(Alignment::Center)
+          .width(Size::auto())
+          .height(Size::fill())
+          .child(
+            image_from_bytes(icon(&self.message.icon))
+              .width(Size::px(54.))
+              .height(Size::px(54.))
+              .margin(Gaps::new(0., 0., 0., 10.)),
+          )
+          .child(
+            rect()
+              .direction(Direction::Vertical)
+              .main_align(Alignment::Start)
+              .cross_align(Alignment::Start)
+              .height(Size::fill())
+              .width(Size::fill())
+              .margin(Gaps::new(6., 0., 6., 6.))
+              .child(
+                label()
+                  .font_size(14.)
+                  .font_weight(FontWeight::BOLD)
+                  .color(Color::WHITE)
+                  .margin(Gaps::new(0., 0., 4., 0.))
+                  .text(self.message.title.clone()),
+              )
+              .child(
+                label()
+                  .font_size(14.)
+                  .color(colors::SUPERLIGHT_GRAY)
+                  .text(truncate(strip(&self.message.body), 100)),
+              ),
+          ),
+      )
   }
 }
 

@@ -6,12 +6,10 @@ use std::sync::{
 use std::thread;
 use std::time::{Duration, Instant};
 
-use freya::prelude::*;
 use rdev::{Event, EventType, Key, grab, listen};
 
-use crate::{app_state::AppState, log, manager::OverlayManager};
+use crate::{app_state::SharedAppState, log};
 
-// TODO make configurable
 static KEYBIND: [Key; 2] = [Key::ControlLeft, Key::BackQuote];
 
 #[derive(Debug, Clone)]
@@ -60,7 +58,7 @@ impl KeyState {
   }
 }
 
-pub fn watch_keybinds(mut app_state: Signal<AppState, SyncStorage>, platform: PlatformSender) {
+pub fn watch_keybinds(shared: SharedAppState, overlay_tx: flume::Sender<()>) {
   let key_state = Arc::new(Mutex::new(KeyState::new()));
   let pressed = Arc::new(AtomicBool::new(false));
   let enabled = Arc::new(AtomicBool::new(true));
@@ -105,21 +103,17 @@ pub fn watch_keybinds(mut app_state: Signal<AppState, SyncStorage>, platform: Pl
         _ => {}
       }
 
-      // Always return the event, we should never block it
       Some(event)
     };
 
-    // This blocks
     if let Err(e) = grab(callback) {
       log!("Failed to grab global hotkeys: {:?}", e);
 
-      // Clone for fallback listen mode
       let key_state_fallback = key_state.clone();
       let pressed_fallback = pressed.clone();
       let enabled_fallback = enabled.clone();
       let tx_fallback = tx.clone();
 
-      // If grab fails, we can at least try listening mode (doesn't work on Wayland though)
       if let Err(e) = listen(move |event: Event| {
         if !enabled_fallback.load(Ordering::Relaxed) {
           return;
@@ -151,14 +145,12 @@ pub fn watch_keybinds(mut app_state: Signal<AppState, SyncStorage>, platform: Pl
     }
   });
 
-  // Thread for keeping track of keybind state and toggling overlay
   thread::spawn(move || {
     loop {
-      let is_enabled = app_state.read().config.is_keybind_enabled;
+      let is_enabled = shared.read().unwrap().config.is_keybind_enabled;
       enabled_monitor.store(is_enabled, Ordering::Relaxed);
 
       if !is_enabled {
-        // Clear key state when disabled
         key_state_monitor.lock().unwrap().clear();
         pressed_monitor.store(false, Ordering::Relaxed);
         thread::sleep(Duration::from_secs(1));
@@ -167,10 +159,9 @@ pub fn watch_keybinds(mut app_state: Signal<AppState, SyncStorage>, platform: Pl
 
       if rx.try_recv().is_ok() {
         log!("Toggling overlay");
-        OverlayManager::toggle(&mut app_state, &platform);
+        let _ = overlay_tx.send(());
       }
 
-      // Clear old key states (in case we missed a key release)
       {
         let mut state = key_state_monitor.lock().unwrap();
         if state.last_update.elapsed() > Duration::from_secs(5) {

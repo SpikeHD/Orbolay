@@ -1,9 +1,6 @@
-use std::borrow::Cow;
-
 use serde::Deserialize;
 
 use crate::{
-  AVATAR_CACHE, log,
   user::{User, UserVoiceState},
 };
 
@@ -83,27 +80,5 @@ impl Default for MessageNotification {
       message_id: None,
       timestamp: Some(chrono::Utc::now().timestamp().to_string()),
     }
-  }
-}
-
-impl MessageNotification {
-  pub fn fetch_icon(&self) -> Result<Vec<u8>, ureq::Error> {
-    let icon = if self.icon.starts_with("/") {
-      Cow::Owned(format!("https://discord.com{}", self.icon))
-    } else {
-      Cow::Borrowed(&self.icon)
-    };
-
-    if let Some(img) = AVATAR_CACHE().get(icon.as_ref()) {
-      log!("Cache hit for icon {}", icon);
-      return Ok(img.clone());
-    }
-
-    log!("Fetching icon from {}", icon);
-    let img = ureq::get(icon.as_ref()).call()?.body_mut().read_to_vec()?;
-
-    (*AVATAR_CACHE.write()).insert(icon.into_owned(), img.clone());
-
-    Ok(img)
   }
 }

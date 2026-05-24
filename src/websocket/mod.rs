@@ -1,10 +1,9 @@
-use freya::prelude::{Readable, Signal, SyncStorage, Writable};
 use serde_json::Value;
 use std::net::{TcpListener, TcpStream};
 use tungstenite::{Message, Utf8Bytes, accept};
 
 use crate::{
-  app_state::AppState,
+  app_state::SharedAppState,
   config::Config,
   error, log,
   payloads::{ChannelJoinPayload, MessageNotificationPayload, UpdatePayload},
@@ -15,7 +14,8 @@ use crate::{
 
 pub fn create_websocket(
   port: u16,
-  app_state: Signal<AppState, SyncStorage>,
+  shared: SharedAppState,
+  redraw_tx: flume::Sender<()>,
   ws_receiver: flume::Receiver<BridgeMessage>,
 ) -> Result<(), Box<dyn std::error::Error>> {
   let server = TcpListener::bind(format!("127.0.0.1:{port}"))?;
@@ -27,7 +27,9 @@ pub fn create_websocket(
         log!("Accepted connection");
 
         let recv = ws_receiver.clone();
-        std::thread::spawn(move || match ws_stream(stream, app_state, recv) {
+        let shared_clone = shared.clone();
+        let redraw_clone = redraw_tx.clone();
+        std::thread::spawn(move || match ws_stream(stream, shared_clone, redraw_clone, recv) {
           Ok(_) => {
             success!("Websocket stream closed");
           }
@@ -49,7 +51,8 @@ pub fn create_websocket(
 
 fn ws_stream(
   stream: TcpStream,
-  mut app_state: Signal<AppState, SyncStorage>,
+  shared: SharedAppState,
+  redraw_tx: flume::Sender<()>,
   ws_receiver: flume::Receiver<BridgeMessage>,
 ) -> Result<(), Box<dyn std::error::Error>> {
   let mut websocket = accept(stream)?;
@@ -59,14 +62,13 @@ fn ws_stream(
   log!("Stream connected");
 
   loop {
-    // TODO find a better way to do this
     std::thread::sleep(std::time::Duration::from_millis(50));
 
     if let Ok(msg) = websocket.read() {
       if msg.is_close() {
         log!("Stream closed");
-        // Safe to assume there is only one websocket client connected, and we can wipe state
-        app_state.write().voice_users = vec![];
+        shared.write().unwrap().voice_users = vec![];
+        let _ = redraw_tx.send(());
         break;
       }
 
@@ -77,11 +79,10 @@ fn ws_stream(
       let msg = msg.to_string();
       let msg: BridgeMessage = serde_json::from_str(&msg)?;
 
-      if let Err(e) = handle_ws_message(&msg, &mut app_state) {
+      if let Err(e) = handle_ws_message(&msg, shared.clone(), &redraw_tx) {
         error!("Failed to handle websocket message: {}", e);
       }
     } else {
-      // Try to retrieve something to send to the websocket
       if let Ok(msg) = ws_receiver.try_recv() {
         let msg = serde_json::to_string(&msg)?;
         log!("Sending message to websocket: {:?}", msg);
@@ -99,11 +100,13 @@ fn ws_stream(
 
 pub fn handle_ws_message(
   msg: &BridgeMessage,
-  app_state: &mut Signal<AppState, SyncStorage>,
+  shared: SharedAppState,
+  redraw_tx: &flume::Sender<()>,
 ) -> Result<(), Box<dyn std::error::Error>> {
   log!("Received message: {:?}", msg);
 
   let data = msg.data.clone();
+  let mut changed = true;
 
   match msg.cmd.as_str() {
     "REGISTER_CONFIG" => {
@@ -114,31 +117,26 @@ pub fn handle_ws_message(
         .unwrap_or_default()
         .to_string();
       let mut data = serde_json::from_value::<Config>(data).unwrap_or_default();
-
-      // Whether the config was valid or not, we still want the user_id to be set
       data.user_id = user_id;
-
-      app_state.write().config = data;
+      shared.write().unwrap().config = data;
     }
     "CHANNEL_JOINED" => {
       let data = serde_json::from_value::<ChannelJoinPayload>(data)?;
       let mut users = vec![];
 
+      let user_id = shared.read().unwrap().config.user_id.clone();
       for voice_state in data.states {
-        users.push(voice_state.clone().into());
-
-        if voice_state.user_id == app_state.read().config.user_id {
-          // Set the current channel to the one we joined
-          app_state.write().current_channel =
+        if voice_state.user_id == user_id {
+          shared.write().unwrap().current_channel =
             voice_state.channel_id.clone().unwrap_or("0".to_string());
         }
+        users.push(voice_state.into());
       }
 
-      app_state.write().voice_users = users;
+      shared.write().unwrap().voice_users = users;
     }
     "VOICE_STATE_UPDATE" => {
-      let current_channel = app_state.read().current_channel.clone();
-      let mut state = app_state.write();
+      let current_channel = shared.read().unwrap().current_channel.clone();
       let channel_is_null = msg
         .data
         .get("state")
@@ -146,53 +144,43 @@ pub fn handle_ws_message(
         .map(|v| v.is_null())
         .unwrap_or(false);
       let mut data = serde_json::from_value::<UpdatePayload>(msg.data.clone())?;
-      let user = state
-        .voice_users
-        .iter_mut()
-        .find(|user| user.id == data.state.user_id);
 
       let should_remove = match &data.state.channel_id {
         Some(channel_id) => channel_id != &current_channel,
         None => channel_is_null,
       };
 
+      let mut state = shared.write().unwrap();
+
       if should_remove {
-        state
-          .voice_users
-          .retain(|user| user.id != data.state.user_id);
-        return Ok(());
-      }
+        state.voice_users.retain(|user| user.id != data.state.user_id);
+      } else {
+        let user = state.voice_users.iter_mut().find(|user| user.id == data.state.user_id);
 
-      // If this is an existing user in our state, update them
-      if let Some(user) = user {
-        // Set "streaming" to the value on the user if it is not included in the payload
-        if data.state.streaming.is_none() {
-          data.state.streaming = Some(user.streaming);
+        if let Some(user) = user {
+          if data.state.streaming.is_none() {
+            data.state.streaming = Some(user.streaming);
+          }
+          user.voice_state = data.state.clone().into();
+          user.streaming = data.state.streaming.unwrap_or_default();
+        } else {
+          state.voice_users.push(data.state.into());
         }
-
-        user.voice_state = data.state.clone().into();
-        user.streaming = data.state.streaming.unwrap_or_default();
-
-        return Ok(());
       }
-
-      // Otherwise, push them
-      state.voice_users.push(data.state.into());
     }
     "CHANNEL_LEFT" => {
-      // User left the channel, no more need for list
-      app_state.write().voice_users = vec![];
-      app_state.write().current_channel = String::new();
+      let mut state = shared.write().unwrap();
+      state.voice_users = vec![];
+      state.current_channel = String::new();
     }
     "MESSAGE_NOTIFICATION" => {
       let mut data = serde_json::from_value::<MessageNotificationPayload>(data)?;
       data.message.timestamp = Some(chrono::Utc::now().timestamp().to_string());
       data.message.icon = data.message.icon.replace(".webp", ".png");
-
-      app_state.write().notify(data.message);
+      shared.write().unwrap().notify(data.message);
     }
     "STREAMER_MODE" => {
-      app_state.write().is_censor = msg
+      shared.write().unwrap().is_censor = msg
         .data
         .get("enabled")
         .unwrap_or(&Value::from(false))
@@ -201,7 +189,12 @@ pub fn handle_ws_message(
     }
     _ => {
       warn!("Unknown command: {}", msg.cmd);
+      changed = false;
     }
+  }
+
+  if changed {
+    let _ = redraw_tx.send(());
   }
 
   Ok(())

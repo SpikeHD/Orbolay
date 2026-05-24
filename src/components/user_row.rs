@@ -1,132 +1,133 @@
+use freya::engine::prelude::SkColor;
 use freya::prelude::*;
-use skia_safe::Color;
 
 use crate::{
   app_state::AppState,
-  config::{Alignment, CornerAlignment},
+  config::{AxisAlignment, CornerAlignment},
   user::{User, UserVoiceState},
   util::{
     colors,
-    image::{circular_with_border, fetch_icon},
+    image::{circular_with_border, fetch_icon, image_from_bytes},
   },
 };
 
-import_svg!(Deafened, "../../assets/deafened.svg", {
-  height: "16",
-  width: "16",
-  margin: "0 6 0 0",
-});
-import_svg!(Muted, "../../assets/muted.svg", {
-  height: "16",
-  width: "16",
-  margin: "0 6 0 0",
-});
-import_svg!(Streaming, "../../assets/streaming.svg", {
-  height: "16",
-  width: "16",
-  margin: "0 6 0 0",
-});
+static DEAFENED_SVG: &[u8] = include_bytes!("../../assets/deafened.svg");
+static MUTED_SVG: &[u8] = include_bytes!("../../assets/muted.svg");
+static STREAMING_SVG: &[u8] = include_bytes!("../../assets/streaming.svg");
 
-#[derive(Props, Clone, PartialEq)]
-pub struct UserRowProps {
-  pub app_state: Signal<AppState, SyncStorage>,
+#[derive(PartialEq)]
+struct AvatarIcon {
+  user: User,
+}
+
+impl Component for AvatarIcon {
+  fn render(&self) -> impl IntoElement {
+    rect()
+      .width(Size::px(50.))
+      .height(Size::px(50.))
+      .corner_radius(CornerRadius::new_all(25.))
+      .child(
+        image_from_bytes(avatar(&self.user))
+          .width(Size::fill())
+          .height(Size::fill()),
+      )
+  }
+}
+
+#[derive(PartialEq)]
+struct UserLabel {
+  user: User,
+}
+
+impl Component for UserLabel {
+  fn render(&self) -> impl IntoElement {
+    let user = &self.user;
+    let is_muted = user.voice_state == UserVoiceState::Muted;
+    let is_deafened = user.voice_state == UserVoiceState::Deafened;
+
+    rect()
+      .direction(Direction::Horizontal)
+      .main_align(Alignment::Center)
+      .cross_align(Alignment::Center)
+      .height(Size::percent(70.))
+      .background(colors::GRAY)
+      .corner_radius(CornerRadius::new_all(5.))
+      .margin(Gaps::new(0., 6., 0., 6.))
+      .child(
+        rect()
+          .padding(Gaps::new_all(4.))
+          .child(label().font_size(14.).color(Color::WHITE).text(user.name.clone())),
+      )
+      .maybe(is_muted, |el| {
+        el.child(
+          svg(MUTED_SVG)
+            .width(Size::px(16.))
+            .height(Size::px(16.))
+            .margin(Gaps::new(0., 6., 0., 0.)),
+        )
+      })
+      .maybe(is_deafened, |el| {
+        el.child(
+          svg(DEAFENED_SVG)
+            .width(Size::px(16.))
+            .height(Size::px(16.))
+            .margin(Gaps::new(0., 6., 0., 0.)),
+        )
+      })
+      .maybe(user.streaming, |el| {
+        el.child(
+          svg(STREAMING_SVG)
+            .width(Size::px(16.))
+            .height(Size::px(16.))
+            .margin(Gaps::new(0., 6., 0., 0.)),
+        )
+      })
+  }
+}
+
+#[derive(PartialEq)]
+pub struct UserRow {
+  pub app_state: State<AppState>,
   pub user: User,
 }
 
-#[component]
-fn avatar_icon(user: User) -> Element {
-  rsx! {
-    rect {
-      width: "auto",
-      height: "100%",
-      // 50% of the height
-      corner_radius: "25",
-      image {
-        sampling: "trilinear",
-        image_data: dynamic_bytes(avatar(&user)),
-      }
-    }
-  }
-}
+impl Component for UserRow {
+  fn render(&self) -> impl IntoElement {
+    let state = self.app_state.read();
+    let alignment = CornerAlignment::from_str(&state.config.user_alignment);
+    let is_right_aligned = alignment.x == AxisAlignment::End;
+    let is_open = state.is_open;
+    let is_voice_semitransparent = state.config.voice_semitransparent;
+    let is_speaking = self.user.voice_state == UserVoiceState::Speaking;
 
-#[component]
-fn user_label(user: User) -> Element {
-  rsx! {
-    rect {
-      content: "flex",
-      direction: "horizontal",
-      main_align: "center",
-      cross_align: "center",
+    let opacity = if !is_speaking && (is_voice_semitransparent && !is_open) {
+      0.5
+    } else {
+      1.0
+    };
 
-      height: "70%",
-      background: colors::GRAY,
-      corner_radius: "5",
-      margin: "0 6 0 6",
-
-      rect {
-        padding: "4",
-
-        label {
-          font_size: "14",
-          color: "white",
-          "{user.name}"
-        }
-      }
-
-      if user.voice_state == UserVoiceState::Muted {
-        Muted {}
-      } else if user.voice_state == UserVoiceState::Deafened {
-        Deafened {}
-      }
-
-      if user.streaming {
-        Streaming {}
-      }
-    }
-  }
-}
-
-pub fn user_row(props: UserRowProps) -> Element {
-  rsx! {
-    rect {
-      content: "flex",
-      direction: "horizontal",
-      main_align: "start",
-      cross_align: "center",
-      height: "50",
-      margin: "6",
-
-      opacity: if props.user.voice_state != UserVoiceState::Speaking &&
-        (props.app_state.read().config.voice_semitransparent && !props.app_state.read().is_open) {
-          "0.5"
-        } else {
-          "1.0"
-        },
-
-      // Change order based on right/left alignment
-      if CornerAlignment::from_str(&props.app_state.read().config.user_alignment).x == Alignment::End {
-        user_label {
-          user: props.user.clone()
-        }
-        avatar_icon {
-          user: props.user.clone()
-        }
-      } else {
-        avatar_icon {
-          user: props.user.clone()
-        }
-        user_label {
-          user: props.user.clone()
-        }
-      }
-    }
+    rect()
+      .direction(Direction::Horizontal)
+      .main_align(Alignment::Start)
+      .cross_align(Alignment::Center)
+      .height(Size::px(50.))
+      .margin(Gaps::new_all(6.))
+      .opacity(opacity)
+      .maybe(is_right_aligned, |el| {
+        el.child(UserLabel { user: self.user.clone() })
+          .child(AvatarIcon { user: self.user.clone() })
+      })
+      .maybe(!is_right_aligned, |el| {
+        el.child(AvatarIcon { user: self.user.clone() })
+          .child(UserLabel { user: self.user.clone() })
+      })
   }
 }
 
 fn avatar(user: &User) -> Vec<u8> {
   let border_color = match user.voice_state {
-    UserVoiceState::Speaking => Some(Color::from_rgb(67, 147, 120)),
-    UserVoiceState::Deafened | UserVoiceState::Muted => Some(Color::from_rgb(218, 62, 68)),
+    UserVoiceState::Speaking => Some(SkColor::from_rgb(67, 147, 120)),
+    UserVoiceState::Deafened | UserVoiceState::Muted => Some(SkColor::from_rgb(218, 62, 68)),
     _ => None,
   };
 

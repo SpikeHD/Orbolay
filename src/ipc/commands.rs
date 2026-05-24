@@ -1,5 +1,3 @@
-use dioxus::prelude::{Signal, SyncStorage};
-use freya::prelude::Writable;
 use std::time::Duration;
 
 use interprocess::TryClone;
@@ -8,7 +6,7 @@ use interprocess::local_socket::{GenericFilePath, ToFsName, prelude::*};
 #[cfg(windows)]
 use interprocess::local_socket::{GenericNamespaced, ToNsName, prelude::*};
 
-use crate::app_state::AppState;
+use crate::app_state::SharedAppState;
 use crate::ipc::{
   OP_CLOSE, OP_FRAME, OP_HANDSHAKE, SelectedVoiceChannelPayload, handle_ipc_message,
   handle_ui_message, ipc_read, ipc_write, subscribe_voice_channel, subscribe_voice_global,
@@ -64,17 +62,19 @@ fn try_create_stream() -> Result<LocalSocketStream, Box<dyn std::error::Error>> 
 fn drain_ui_messages(
   stream: &mut LocalSocketStream,
   receiver: &flume::Receiver<BridgeMessage>,
-  app_state: &mut Signal<AppState, SyncStorage>,
+  shared: SharedAppState,
+  redraw_tx: &flume::Sender<()>,
 ) -> Result<(), Box<dyn std::error::Error>> {
   while let Ok(msg) = receiver.try_recv() {
-    handle_ui_message(stream, &msg, app_state)?;
+    handle_ui_message(stream, &msg, shared.clone(), redraw_tx)?;
   }
 
   Ok(())
 }
 
 pub fn create_ipc_connection(
-  mut app_state: Signal<AppState, SyncStorage>,
+  shared: SharedAppState,
+  redraw_tx: flume::Sender<()>,
   receiver: flume::Receiver<BridgeMessage>,
 ) -> Result<(), Box<dyn std::error::Error>> {
   let handshake = serde_json::json!({
@@ -95,20 +95,19 @@ pub fn create_ipc_connection(
     ipc_write(&mut stream, OP_HANDSHAKE, &handshake.to_string())?;
 
     let ui_receiver = receiver.clone();
-    let mut ui_app_state = app_state;
     let mut ui_stream = stream.try_clone()?;
     let (tx, rx) = flume::unbounded();
+    let ui_shared = shared.clone();
+    let ui_redraw = redraw_tx.clone();
 
-    // Thread to handle UI messages
     std::thread::spawn(move || {
       loop {
-        if let Err(e) = drain_ui_messages(&mut ui_stream, &ui_receiver, &mut ui_app_state) {
+        if let Err(e) = drain_ui_messages(&mut ui_stream, &ui_receiver, ui_shared.clone(), &ui_redraw) {
           error!("UI message handler failed: {}", e);
           continue;
         }
 
         if let Ok(()) = rx.try_recv() {
-          // Kill the thread
           return;
         }
 
@@ -120,19 +119,21 @@ pub fn create_ipc_connection(
       match ipc_read(&mut stream) {
         Ok((OP_FRAME, payload)) => {
           if let Ok(msg) = serde_json::from_str::<BridgeMessage>(&payload)
-            && let Err(e) = handle_command(&mut stream, &msg, &mut app_state)
+            && let Err(e) = handle_command(&mut stream, &msg, shared.clone(), &redraw_tx)
           {
             error!("Error handling IPC command: {}", e);
           }
         }
         Ok((OP_CLOSE, payload)) => {
           log!("Stream closed: {}", payload);
-          app_state.write().voice_users = vec![];
+          shared.write().unwrap().voice_users = vec![];
+          let _ = redraw_tx.send(());
           break;
         }
         Err(e) => {
           error!("IPC read error: {}", e);
-          app_state.write().voice_users = vec![];
+          shared.write().unwrap().voice_users = vec![];
+          let _ = redraw_tx.send(());
           break;
         }
         _ => {}
@@ -141,13 +142,17 @@ pub fn create_ipc_connection(
 
     tx.send(())?;
 
-    app_state.write().notify(MessageNotification {
-      title: "Disconnected".into(),
-      body: "The connection to the Discord client has been closed, retrying in 10 seconds..."
-        .into(),
-      icon: "".into(),
-      ..Default::default()
-    });
+    {
+      let mut state = shared.write().unwrap();
+      state.notify(MessageNotification {
+        title: "Disconnected".into(),
+        body: "The connection to the Discord client has been closed, retrying in 10 seconds..."
+          .into(),
+        icon: "".into(),
+        ..Default::default()
+      });
+    }
+    let _ = redraw_tx.send(());
 
     std::thread::sleep(Duration::from_secs(10));
   }
@@ -156,7 +161,8 @@ pub fn create_ipc_connection(
 pub fn handle_command(
   stream: &mut LocalSocketStream,
   msg: &BridgeMessage,
-  app_state: &mut Signal<AppState, SyncStorage>,
+  shared: SharedAppState,
+  redraw_tx: &flume::Sender<()>,
 ) -> Result<(), Box<dyn std::error::Error>> {
   match msg.cmd.as_str() {
     "AUTHENTICATE" => {
@@ -199,12 +205,13 @@ pub fn handle_command(
       let data = msg.data.get("data").cloned().unwrap_or_default();
       let data = serde_json::from_value::<SelectedVoiceChannelPayload>(data).ok();
       if let Some(channel_id) = data.and_then(|d| d.id) {
-        app_state.write().current_channel = channel_id.clone();
+        shared.write().unwrap().current_channel = channel_id.clone();
         subscribe_voice_channel(stream, &channel_id)?;
+        let _ = redraw_tx.send(());
       }
     }
     "DISPATCH" => {
-      handle_ipc_message(stream, msg, app_state)?;
+      handle_ipc_message(stream, msg, shared, redraw_tx)?;
     }
     _ => {
       log!("Unhandled command: {}", msg.cmd);

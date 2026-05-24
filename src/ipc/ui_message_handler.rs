@@ -1,9 +1,6 @@
-use dioxus::prelude::{Signal, SyncStorage};
 use interprocess::local_socket::prelude::*;
 
-use freya::prelude::Writable;
-
-use crate::app_state::AppState;
+use crate::app_state::SharedAppState;
 use crate::ipc::setters::{disconnect, set_deafened, set_muted, stop_streaming};
 use crate::log;
 use crate::util::bridge::BridgeMessage;
@@ -11,11 +8,14 @@ use crate::util::bridge::BridgeMessage;
 pub fn handle_ui_message(
   stream: &mut LocalSocketStream,
   msg: &BridgeMessage,
-  app_state: &mut Signal<AppState, SyncStorage>,
+  shared: SharedAppState,
+  redraw_tx: &flume::Sender<()>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-  let mut state = app_state.write();
+  let mut state = shared.write().unwrap();
 
   log!("Handling UI message: {:?}", msg);
+
+  let mut changed = true;
 
   match msg.cmd.as_str() {
     "TOGGLE_MUTE" => {
@@ -25,7 +25,9 @@ pub fn handle_ui_message(
         .find(|user| user.id == state.config.user_id)
         .map(|user| user.voice_state == crate::user::UserVoiceState::Muted)
         .unwrap_or(false);
+      drop(state);
       set_muted(stream, !muted)?;
+      return Ok(()); // IPC will send back a state update
     }
     "TOGGLE_DEAF" => {
       let deafened = state
@@ -34,7 +36,9 @@ pub fn handle_ui_message(
         .find(|user| user.id == state.config.user_id)
         .map(|user| user.voice_state == crate::user::UserVoiceState::Deafened)
         .unwrap_or(false);
+      drop(state);
       set_deafened(stream, !deafened)?;
+      return Ok(());
     }
     "DISCONNECT" => {
       disconnect(stream)?;
@@ -42,11 +46,20 @@ pub fn handle_ui_message(
       state.voice_users.clear();
     }
     "STOP_STREAM" => {
+      drop(state);
       stop_streaming(stream)?;
+      return Ok(());
     }
     _ => {
       log!("Unknown UI command: {}", msg.cmd);
+      changed = false;
     }
+  }
+
+  drop(state);
+
+  if changed {
+    let _ = redraw_tx.send(());
   }
 
   Ok(())

@@ -1,5 +1,7 @@
-pub const RED_GRAY: &str = "#3f2226";
-pub const GRAY: &str = "#1e1f23";
-pub const LIGHT_GRAY: &str = "#37373c";
-pub const SUPERLIGHT_GRAY: &str = "#b4b4b4";
-pub const TRANSPARENT_GRAY: &str = "#22222256";
+use freya::prelude::Color;
+
+pub const RED_GRAY: Color = Color::new(0xFF3F2226);
+pub const GRAY: Color = Color::new(0xFF1E1F23);
+pub const LIGHT_GRAY: Color = Color::new(0xFF37373C);
+pub const SUPERLIGHT_GRAY: Color = Color::new(0xFFB4B4B4);
+pub const TRANSPARENT_GRAY: Color = Color::new(0x56222222);

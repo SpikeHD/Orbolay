@@ -1,84 +1,95 @@
 use std::fmt::Display;
 
+use freya::prelude::{Alignment, Gaps};
 use serde::Deserialize;
 
 #[derive(Debug, Clone, Deserialize, PartialEq)]
-pub enum Alignment {
+pub enum AxisAlignment {
   Start,
   Center,
   End,
 }
 
-impl Display for Alignment {
+impl Display for AxisAlignment {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     match self {
-      Alignment::Start => write!(f, "start"),
-      Alignment::Center => write!(f, "center"),
-      Alignment::End => write!(f, "end"),
+      AxisAlignment::Start => write!(f, "start"),
+      AxisAlignment::Center => write!(f, "center"),
+      AxisAlignment::End => write!(f, "end"),
+    }
+  }
+}
+
+impl AxisAlignment {
+  pub fn to_freya(&self) -> Alignment {
+    match self {
+      AxisAlignment::Start => Alignment::Start,
+      AxisAlignment::Center => Alignment::Center,
+      AxisAlignment::End => Alignment::End,
     }
   }
 }
 
 #[derive(Debug, Clone, Deserialize, PartialEq)]
 pub struct CornerAlignment {
-  pub x: Alignment,
-  pub y: Alignment,
+  pub x: AxisAlignment,
+  pub y: AxisAlignment,
 }
 
 impl CornerAlignment {
   pub fn from_str(s: impl AsRef<str>) -> Self {
     match s.as_ref().to_ascii_lowercase().as_str() {
       "topleft" => CornerAlignment {
-        x: Alignment::Start,
-        y: Alignment::Start,
+        x: AxisAlignment::Start,
+        y: AxisAlignment::Start,
       },
       "topright" => CornerAlignment {
-        x: Alignment::End,
-        y: Alignment::Start,
+        x: AxisAlignment::End,
+        y: AxisAlignment::Start,
       },
       "bottomleft" => CornerAlignment {
-        x: Alignment::Start,
-        y: Alignment::End,
+        x: AxisAlignment::Start,
+        y: AxisAlignment::End,
       },
       "bottomright" => CornerAlignment {
-        x: Alignment::End,
-        y: Alignment::End,
+        x: AxisAlignment::End,
+        y: AxisAlignment::End,
       },
       "topcenter" => CornerAlignment {
-        x: Alignment::Center,
-        y: Alignment::Start,
+        x: AxisAlignment::Center,
+        y: AxisAlignment::Start,
       },
       "bottomcenter" => CornerAlignment {
-        x: Alignment::Center,
-        y: Alignment::End,
+        x: AxisAlignment::Center,
+        y: AxisAlignment::End,
       },
       "centerleft" => CornerAlignment {
-        x: Alignment::Start,
-        y: Alignment::Center,
+        x: AxisAlignment::Start,
+        y: AxisAlignment::Center,
       },
       "centerright" => CornerAlignment {
-        x: Alignment::End,
-        y: Alignment::Center,
+        x: AxisAlignment::End,
+        y: AxisAlignment::Center,
       },
       _ => CornerAlignment {
-        x: Alignment::Start,
-        y: Alignment::Start,
+        x: AxisAlignment::Start,
+        y: AxisAlignment::Start,
       },
     }
   }
 
-  pub fn padding(&self, offset_x: i32, offset_y: i32) -> String {
+  pub fn to_gaps(&self, offset_x: i32, offset_y: i32) -> Gaps {
     let (top, bottom) = match self.y {
-      Alignment::Start => (offset_y, 0),
-      Alignment::End => (0, offset_y),
-      Alignment::Center => (0, 0),
+      AxisAlignment::Start => (offset_y as f32, 0.),
+      AxisAlignment::End => (0., offset_y as f32),
+      AxisAlignment::Center => (0., 0.),
     };
     let (left, right) = match self.x {
-      Alignment::Start => (offset_x, 0),
-      Alignment::End => (0, offset_x),
-      Alignment::Center => (0, 0),
+      AxisAlignment::Start => (offset_x as f32, 0.),
+      AxisAlignment::End => (0., offset_x as f32),
+      AxisAlignment::Center => (0., 0.),
     };
-    format!("{top} {right} {bottom} {left}")
+    Gaps::new(top, right, bottom, left)
   }
 }
 

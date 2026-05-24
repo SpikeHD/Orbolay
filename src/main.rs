@@ -3,8 +3,6 @@
   windows_subsystem = "windows"
 )]
 
-use std::collections::HashMap;
-
 use display_info::DisplayInfo;
 use freya::prelude::*;
 use gumdrop::Options;
@@ -17,8 +15,8 @@ use winit::{
 };
 
 use crate::{
-  app_state::AppState,
-  components::{message_row, user_row, voice_controls},
+  app_state::{AppState, SharedAppState},
+  components::{MessageRow, UserRow, VoiceControls},
   config::CornerAlignment,
   manager::OverlayManager,
   notifications::create_notification_thread,
@@ -46,9 +44,6 @@ const GIT_HASH: Option<&str> = option_env!("GIT_HASH");
 const APP_NAME: Option<&str> = option_env!("CARGO_PKG_NAME");
 const APP_VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
 const CLIENT_ID: &str = "207646673902501888";
-
-pub static STATE: GlobalSignal<AppState> = GlobalSignal::new(AppState::new);
-pub static AVATAR_CACHE: GlobalSignal<HashMap<String, Vec<u8>>> = GlobalSignal::new(HashMap::new);
 
 #[derive(Debug, Clone, Options)]
 pub struct Args {
@@ -86,7 +81,6 @@ fn main() {
     std::process::exit(0);
   }
 
-  // Close if we are already running
   if util::process::is_already_running() {
     MessageDialogBuilder::default()
       .set_level(MessageLevel::Error)
@@ -108,14 +102,12 @@ fn main() {
 
   #[cfg(target_os = "macos")]
   let window_size = (
-    (monitor_size.0 + 1) as f32 * primary.scale_factor,
-    (monitor_size.1 + 1) as f32 * primary.scale_factor,
+    (monitor_size.0 + 1) as f64 * primary.scale_factor as f64,
+    (monitor_size.1 + 1) as f64 * primary.scale_factor as f64,
   );
-  // https://discourse.glfw.org/t/black-screen-when-setting-window-to-transparent-and-size-to-1920x1080/2585/4
   #[cfg(not(target_os = "macos"))]
-  let window_size = (monitor_size.0 + 1, monitor_size.1 - 1);
+  let window_size = ((monitor_size.0 + 1) as f64, (monitor_size.1 - 1) as f64);
 
-  // If on Wayland, log a warning
   #[cfg(target_os = "linux")]
   {
     let session_type = std::env::var("XDG_SESSION_TYPE").unwrap_or_default();
@@ -126,68 +118,72 @@ fn main() {
     }
   }
 
-  launch_cfg(
-    app,
-    LaunchConfig::<f32>::new()
-      .with_title("orbolay")
-      .with_decorations(false)
-      .with_background("transparent")
-      .with_transparency(true)
-      .with_window_attributes(move |mut w| {
-        w = w
-          .with_inner_size(PhysicalSize::new(window_size.0, window_size.1))
-          .with_resizable(false)
-          .with_window_level(WindowLevel::AlwaysOnTop)
-          .with_position(PhysicalPosition::new(
-            monitor_position.0,
-            monitor_position.1,
-          ));
+  launch(
+    LaunchConfig::new().with_window(
+      WindowConfig::new(app)
+        .with_title("orbolay")
+        .with_decorations(false)
+        .with_transparency(true)
+        .with_background(Color::TRANSPARENT)
+        .with_window_attributes(move |mut w, _event_loop| {
+          w = w
+            .with_inner_size(PhysicalSize::new(window_size.0, window_size.1))
+            .with_resizable(false)
+            .with_window_level(WindowLevel::AlwaysOnTop)
+            .with_position(PhysicalPosition::new(
+              monitor_position.0,
+              monitor_position.1,
+            ));
 
-        #[cfg(target_os = "windows")]
-        {
-          w = w.with_skip_taskbar(true);
-        }
+          #[cfg(target_os = "windows")]
+          {
+            w = w.with_skip_taskbar(true);
+          }
 
-        #[cfg(target_os = "linux")]
-        {
-          use winit::platform::wayland::WindowAttributesExtWayland;
-          use winit::platform::x11::{WindowAttributesExtX11, WindowType};
+          #[cfg(target_os = "linux")]
+          {
+            use winit::platform::wayland::WindowAttributesExtWayland;
+            use winit::platform::x11::{WindowAttributesExtX11, WindowType};
 
-          w = WindowAttributesExtX11::with_name(w, "orbolay", "orbolay")
-            .with_x11_window_type(vec![WindowType::Utility])
-            .with_override_redirect(true);
-          w = WindowAttributesExtWayland::with_name(w, "orbolay", "orbolay");
-        }
+            w = WindowAttributesExtX11::with_name(w, "orbolay", "orbolay")
+              .with_x11_window_type(vec![WindowType::Utility])
+              .with_override_redirect(true);
+            w = WindowAttributesExtWayland::with_name(w, "orbolay", "orbolay");
+          }
 
-        w
-      }),
+          w
+        }),
+    ),
   );
 }
 
-fn app() -> Element {
+fn app() -> impl IntoElement {
   let args = Args::parse_args_default_or_exit();
-  let platform = use_platform();
-  let mut app_state = use_signal_sync(AppState::new);
+  let mut app_state = use_state(AppState::new);
 
-  use_effect(move || {
-    let (ws_sender, ws_receiver) = flume::unbounded();
+  use_hook(move || {
+    let (ws_sender, ws_receiver) = flume::unbounded::<crate::util::bridge::BridgeMessage>();
+    let (redraw_tx, redraw_rx) = flume::unbounded::<()>();
+    let (overlay_tx, overlay_rx) = flume::unbounded::<()>();
+
     app_state.write().ws_sender = Some(ws_sender);
 
-    platform.with_window(move |w| {
-      if !args.debug {
-        w.set_cursor_hittest(false).unwrap_or_default();
-      }
-    });
+    // Shared state for background threads
+    let shared: SharedAppState = std::sync::Arc::new(std::sync::RwLock::new(AppState::new()));
 
-    create_transport_thread(app_state, args.clone(), ws_receiver);
+    if !args.debug {
+      Platform::get().with_window(None, |w| {
+        w.set_cursor_hittest(false).unwrap_or_default();
+      });
+    }
 
     #[cfg(not(target_os = "macos"))]
-    keys::watch_keybinds(app_state, platform.sender());
+    keys::watch_keybinds(shared.clone(), overlay_tx);
 
-    create_notification_thread(app_state);
+    create_transport_thread(shared.clone(), redraw_tx.clone(), args.clone(), ws_receiver);
+    create_notification_thread(shared.clone(), redraw_tx.clone());
 
-    // Write informational message to the app_state messages list
-    app_state.write().notify(MessageNotification {
+    shared.write().unwrap().notify(MessageNotification {
       title: format!(
         "Orbolay v{} (rev {})",
         APP_VERSION.unwrap_or("0.0.0"),
@@ -200,109 +196,150 @@ fn app() -> Element {
       channel_id: None,
       message_id: None,
     });
+
+    // sync SharedAppState -> AppState on every redraw signal
+    spawn_forever(async move {
+      loop {
+        match redraw_rx.recv_async().await {
+          Ok(()) => {
+            let synced = shared.read().unwrap().clone();
+            let ws_sender = app_state.read().ws_sender.clone();
+            let is_open = app_state.read().is_open;
+            *app_state.write() = AppState {
+              ws_sender,
+              is_open,
+              ..synced
+            };
+          }
+          Err(_) => break,
+        }
+      }
+    });
+
+    // toggle is_open in AppState when keybind fires
+    spawn_forever(async move {
+      loop {
+        match overlay_rx.recv_async().await {
+          Ok(()) => {
+            let current = app_state.read().is_open;
+            app_state.write().is_open = !current;
+          }
+          Err(_) => break,
+        }
+      }
+    });
+
+    redraw_tx.send(()).ok();
   });
 
-  rsx!(
-    // Background layer
-    rect {
-      position: "absolute",
-      position_top: "0",
-      position_left: "0",
+  // Sync is_open -> cursor hit-test
+  use_side_effect(move || {
+    let is_open = app_state.read().is_open;
+    Platform::get().with_window(None, move |w| {
+      let _ = w.set_cursor_hittest(is_open);
+    });
+  });
 
-      background: if app_state.read().is_open { colors::TRANSPARENT_GRAY } else { "transparent" },
-      width: "100%",
-      height: "100%",
+  let state = app_state.read();
+  let is_open = state.is_open;
+  let is_censor = state.is_censor;
+  let config = state.config.clone();
+  let voice_users = state.voice_users.clone();
+  let messages = state.messages.clone();
+  let current_user = state
+    .voice_users
+    .iter()
+    .find(|u| u.id == state.config.user_id)
+    .cloned();
 
-      onclick: move |_e| {
-        // Close overlay using centralized manager
-        OverlayManager::close(&mut app_state, &platform.sender());
+  let user_alignment = CornerAlignment::from_str(&config.user_alignment);
+  let msg_alignment = CornerAlignment::from_str(&config.message_alignment);
+
+  let user_gaps = user_alignment.to_gaps(config.user_offset_x, config.user_offset_y);
+  let msg_gaps = msg_alignment.to_gaps(config.message_offset_x, config.message_offset_y);
+
+  // Root container
+  let voice_section = voice_users.iter().fold(
+    rect()
+      .direction(Direction::Vertical)
+      .cross_align(user_alignment.x.to_freya())
+      .main_align(user_alignment.y.to_freya())
+      .position(Position::new_absolute().top(0.).left(0.))
+      .background(Color::TRANSPARENT)
+      .height(Size::fill())
+      .width(Size::fill())
+      .padding(user_gaps),
+    |el, user| {
+      let mut u = user.clone();
+      if is_censor {
+        u.name = censor(&u.name);
       }
-    }
+      el.child(UserRow { user: u, app_state })
+    },
+  );
 
+  let messages_section = messages.iter().fold(
+    rect()
+      .direction(Direction::Vertical)
+      .cross_align(msg_alignment.x.to_freya())
+      .main_align(msg_alignment.y.to_freya())
+      .position(Position::new_absolute().top(0.).left(0.))
+      .background(Color::TRANSPARENT)
+      .height(Size::fill())
+      .width(Size::fill())
+      .padding(msg_gaps)
+      .opacity(
+        if config.messages_semitransparent && !is_open {
+          0.5
+        } else {
+          1.0
+        },
+      ),
+    |el, message| {
+      if is_censor {
+        el
+      } else {
+        el.child(MessageRow {
+          app_state,
+          message: message.clone(),
+        })
+      }
+    },
+  );
+
+  rect()
+    .width(Size::fill())
+    .height(Size::fill())
+    // Background overlay
+    .child(
+      rect()
+        .position(Position::new_absolute().top(0.).left(0.))
+        .background(if is_open {
+          colors::TRANSPARENT_GRAY
+        } else {
+          Color::TRANSPARENT
+        })
+        .width(Size::fill())
+        .height(Size::fill())
+        .on_press(move |_| {
+          OverlayManager::close(app_state);
+        }),
+    )
     // Voice users
-    rect {
-      content: "flex",
-      direction: "vertical",
-      cross_align: CornerAlignment::from_str(&app_state.read().config.user_alignment).x.to_string(),
-      main_align: CornerAlignment::from_str(&app_state.read().config.user_alignment).y.to_string(),
-
-      position: "absolute",
-      position_top: "0",
-      position_left: "0",
-
-      background: "transparent",
-      height: "100%",
-      width: "100%",
-
-      padding: CornerAlignment::from_str(&app_state.read().config.user_alignment)
-        .padding(app_state.read().config.user_offset_x, app_state.read().config.user_offset_y),
-
-      for user in app_state.read().voice_users.iter() {
-        user_row {
-          user: {
-            let mut u = user.clone();
-            if app_state.read().is_censor {
-              u.name = censor(&u.name);
-            }
-
-            u
-          },
-          app_state: app_state
-        }
-      }
-    }
-
+    .child(voice_section)
     // Messages
-    rect {
-      content: "flex",
-      direction: "vertical",
-      cross_align: CornerAlignment::from_str(&app_state.read().config.message_alignment).x.to_string(),
-      main_align: CornerAlignment::from_str(&app_state.read().config.message_alignment).y.to_string(),
-
-      position: "absolute",
-      position_top: "0",
-      position_left: "0",
-
-      background: "transparent",
-      height: "100%",
-      width: "100%",
-
-      padding: CornerAlignment::from_str(&app_state.read().config.message_alignment)
-        .padding(app_state.read().config.message_offset_x, app_state.read().config.message_offset_y),
-
-      opacity: if app_state.read().config.messages_semitransparent && !app_state.read().is_open { "0.5" } else { "1.0" },
-
-      if !app_state.read().is_censor {
-        for message in app_state.read().messages.iter() {
-          message_row {
-            app_state: app_state,
-            message: message.clone(),
-          }
-        }
-      }
-    }
-
-    // Voice Controls
-    if app_state.read().is_open {
-      if let Some(user) = app_state.read().voice_users.iter().find(|u| u.id == app_state.read().config.user_id) {
-        rect {
-          position: "absolute",
-          position_top: "0",
-          position_left: "0",
-
-          content: "flex",
-          direction: "horizontal",
-          main_align: "center",
-          cross_align: "end",
-          height: "90%",
-          width: "100%",
-
-          voice_controls {
-            user: user.clone(),
-            app_state: app_state
-          }
-        }
-      }
-    }
-  )
+    .child(messages_section)
+    // Voice controls
+    .maybe(is_open, |el| {
+      el.maybe_child(current_user.map(|user| {
+        rect()
+          .position(Position::new_absolute().top(0.).left(0.))
+          .direction(Direction::Horizontal)
+          .main_align(Alignment::Center)
+          .cross_align(Alignment::End)
+          .height(Size::percent(90.))
+          .width(Size::fill())
+          .child(VoiceControls { user, app_state })
+      }))
+    })
 }
