@@ -1,13 +1,15 @@
-use std::sync::atomic::Ordering;
-use std::time::Instant;
+use crate::log;
+use std::time::{Duration, Instant};
 
 use rdev::{EventType, Key};
 
 use super::{bind::Keybind, event::KeyEvent};
 
+const STALE_TIMEOUT: Duration = Duration::from_secs(5);
+
 pub struct KeyState {
   pub pressed: Vec<Key>,
-  pub last_update: Instant,
+  last_update: Instant,
 }
 
 impl KeyState {
@@ -18,19 +20,19 @@ impl KeyState {
     }
   }
 
-  pub fn press(&mut self, key: Key) {
+  fn press(&mut self, key: Key) {
     if !self.pressed.contains(&key) {
       self.pressed.push(key);
       self.last_update = Instant::now();
     }
   }
 
-  pub fn release(&mut self, key: Key) {
+  fn release(&mut self, key: Key) {
     self.pressed.retain(|&k| k != key);
     self.last_update = Instant::now();
   }
 
-  pub fn clear(&mut self) {
+  fn clear(&mut self) {
     self.pressed.clear();
     self.last_update = Instant::now();
   }
@@ -40,8 +42,15 @@ pub fn process(
   event_type: &EventType,
   key_state: &mut KeyState,
   keybinds: &[Keybind],
-  tx: &std::sync::mpsc::Sender<KeyEvent>,
+  tx: &flume::Sender<KeyEvent>,
 ) {
+  if key_state.last_update.elapsed() > STALE_TIMEOUT {
+    key_state.clear();
+    for bind in keybinds {
+      bind.reset();
+    }
+  }
+
   match event_type {
     EventType::KeyPress(k) => key_state.press(*k),
     EventType::KeyRelease(k) => key_state.release(*k),
@@ -50,20 +59,14 @@ pub fn process(
 
   for bind in keybinds {
     let matches = bind.matches(&key_state.pressed);
-    let was_active = bind.active.load(Ordering::Relaxed);
+    let was_active = bind.active();
 
     if matches && !was_active {
-      bind.active.store(true, Ordering::Relaxed);
+      bind.set_active(true);
+      log!("Key event: {:?}", bind.event);
       let _ = tx.send(bind.event.clone());
     } else if !matches && was_active {
-      bind.active.store(false, Ordering::Relaxed);
+      bind.set_active(false);
     }
-  }
-}
-
-pub fn reset(key_state: &mut KeyState, keybinds: &[Keybind]) {
-  key_state.clear();
-  for bind in keybinds {
-    bind.reset();
   }
 }

@@ -7,7 +7,7 @@ use super::event::KeyEvent;
 pub struct Keybind {
   pub keys: Vec<Key>,
   pub event: KeyEvent,
-  pub active: AtomicBool,
+  active: AtomicBool,
 }
 
 impl Keybind {
@@ -23,6 +23,14 @@ impl Keybind {
     pressed.len() == self.keys.len() && self.keys.iter().all(|k| pressed.contains(k))
   }
 
+  pub fn active(&self) -> bool {
+    self.active.load(Ordering::Relaxed)
+  }
+
+  pub fn set_active(&self, val: bool) {
+    self.active.store(val, Ordering::Relaxed);
+  }
+
   pub fn reset(&self) {
     self.active.store(false, Ordering::Relaxed);
   }
@@ -30,10 +38,7 @@ impl Keybind {
 
 pub fn default_keybinds() -> Vec<Keybind> {
   vec![
-    Keybind::new(
-      vec![Key::ControlLeft, Key::BackQuote],
-      KeyEvent::ToggleOverlay,
-    ),
+    Keybind::new(vec![Key::ControlLeft, Key::BackQuote], KeyEvent::ToggleOverlay),
     Keybind::new(vec![Key::KeyC], KeyEvent::OpenConfigurator),
   ]
 }
