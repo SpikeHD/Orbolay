@@ -31,11 +31,7 @@ pub fn open_configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) {
   spawn(async move {
     let _ = Platform::get()
       .launch_window(
-        WindowConfig::new({
-          let shared = shared.clone();
-          let redraw_tx = redraw_tx.clone();
-          move || configurator(shared.clone(), redraw_tx.clone())
-        })
+        WindowConfig::new(move || configurator(shared.clone(), redraw_tx.clone()))
         .with_background(GRAY)
         .with_size(WIDTH as f64, HEIGHT as f64)
         .with_title("Orbolay Configurator")

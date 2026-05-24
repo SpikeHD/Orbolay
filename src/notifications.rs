@@ -11,10 +11,8 @@ pub fn create_notification_thread(shared: SharedAppState, redraw_tx: flume::Send
         let before = state.messages.len();
 
         state.messages.retain(|message| {
-          let msg = message.clone();
-          if let Some(message_timestamp) = msg.timestamp {
-            let timestamp = message_timestamp.parse::<i64>().unwrap_or(0);
-            return current_timestamp - timestamp < 5;
+          if let Some(ts) = &message.timestamp {
+            return current_timestamp - ts.parse::<i64>().unwrap_or(0) < 5;
           }
           true
         });

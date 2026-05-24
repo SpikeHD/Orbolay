@@ -17,7 +17,7 @@ use winit::{
 use crate::{
   app_state::{AppState, SharedAppState},
   components::{MessageRow, UserRow, VoiceControls},
-  config::{CornerAlignment, load_config},
+  config::{CornerAlignment, is_first_run, load_config, save_config},
   configurator::open_configurator,
   manager::OverlayManager,
   notifications::create_notification_thread,
@@ -172,9 +172,11 @@ fn app() -> impl IntoElement {
 
     // Shared state for background threads
     let mut initial = AppState::new();
+
     if let Some(saved) = load_config() {
       initial.config = saved;
     }
+
     let shared: SharedAppState = std::sync::Arc::new(std::sync::RwLock::new(initial));
 
     if !args.debug {
@@ -186,7 +188,7 @@ fn app() -> impl IntoElement {
     #[cfg(not(target_os = "macos"))]
     keys::watch_keybinds(shared.clone(), keybind_tx);
 
-    create_transport_thread(shared.clone(), redraw_tx.clone(), args.clone(), ws_receiver);
+    create_transport_thread(shared.clone(), redraw_tx.clone(), args, ws_receiver);
     create_notification_thread(shared.clone(), redraw_tx.clone());
 
     shared.write().unwrap().notify(MessageNotification {
@@ -218,9 +220,18 @@ fn app() -> impl IntoElement {
       }
     });
 
-    // Handle keybind events
-    let shared_cfg = shared.clone();
-    let redraw_tx_cfg = redraw_tx.clone();
+    // Both of these must happen before shared/redraw_tx are moved into the keybind handler
+    if is_first_run() {
+      open_configurator(shared.clone(), redraw_tx.clone());
+      redraw_tx.send(()).ok();
+
+      // Write the config regardless so we don't trigger this in the future
+      {
+        let state = shared.read().unwrap();
+        save_config(&state.config);
+      }
+    }
+
     spawn_forever(async move {
       while let Ok(event) = keybind_rx.recv_async().await {
         match event {
@@ -229,17 +240,13 @@ fn app() -> impl IntoElement {
             app_state.write().is_open = !current;
           }
           keys::KeyEvent::OpenConfigurator if app_state.read().is_open => {
-            open_configurator(shared_cfg.clone(), redraw_tx_cfg.clone());
+            open_configurator(shared.clone(), redraw_tx.clone());
             app_state.write().is_open = false;
           }
           _ => {}
         }
       }
     });
-
-    open_configurator(shared.clone(), redraw_tx.clone());
-
-    redraw_tx.send(()).ok();
   });
 
   // Sync is_open -> cursor hit-test
@@ -251,9 +258,6 @@ fn app() -> impl IntoElement {
   });
 
   let state = app_state.read();
-  let is_open = state.is_open;
-  let is_censor = state.is_censor;
-  let config = state.config.clone();
   let voice_users = state.voice_users.clone();
   let messages = state.messages.clone();
   let current_user = state
@@ -263,15 +267,12 @@ fn app() -> impl IntoElement {
     .cloned();
 
   let user_alignment =
-    CornerAlignment::from_str(config.user_alignment.as_deref().unwrap_or("topleft"));
+    CornerAlignment::from_str(state.config.user_alignment.as_deref().unwrap_or("topleft"));
   let msg_alignment =
-    CornerAlignment::from_str(config.message_alignment.as_deref().unwrap_or("topright"));
+    CornerAlignment::from_str(state.config.message_alignment.as_deref().unwrap_or("topright"));
 
-  let user_gaps = user_alignment.to_gaps(config.user_offset_x, config.user_offset_y);
-  let msg_gaps = msg_alignment.to_gaps(config.message_offset_x, config.message_offset_y);
-
-  let is_right_aligned = user_alignment.x == config::AxisAlignment::End;
-  let is_voice_semitransparent = config.voice_semitransparent.unwrap_or(true);
+  let user_gaps = user_alignment.to_gaps(state.config.user_offset_x, state.config.user_offset_y);
+  let msg_gaps = msg_alignment.to_gaps(state.config.message_offset_x, state.config.message_offset_y);
 
   // Root container
   let voice_section = voice_users.iter().fold(
@@ -286,14 +287,14 @@ fn app() -> impl IntoElement {
       .padding(user_gaps),
     |el, user| {
       let mut u = user.clone();
-      if is_censor {
+      if state.is_censor {
         u.name = censor(&u.name);
       }
       el.child(UserRow {
         user: u,
-        is_right_aligned,
-        is_open,
-        is_voice_semitransparent,
+        is_open: state.is_open,
+        is_right_aligned: user_alignment.x == config::AxisAlignment::End,
+        is_voice_semitransparent: state.config.voice_semitransparent.unwrap_or(true),
       })
     },
   );
@@ -308,13 +309,13 @@ fn app() -> impl IntoElement {
       .height(Size::fill())
       .width(Size::fill())
       .padding(msg_gaps)
-      .opacity(if config.messages_semitransparent && !is_open {
+      .opacity(if state.config.messages_semitransparent && !state.is_open {
         0.5
       } else {
         1.0
       }),
     |el, message| {
-      if is_censor {
+      if state.is_censor {
         el
       } else {
         el.child(MessageRow {
@@ -332,7 +333,7 @@ fn app() -> impl IntoElement {
     .child(
       rect()
         .position(Position::new_absolute().top(0.).left(0.))
-        .background(if is_open {
+        .background(if state.is_open {
           colors::TRANSPARENT_GRAY
         } else {
           Color::TRANSPARENT
@@ -348,7 +349,7 @@ fn app() -> impl IntoElement {
     // Messages
     .child(messages_section)
     // Voice controls
-    .maybe(is_open, |el| {
+    .maybe(state.is_open, |el| {
       el.maybe_child(current_user.map(|user| {
         rect()
           .position(Position::new_absolute().top(0.).left(0.))
