@@ -147,7 +147,7 @@ pub fn watch_keybinds(shared: SharedAppState, overlay_tx: flume::Sender<()>) {
 
   thread::spawn(move || {
     loop {
-      let is_enabled = shared.read().unwrap().config.is_keybind_enabled;
+      let is_enabled = shared.read().unwrap().config.is_keybind_enabled.unwrap_or(true);
       enabled_monitor.store(is_enabled, Ordering::Relaxed);
 
       if !is_enabled {

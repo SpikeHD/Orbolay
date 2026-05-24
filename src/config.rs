@@ -96,10 +96,14 @@ impl CornerAlignment {
 #[derive(Debug, Clone, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Config {
+  #[serde(default)]
   pub port: Option<u16>,
+  #[serde(default)]
   pub user_id: String,
-  pub message_alignment: String,
-  pub user_alignment: String,
+  #[serde(default)]
+  pub message_alignment: Option<String>,
+  #[serde(default)]
+  pub user_alignment: Option<String>,
   #[serde(default)]
   pub message_offset_x: i32,
   #[serde(default)]
@@ -108,9 +112,12 @@ pub struct Config {
   pub user_offset_x: i32,
   #[serde(default)]
   pub user_offset_y: i32,
-  pub voice_semitransparent: bool,
+  #[serde(default)]
+  pub voice_semitransparent: Option<bool>,
+  #[serde(default)]
   pub messages_semitransparent: bool,
-  pub is_keybind_enabled: bool,
+  #[serde(default)]
+  pub is_keybind_enabled: Option<bool>,
 }
 
 impl Default for Config {
@@ -118,15 +125,15 @@ impl Default for Config {
     Self {
       port: Some(6888),
       user_id: String::new(),
-      message_alignment: "topright".into(),
-      user_alignment: "topleft".into(),
+      message_alignment: None,
+      user_alignment: None,
       message_offset_x: 0,
       message_offset_y: 0,
       user_offset_x: 0,
       user_offset_y: 0,
-      voice_semitransparent: true,
+      voice_semitransparent: None,
       messages_semitransparent: false,
-      is_keybind_enabled: true,
+      is_keybind_enabled: None,
     }
   }
 }

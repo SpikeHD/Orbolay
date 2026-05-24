@@ -118,7 +118,8 @@ pub fn handle_ws_message(
         .and_then(|v| v.as_str())
         .unwrap_or_default()
         .to_string();
-      let mut data = serde_json::from_value::<Config>(data).unwrap_or_default();
+      let existing = shared.read().unwrap().config.clone();
+      let mut data = serde_json::from_value::<Config>(data).unwrap_or(existing);
       data.user_id = user_id;
       shared.write().unwrap().config = data;
     }

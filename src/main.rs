@@ -242,11 +242,14 @@ fn app() -> impl IntoElement {
     .find(|u| u.id == state.config.user_id)
     .cloned();
 
-  let user_alignment = CornerAlignment::from_str(&config.user_alignment);
-  let msg_alignment = CornerAlignment::from_str(&config.message_alignment);
+  let user_alignment = CornerAlignment::from_str(config.user_alignment.as_deref().unwrap_or("topleft"));
+  let msg_alignment = CornerAlignment::from_str(config.message_alignment.as_deref().unwrap_or("topright"));
 
   let user_gaps = user_alignment.to_gaps(config.user_offset_x, config.user_offset_y);
   let msg_gaps = msg_alignment.to_gaps(config.message_offset_x, config.message_offset_y);
+
+  let is_right_aligned = user_alignment.x == config::AxisAlignment::End;
+  let is_voice_semitransparent = config.voice_semitransparent.unwrap_or(true);
 
   // Root container
   let voice_section = voice_users.iter().fold(
@@ -264,7 +267,12 @@ fn app() -> impl IntoElement {
       if is_censor {
         u.name = censor(&u.name);
       }
-      el.child(UserRow { user: u, app_state })
+      el.child(UserRow {
+        user: u,
+        is_right_aligned,
+        is_open,
+        is_voice_semitransparent,
+      })
     },
   );
 

@@ -2,8 +2,6 @@ use freya::engine::prelude::SkColor;
 use freya::prelude::*;
 
 use crate::{
-  app_state::AppState,
-  config::{AxisAlignment, CornerAlignment},
   user::{User, UserVoiceState},
   util::{
     colors,
@@ -90,20 +88,18 @@ impl Component for UserLabel {
 
 #[derive(PartialEq)]
 pub struct UserRow {
-  pub app_state: State<AppState>,
   pub user: User,
+  pub is_right_aligned: bool,
+  pub is_open: bool,
+  pub is_voice_semitransparent: bool,
 }
 
 impl Component for UserRow {
   fn render(&self) -> impl IntoElement {
-    let state = self.app_state.read();
-    let alignment = CornerAlignment::from_str(&state.config.user_alignment);
-    let is_right_aligned = alignment.x == AxisAlignment::End;
-    let is_open = state.is_open;
-    let is_voice_semitransparent = state.config.voice_semitransparent;
+    let is_right_aligned = self.is_right_aligned;
     let is_speaking = self.user.voice_state == UserVoiceState::Speaking;
 
-    let opacity = if !is_speaking && (is_voice_semitransparent && !is_open) {
+    let opacity = if !is_speaking && (self.is_voice_semitransparent && !self.is_open) {
       0.5
     } else {
       1.0
