@@ -47,7 +47,7 @@
 
 ### Windows (scoop)
 ```sh
-scoop bucket add turbo 'https://github.com/Small-Ku/turbo-bucket.git
+scoop bucket add turbo 'https://github.com/Small-Ku/turbo-bucket.git'
 scoop install turbo/orbolay
 ```
 
