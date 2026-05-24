@@ -102,7 +102,9 @@ pub fn create_ipc_connection(
 
     std::thread::spawn(move || {
       loop {
-        if let Err(e) = drain_ui_messages(&mut ui_stream, &ui_receiver, ui_shared.clone(), &ui_redraw) {
+        if let Err(e) =
+          drain_ui_messages(&mut ui_stream, &ui_receiver, ui_shared.clone(), &ui_redraw)
+        {
           error!("UI message handler failed: {}", e);
           continue;
         }

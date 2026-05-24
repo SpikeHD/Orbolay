@@ -1,4 +1,6 @@
-use crate::{Args, app_state::SharedAppState, error, ipc, util::bridge::BridgeMessage, warn, websocket};
+use crate::{
+  Args, app_state::SharedAppState, error, ipc, util::bridge::BridgeMessage, warn, websocket,
+};
 
 pub fn create_transport_thread(
   shared: SharedAppState,

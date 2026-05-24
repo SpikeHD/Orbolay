@@ -1,11 +1,15 @@
-use std::{cell::RefCell, collections::HashMap, rc::Rc, sync::{LazyLock, Mutex}};
+use std::{
+  cell::RefCell,
+  collections::HashMap,
+  rc::Rc,
+  sync::{LazyLock, Mutex},
+};
 
 use bytes::Bytes;
-use freya::elements::image::{image as img_fn, Image as FreyaImage, ImageHolder};
+use freya::elements::image::{Image as FreyaImage, ImageHolder, image as img_fn};
 use freya::engine::prelude::{
-  ClipOp, DirectContext, EncodedImageFormat, Paint, PaintStyle, PathBuilder,
-  SkColor, SkData, SkImage, SkPoint, SkRect,
-  raster_n32_premul,
+  ClipOp, DirectContext, EncodedImageFormat, Paint, PaintStyle, PathBuilder, SkColor, SkData,
+  SkImage, SkPoint, SkRect, raster_n32_premul,
 };
 
 use crate::log;
@@ -18,7 +22,11 @@ pub static DEFAULT_AVATAR: &[u8] = include_bytes!("../../assets/discordgrey.png"
 const OUTPUT_RES: (i32, i32) = (256, 256);
 
 pub fn image_from_bytes(bytes: Vec<u8>) -> FreyaImage {
-  let data = if bytes.is_empty() { DEFAULT_AVATAR } else { &bytes };
+  let data = if bytes.is_empty() {
+    DEFAULT_AVATAR
+  } else {
+    &bytes
+  };
   let sk_image = SkImage::from_encoded(SkData::new_copy(data))
     .or_else(|| SkImage::from_encoded(SkData::new_copy(DEFAULT_AVATAR)))
     .expect("Failed to decode avatar and fallback image");
@@ -93,7 +101,10 @@ pub fn fetch_icon(url: &str, placeholder: bool) -> Result<Vec<u8>, Box<dyn std::
   log!("Fetching avatar from {}", url);
   let img = ureq::get(url).call()?.body_mut().read_to_vec()?;
 
-  AVATAR_CACHE.lock().unwrap().insert(url.to_string(), img.clone());
+  AVATAR_CACHE
+    .lock()
+    .unwrap()
+    .insert(url.to_string(), img.clone());
 
   Ok(img)
 }

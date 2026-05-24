@@ -54,9 +54,12 @@ impl Component for UserLabel {
       .corner_radius(CornerRadius::new_all(5.))
       .margin(Gaps::new(0., 6., 0., 6.))
       .child(
-        rect()
-          .padding(Gaps::new_all(4.))
-          .child(label().font_size(14.).color(Color::WHITE).text(user.name.clone())),
+        rect().padding(Gaps::new_all(4.)).child(
+          label()
+            .font_size(14.)
+            .color(Color::WHITE)
+            .text(user.name.clone()),
+        ),
       )
       .maybe(is_muted, |el| {
         el.child(
@@ -114,12 +117,20 @@ impl Component for UserRow {
       .margin(Gaps::new_all(6.))
       .opacity(opacity)
       .maybe(is_right_aligned, |el| {
-        el.child(UserLabel { user: self.user.clone() })
-          .child(AvatarIcon { user: self.user.clone() })
+        el.child(UserLabel {
+          user: self.user.clone(),
+        })
+        .child(AvatarIcon {
+          user: self.user.clone(),
+        })
       })
       .maybe(!is_right_aligned, |el| {
-        el.child(AvatarIcon { user: self.user.clone() })
-          .child(UserLabel { user: self.user.clone() })
+        el.child(AvatarIcon {
+          user: self.user.clone(),
+        })
+        .child(UserLabel {
+          user: self.user.clone(),
+        })
       })
   }
 }

@@ -29,14 +29,16 @@ pub fn create_websocket(
         let recv = ws_receiver.clone();
         let shared_clone = shared.clone();
         let redraw_clone = redraw_tx.clone();
-        std::thread::spawn(move || match ws_stream(stream, shared_clone, redraw_clone, recv) {
-          Ok(_) => {
-            success!("Websocket stream closed");
-          }
-          Err(e) => {
-            error!("Error in websocket stream: {}", e);
-          }
-        });
+        std::thread::spawn(
+          move || match ws_stream(stream, shared_clone, redraw_clone, recv) {
+            Ok(_) => {
+              success!("Websocket stream closed");
+            }
+            Err(e) => {
+              error!("Error in websocket stream: {}", e);
+            }
+          },
+        );
       }
       Err(e) => {
         warn!("Failed to accept connection: {}", e);
@@ -153,9 +155,14 @@ pub fn handle_ws_message(
       let mut state = shared.write().unwrap();
 
       if should_remove {
-        state.voice_users.retain(|user| user.id != data.state.user_id);
+        state
+          .voice_users
+          .retain(|user| user.id != data.state.user_id);
       } else {
-        let user = state.voice_users.iter_mut().find(|user| user.id == data.state.user_id);
+        let user = state
+          .voice_users
+          .iter_mut()
+          .find(|user| user.id == data.state.user_id);
 
         if let Some(user) = user {
           if data.state.streaming.is_none() {

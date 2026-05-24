@@ -199,33 +199,23 @@ fn app() -> impl IntoElement {
 
     // sync SharedAppState -> AppState on every redraw signal
     spawn_forever(async move {
-      loop {
-        match redraw_rx.recv_async().await {
-          Ok(()) => {
-            let synced = shared.read().unwrap().clone();
-            let ws_sender = app_state.read().ws_sender.clone();
-            let is_open = app_state.read().is_open;
-            *app_state.write() = AppState {
-              ws_sender,
-              is_open,
-              ..synced
-            };
-          }
-          Err(_) => break,
-        }
+      while let Ok(()) = redraw_rx.recv_async().await {
+        let synced = shared.read().unwrap().clone();
+        let ws_sender = app_state.read().ws_sender.clone();
+        let is_open = app_state.read().is_open;
+        *app_state.write() = AppState {
+          ws_sender,
+          is_open,
+          ..synced
+        };
       }
     });
 
     // toggle is_open in AppState when keybind fires
     spawn_forever(async move {
-      loop {
-        match overlay_rx.recv_async().await {
-          Ok(()) => {
-            let current = app_state.read().is_open;
-            app_state.write().is_open = !current;
-          }
-          Err(_) => break,
-        }
+      while let Ok(()) = overlay_rx.recv_async().await {
+        let current = app_state.read().is_open;
+        app_state.write().is_open = !current;
       }
     });
 
@@ -288,13 +278,11 @@ fn app() -> impl IntoElement {
       .height(Size::fill())
       .width(Size::fill())
       .padding(msg_gaps)
-      .opacity(
-        if config.messages_semitransparent && !is_open {
-          0.5
-        } else {
-          1.0
-        },
-      ),
+      .opacity(if config.messages_semitransparent && !is_open {
+        0.5
+      } else {
+        1.0
+      }),
     |el, message| {
       if is_censor {
         el

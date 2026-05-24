@@ -1,6 +1,8 @@
 use std::sync::{Arc, RwLock};
 
-use crate::{config::Config, payloads::MessageNotification, user::User, util::bridge::BridgeMessage};
+use crate::{
+  config::Config, payloads::MessageNotification, user::User, util::bridge::BridgeMessage,
+};
 
 /// Thread-safe shared state for background threads.
 pub type SharedAppState = Arc<RwLock<AppState>>;

@@ -91,7 +91,11 @@ impl Component for VoiceControls {
         .into(),
       })
       .child(ControlButton {
-        icon: if is_deafened { DEAFENED_SVG } else { DEAFEN_SVG },
+        icon: if is_deafened {
+          DEAFENED_SVG
+        } else {
+          DEAFEN_SVG
+        },
         is_red: is_deafened,
         on_click: (move |()| {
           app_state.write().send(BridgeMessage {
