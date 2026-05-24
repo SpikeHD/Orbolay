@@ -24,10 +24,17 @@ pub fn watch_keybinds(shared: SharedAppState, keybind_tx: flume::Sender<KeyEvent
   let enabled = Arc::new(AtomicBool::new(true));
   let enabled_monitor = enabled.clone();
 
-  thread::spawn(move || loop {
-    let is_enabled = shared.read().unwrap().config.is_keybind_enabled.unwrap_or(true);
-    enabled_monitor.store(is_enabled, Ordering::Relaxed);
-    thread::sleep(Duration::from_secs(1));
+  thread::spawn(move || {
+    loop {
+      let is_enabled = shared
+        .read()
+        .unwrap()
+        .config
+        .is_keybind_enabled
+        .unwrap_or(true);
+      enabled_monitor.store(is_enabled, Ordering::Relaxed);
+      thread::sleep(Duration::from_secs(1));
+    }
   });
 
   thread::spawn(move || {
@@ -38,7 +45,12 @@ pub fn watch_keybinds(shared: SharedAppState, keybind_tx: flume::Sender<KeyEvent
 
     let grab_result = grab(move |event: Event| {
       if enabled_grab.load(Ordering::Relaxed) {
-        process(&event.event_type, &mut key_state_grab.borrow_mut(), &keybinds_grab, &keybind_tx_grab);
+        process(
+          &event.event_type,
+          &mut key_state_grab.borrow_mut(),
+          &keybinds_grab,
+          &keybind_tx_grab,
+        );
       }
       Some(event)
     });
@@ -51,7 +63,12 @@ pub fn watch_keybinds(shared: SharedAppState, keybind_tx: flume::Sender<KeyEvent
 
       if let Err(e) = listen(move |event: Event| {
         if enabled.load(Ordering::Relaxed) {
-          process(&event.event_type, &mut key_state_listen.borrow_mut(), &keybinds_listen, &keybind_tx);
+          process(
+            &event.event_type,
+            &mut key_state_listen.borrow_mut(),
+            &keybinds_listen,
+            &keybind_tx,
+          );
         }
       }) {
         log!("Failed to listen for global hotkeys: {:?}", e);

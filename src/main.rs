@@ -268,11 +268,17 @@ fn app() -> impl IntoElement {
 
   let user_alignment =
     CornerAlignment::from_str(state.config.user_alignment.as_deref().unwrap_or("topleft"));
-  let msg_alignment =
-    CornerAlignment::from_str(state.config.message_alignment.as_deref().unwrap_or("topright"));
+  let msg_alignment = CornerAlignment::from_str(
+    state
+      .config
+      .message_alignment
+      .as_deref()
+      .unwrap_or("topright"),
+  );
 
   let user_gaps = user_alignment.to_gaps(state.config.user_offset_x, state.config.user_offset_y);
-  let msg_gaps = msg_alignment.to_gaps(state.config.message_offset_x, state.config.message_offset_y);
+  let msg_gaps =
+    msg_alignment.to_gaps(state.config.message_offset_x, state.config.message_offset_y);
 
   // Root container
   let voice_section = voice_users.iter().fold(

@@ -32,10 +32,10 @@ pub fn open_configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) {
     let _ = Platform::get()
       .launch_window(
         WindowConfig::new(move || configurator(shared.clone(), redraw_tx.clone()))
-        .with_background(GRAY)
-        .with_size(WIDTH as f64, HEIGHT as f64)
-        .with_title("Orbolay Configurator")
-        .with_resizable(false),
+          .with_background(GRAY)
+          .with_size(WIDTH as f64, HEIGHT as f64)
+          .with_title("Orbolay Configurator")
+          .with_resizable(false),
       )
       .await;
   });
