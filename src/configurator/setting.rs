@@ -1,6 +1,9 @@
 use freya::prelude::*;
 
-use crate::{configurator::{dropdown::DropdownControl, input::InputControl, toggle::ToggleControl}, util::colors::MUTED_GRAY};
+use crate::{
+  configurator::{dropdown::DropdownControl, input::InputControl, toggle::ToggleControl},
+  util::colors::MUTED_GRAY,
+};
 
 #[derive(PartialEq)]
 pub struct SettingRow {

@@ -30,7 +30,10 @@ impl Keybind {
 
 pub fn default_keybinds() -> Vec<Keybind> {
   vec![
-    Keybind::new(vec![Key::ControlLeft, Key::BackQuote], KeyEvent::ToggleOverlay),
+    Keybind::new(
+      vec![Key::ControlLeft, Key::BackQuote],
+      KeyEvent::ToggleOverlay,
+    ),
     Keybind::new(vec![Key::KeyC], KeyEvent::OpenConfigurator),
   ]
 }

@@ -16,11 +16,9 @@ impl Component for ToggleControl {
   fn render(&self) -> impl IntoElement {
     let on_change = self.on_change.clone();
     let mut toggled = use_state(|| self.initial);
-    Switch::new()
-      .toggled(toggled())
-      .on_toggle(move |_| {
-        toggled.toggle();
-        on_change.call(if toggled() { "true" } else { "false" }.to_string());
-      })
+    Switch::new().toggled(toggled()).on_toggle(move |_| {
+      toggled.toggle();
+      on_change.call(if toggled() { "true" } else { "false" }.to_string());
+    })
   }
 }

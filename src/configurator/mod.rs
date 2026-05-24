@@ -83,7 +83,9 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
             .padding(Gaps::new_symmetric(0., 16.))
             .child(SettingRow {
               name: "Semi-Transparent Voice Users".into(),
-              description: Some("Fade voice users when not actively speaking and the overlay is closed".into()),
+              description: Some(
+                "Fade voice users when not actively speaking and the overlay is closed".into(),
+              ),
               kind: SettingKind::Toggle(config.voice_semitransparent.unwrap_or(true)),
               on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
                 cfg.voice_semitransparent = Some(v == "true");
@@ -113,7 +115,10 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
               description: Some("Screen position for voice users".into()),
               kind: SettingKind::Dropdown(
                 ALIGNMENTS.iter().map(|s| s.to_string()).collect(),
-                config.user_alignment.clone().or_else(|| Some("topleft".into())),
+                config
+                  .user_alignment
+                  .clone()
+                  .or_else(|| Some("topleft".into())),
               ),
               on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
                 cfg.user_alignment = Some(v);
@@ -147,7 +152,10 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
               description: Some("Screen position for notifications".into()),
               kind: SettingKind::Dropdown(
                 ALIGNMENTS.iter().map(|s| s.to_string()).collect(),
-                config.message_alignment.clone().or_else(|| Some("topright".into())),
+                config
+                  .message_alignment
+                  .clone()
+                  .or_else(|| Some("topright".into())),
               ),
               on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
                 cfg.message_alignment = Some(v);

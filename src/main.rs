@@ -15,7 +15,15 @@ use winit::{
 };
 
 use crate::{
-  app_state::{AppState, SharedAppState}, components::{MessageRow, UserRow, VoiceControls}, config::{CornerAlignment, load_config}, configurator::open_configurator, manager::OverlayManager, notifications::create_notification_thread, payloads::MessageNotification, transport::create_transport_thread, util::{colors, text::censor}
+  app_state::{AppState, SharedAppState},
+  components::{MessageRow, UserRow, VoiceControls},
+  config::{CornerAlignment, load_config},
+  configurator::open_configurator,
+  manager::OverlayManager,
+  notifications::create_notification_thread,
+  payloads::MessageNotification,
+  transport::create_transport_thread,
+  util::{colors, text::censor},
 };
 
 mod app_state;
@@ -254,8 +262,10 @@ fn app() -> impl IntoElement {
     .find(|u| u.id == state.config.user_id)
     .cloned();
 
-  let user_alignment = CornerAlignment::from_str(config.user_alignment.as_deref().unwrap_or("topleft"));
-  let msg_alignment = CornerAlignment::from_str(config.message_alignment.as_deref().unwrap_or("topright"));
+  let user_alignment =
+    CornerAlignment::from_str(config.user_alignment.as_deref().unwrap_or("topleft"));
+  let msg_alignment =
+    CornerAlignment::from_str(config.message_alignment.as_deref().unwrap_or("topright"));
 
   let user_gaps = user_alignment.to_gaps(config.user_offset_x, config.user_offset_y);
   let msg_gaps = msg_alignment.to_gaps(config.message_offset_x, config.message_offset_y);

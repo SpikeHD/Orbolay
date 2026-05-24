@@ -157,7 +157,3 @@ pub fn load_config() -> Option<Config> {
   let json = std::fs::read_to_string(dir.join("config.json")).ok()?;
   serde_json::from_str(&json).ok()
 }
-
-pub fn is_first_run() -> bool {
-  load_config().is_none()
-}
