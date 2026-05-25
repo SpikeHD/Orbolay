@@ -3,14 +3,16 @@ use freya::prelude::*;
 use crate::{
   app_state::SharedAppState,
   config::{Config, save_config},
+  keys::bind::{DEFAULT_OVERLAY_TOGGLE, keys_to_strings, strings_to_keys},
   util::colors::{GRAY, MUTED_GRAY, TRANSPARENT},
 };
 
-use setting::{SettingKind, SettingRow};
+use setting::{SettingChange, SettingKind, SettingRow};
 
 mod dropdown;
 mod input;
 mod setting;
+mod keybind;
 mod toggle;
 
 const WIDTH: f32 = 500.;
@@ -55,15 +57,35 @@ fn make_updater(
   shared: SharedAppState,
   redraw_tx: flume::Sender<()>,
   update_fn: impl Fn(&mut Config, String) + 'static,
-) -> EventHandler<String> {
-  EventHandler::new(move |value: String| {
-    let updated = {
-      let mut state = shared.write().unwrap();
-      update_fn(&mut state.config, value);
-      state.config.clone()
-    };
-    save_config(&updated);
-    redraw_tx.send(()).ok();
+) -> EventHandler<SettingChange> {
+  EventHandler::new(move |change: SettingChange| {
+    if let SettingChange::Value(value) = change {
+      let updated = {
+        let mut state = shared.write().unwrap();
+        update_fn(&mut state.config, value);
+        state.config.clone()
+      };
+      save_config(&updated);
+      redraw_tx.send(()).ok();
+    }
+  })
+}
+
+fn make_keybind_updater(
+  shared: SharedAppState,
+  redraw_tx: flume::Sender<()>,
+  update_fn: impl Fn(&mut Config, Vec<rdev::Key>) + 'static,
+) -> EventHandler<SettingChange> {
+  EventHandler::new(move |change: SettingChange| {
+    if let SettingChange::Keys(keys) = change {
+      let updated = {
+        let mut state = shared.write().unwrap();
+        update_fn(&mut state.config, keys);
+        state.config.clone()
+      };
+      save_config(&updated);
+      redraw_tx.send(()).ok();
+    }
   })
 }
 
@@ -87,6 +109,17 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
             .direction(Direction::Vertical)
             .width(Size::fill())
             .padding(Gaps::new_symmetric(0., 16.))
+            .child(SettingRow {
+              name: "Overlay Keybind".into(),
+              description: Some(
+                "The keybind used to open the overlay".into(),
+              ),
+              kind: SettingKind::Keybind(Some(strings_to_keys(config.overlay_keybind.clone().unwrap_or_else(|| DEFAULT_OVERLAY_TOGGLE.clone())))),
+              on_change: make_keybind_updater(shared.clone(), redraw_tx.clone(), |cfg, keys| {
+                cfg.overlay_keybind = Some(keys_to_strings(keys));
+              }),
+            })
+            .child(divider())
             .child(SettingRow {
               name: "Semi-Transparent Voice Users".into(),
               description: Some(

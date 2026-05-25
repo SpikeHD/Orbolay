@@ -1,6 +1,6 @@
-mod bind;
 mod state;
 
+pub mod bind;
 pub mod event;
 
 pub use event::KeyEvent;

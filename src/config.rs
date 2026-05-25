@@ -3,6 +3,8 @@ use std::fmt::Display;
 use freya::prelude::{Alignment, Gaps};
 use serde::{Deserialize, Serialize};
 
+use crate::keys::bind::DEFAULT_OVERLAY_TOGGLE;
+
 #[derive(Debug, Clone, Deserialize, PartialEq)]
 pub enum AxisAlignment {
   Start,
@@ -97,6 +99,8 @@ impl CornerAlignment {
 #[serde(rename_all = "camelCase")]
 pub struct Config {
   #[serde(default)]
+  pub overlay_keybind: Option<Vec<String>>,
+  #[serde(default)]
   pub port: Option<u16>,
   #[serde(default)]
   pub user_id: String,
@@ -123,6 +127,7 @@ pub struct Config {
 impl Default for Config {
   fn default() -> Self {
     Self {
+      overlay_keybind: Some(DEFAULT_OVERLAY_TOGGLE.clone()),
       port: Some(6888),
       user_id: String::new(),
       message_alignment: None,
