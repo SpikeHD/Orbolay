@@ -24,6 +24,7 @@ use crate::{
   notifications::create_notification_thread,
   payloads::MessageNotification,
   transport::create_transport_thread,
+  updates::maybe_notify_update,
   util::{colors, text::censor},
 };
 
@@ -40,6 +41,7 @@ mod manager;
 mod notifications;
 mod payloads;
 mod transport;
+mod updates;
 mod user;
 mod util;
 mod websocket;
@@ -244,6 +246,7 @@ fn app() -> impl IntoElement {
     }
 
     start_config_watcher(shared.clone(), redraw_tx.clone());
+    maybe_notify_update(shared.clone());
 
     #[cfg(not(target_os = "macos"))]
     spawn_forever(async move {
