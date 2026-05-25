@@ -19,6 +19,29 @@
   <img width="100%" alt="image" src="https://github.com/user-attachments/assets/c37acdd6-9bfa-4822-aedf-49326f099f7f" />
 </div>
 
+# Table of Contents
+
+* [Features](#features)
+* [Compatibility](#compatibility)
+* [Installation](#installation)
+  * [With Package Managers](#with-package-managers)
+    * [Windows (scoop)](#windows-scoop)
+    * [Arch](#arch)
+    * [Void](#void)
+    * [`cargo`](#cargo)
+  * [Manual Installation](#manual-installation)
+* [How to Use](#how-to-use)
+  * [With Official Clients](#with-official-clients)
+  * [With Modded Clients](#with-modded-clients)
+* [Configuration](#configuration)
+* [Other Notes](#other-notes)
+  * [Hyprland](#hyprland)
+* [Building](#building)
+  * [Requirements](#requirements)
+  * [Steps](#steps)
+* [Special Thanks](#special-thanks)
+* [Contributing](#contributing)
+
 # Features
 
 * Voice channel member list and status (who is speaking/muted/deafened/etc)
@@ -88,6 +111,13 @@ With your client open:
 1. Install a compatible bridge plugin ([Shelter](https://github.com/SpikeHD/shelter-plugins?tab=readme-ov-file#orbolay-bridge) / [Vencord](https://github.com/SpikeHD/vc-orbolay-bridge), also available on [Equicord](https://github.com/Equicord/Equicord))
 2. Run the executable
 3. Press <kbd>Ctrl</kbd> + <kbd>`</kbd> to open the overlay and interact with voice controls
+
+# Configuration
+
+On first run, Orbolay should open the configurator automatically. In the future, it can be opened in two ways:
+
+1. Open the overlay, then press "C"
+2. Run `orbolay --config` in any terminal
 
 # Other Notes
 
