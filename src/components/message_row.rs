@@ -7,7 +7,7 @@ use crate::{
     bridge::BridgeMessage,
     colors,
     image::{circular_with_border, fetch_icon, image_from_bytes},
-    text::{strip, truncate},
+    text::strip,
   },
 };
 
@@ -31,6 +31,7 @@ impl Component for MessageRow {
       .margin(Gaps::new_all(6.))
       .corner_radius(CornerRadius::new_all(10.))
       .background(colors::GRAY)
+      .overflow(Overflow::Clip)
       .on_press(move |_| {
         app_state.write().send(BridgeMessage {
           cmd: "NAVIGATE".to_string(),
@@ -46,7 +47,7 @@ impl Component for MessageRow {
           .direction(Direction::Horizontal)
           .main_align(Alignment::Start)
           .cross_align(Alignment::Center)
-          .width(Size::auto())
+          .width(Size::fill())
           .height(Size::fill())
           .child(
             image_from_bytes(icon(&self.message.icon))
@@ -61,20 +62,24 @@ impl Component for MessageRow {
               .cross_align(Alignment::Start)
               .height(Size::fill())
               .width(Size::fill())
-              .margin(Gaps::new(6., 0., 6., 6.))
+              .margin(Gaps::new(6., 10., 6., 6.))
               .child(
                 label()
                   .font_size(14.)
                   .font_weight(FontWeight::BOLD)
                   .color(Color::WHITE)
                   .margin(Gaps::new(0., 0., 4., 0.))
-                  .text(self.message.title.clone()),
+                  .max_lines(1)
+                  .text(self.message.title.clone())
+                  .text_overflow(TextOverflow::Ellipsis),
               )
               .child(
                 label()
                   .font_size(14.)
                   .color(colors::SUPERLIGHT_GRAY)
-                  .text(truncate(strip(&self.message.body), 100)),
+                  .max_lines(2)
+                  .text(strip(&self.message.body))
+                  .text_overflow(TextOverflow::Ellipsis),
               ),
           ),
       )
