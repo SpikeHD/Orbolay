@@ -31,14 +31,30 @@ pub fn open_configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) {
   spawn(async move {
     let _ = Platform::get()
       .launch_window(
-        WindowConfig::new(move || configurator(shared.clone(), redraw_tx.clone()))
-          .with_background(GRAY)
-          .with_size(WIDTH as f64, HEIGHT as f64)
-          .with_title("Orbolay Configurator")
-          .with_resizable(false),
+        configurator_window(shared, redraw_tx),
       )
       .await;
   });
+}
+
+pub fn open_configurator_standalone() {
+  // Basically a blocking, standalone version of open_configurator
+  let shared = SharedAppState::default();
+  let (redraw_tx, _) = flume::unbounded();
+
+  launch(
+    LaunchConfig::new().with_window(
+      configurator_window(shared.clone(), redraw_tx)
+    )
+  );
+}
+
+fn configurator_window(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> WindowConfig {
+  WindowConfig::new(move || configurator(shared.clone(), redraw_tx.clone()))
+    .with_background(GRAY)
+    .with_size(WIDTH as f64, HEIGHT as f64)
+    .with_title("Orbolay Configurator")
+    .with_resizable(false)
 }
 
 fn make_updater(

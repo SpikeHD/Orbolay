@@ -18,7 +18,7 @@ use crate::{
   app_state::{AppState, SharedAppState},
   components::{MessageRow, UserRow, VoiceControls},
   config::{CornerAlignment, is_first_run, load_config, save_config},
-  configurator::open_configurator,
+  configurator::{open_configurator, open_configurator_standalone},
   manager::OverlayManager,
   notifications::create_notification_thread,
   payloads::MessageNotification,
@@ -63,6 +63,9 @@ pub struct Args {
 
   #[options(help = "Force websocket mode instead of IPC")]
   websocket: bool,
+
+  #[options(help = "Open the configuration window")]
+  config: bool,
 }
 
 fn main() {
@@ -80,6 +83,11 @@ fn main() {
       APP_VERSION.unwrap_or("0.0.0"),
       GIT_HASH.unwrap_or("unknown")
     );
+    std::process::exit(0);
+  }
+
+  if args.config {
+    open_configurator_standalone();
     std::process::exit(0);
   }
 
