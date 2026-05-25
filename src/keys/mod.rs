@@ -1,6 +1,7 @@
 mod state;
 
 pub mod bind;
+pub mod convert;
 pub mod event;
 
 pub use event::KeyEvent;

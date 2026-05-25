@@ -90,15 +90,8 @@ impl Component for SettingRow {
           })
           .map(keybind_initial, move |el, initial| {
             el.child(KeybindControl::new(
-              initial.map(|keys| {
-                keys.iter()
-                  .map(|k| format!("{:?}", k))
-                  .collect::<Vec<String>>()
-                  .join(", ")
-              }),
+              initial,
               EventHandler::new(move |keys: Vec<Key>| oc_keybind.call(SettingChange::Keys(keys))),
-              EventHandler::new(|_| {}),
-              EventHandler::new(|_| {}),
             ))
           }),
       )
