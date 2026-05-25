@@ -14,8 +14,8 @@ impl InputControl {
 
 impl Component for InputControl {
   fn render(&self) -> impl IntoElement {
-    let focus = use_focus();
-    let focus_status = use_focus_status(focus);
+    let id = use_a11y();
+    let focus_status = use_focus(id);
     let on_change = self.on_change.clone();
     let value = use_state(|| self.initial.clone().unwrap_or_default());
 
@@ -25,6 +25,6 @@ impl Component for InputControl {
       }
     });
 
-    Input::new(value).a11y_id(focus.a11y_id())
+    Input::new(value).a11y_id(id)
   }
 }
