@@ -18,6 +18,7 @@ use crate::{
   app_state::{AppState, SharedAppState},
   components::{MessageRow, UserRow, VoiceControls},
   config::{CornerAlignment, is_first_run, load_config, save_config},
+  config_watcher::start_config_watcher,
   configurator::{open_configurator, open_configurator_standalone},
   manager::OverlayManager,
   notifications::create_notification_thread,
@@ -29,6 +30,7 @@ use crate::{
 mod app_state;
 mod components;
 mod config;
+mod config_watcher;
 mod configurator;
 mod ipc;
 #[cfg(not(target_os = "macos"))]
@@ -240,6 +242,8 @@ fn app() -> impl IntoElement {
         save_config(&state.config);
       }
     }
+
+    start_config_watcher(shared.clone(), redraw_tx.clone());
 
     #[cfg(not(target_os = "macos"))]
     spawn_forever(async move {

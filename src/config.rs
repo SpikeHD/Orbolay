@@ -138,7 +138,7 @@ impl Default for Config {
   }
 }
 
-fn config_dir() -> Option<std::path::PathBuf> {
+pub fn config_dir() -> Option<std::path::PathBuf> {
   Some(dirs::config_dir()?.join("orbolay"))
 }
 
