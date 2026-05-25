@@ -14,7 +14,7 @@ pub fn maybe_notify_update(shared: SharedAppState) {
     let json = serde_json::from_str::<Value>(&json).expect("Failed to parse response body as JSON");
 
     if let Some(latest_version) = json.get("tag_name").and_then(|v| v.as_str()) {
-      let current_version = env!("CARGO_PKG_VERSION");
+      let current_version = format!("v{}", env!("CARGO_PKG_VERSION"));
       if latest_version != current_version {
         shared.write().unwrap().notify(MessageNotification {
           title: "Update Available!".into(),
