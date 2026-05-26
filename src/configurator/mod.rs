@@ -142,10 +142,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
           .and_then(|i| display_names.get(i).cloned()),
       ),
       on_change: make_updater(shared.clone(), redraw_tx.clone(), move |cfg, v| {
-        if let Some(idx) = display_names_for_update
-          .iter()
-          .position(|name| name == &v)
-        {
+        if let Some(idx) = display_names_for_update.iter().position(|name| name == &v) {
           cfg.display_idx = Some(idx);
         }
       }),

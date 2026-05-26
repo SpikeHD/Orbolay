@@ -33,8 +33,7 @@ pub fn specific_monitor_or_primary() -> DisplayInfo {
   }
 }
 
-pub
-fn update_monitor() {
+pub fn update_monitor() {
   let display = specific_monitor_or_primary();
   let monitor_position = (display.x, display.y);
   let monitor_size = (display.width, display.height);
