@@ -54,7 +54,6 @@ pub fn watch_keybinds(shared: SharedAppState, keybind_tx: flume::Sender<KeyEvent
             break;
           }
         }
-        drop(kbs);
 
         thread::sleep(Duration::from_secs(1));
       }

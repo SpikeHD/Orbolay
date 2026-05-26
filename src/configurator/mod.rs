@@ -19,7 +19,7 @@ mod keybind;
 mod setting;
 mod toggle;
 
-const WIDTH: f32 = 500.;
+const WIDTH: f32 = 600.;
 const HEIGHT: f32 = 600.;
 
 const ALIGNMENTS: &[&str] = &[
@@ -117,6 +117,18 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
   #[cfg(not(target_os = "macos"))]
   let inner = inner
     .child(SettingRow {
+      name: "Enable Keybind".into(),
+      description: Some("Toggle overlay visibility with a keybind".into()),
+      kind: SettingKind::Toggle(config.is_keybind_enabled.unwrap_or(true)),
+      on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
+        cfg.is_keybind_enabled = Some(v == "true");
+      }),
+    })
+    .child(divider());
+
+  #[cfg(not(target_os = "macos"))]
+  let inner = inner
+    .child(SettingRow {
       name: "Overlay Keybind".into(),
       description: Some("The keybind used to open the overlay".into()),
       kind: SettingKind::Keybind(Some(strings_to_keys(
@@ -165,18 +177,6 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
       kind: SettingKind::Toggle(config.messages_semitransparent),
       on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
         cfg.messages_semitransparent = v == "true";
-      }),
-    })
-    .child(divider());
-
-  #[cfg(not(target_os = "macos"))]
-  let inner = inner
-    .child(SettingRow {
-      name: "Enable Keybind".into(),
-      description: Some("Toggle overlay visibility with a keybind".into()),
-      kind: SettingKind::Toggle(config.is_keybind_enabled.unwrap_or(true)),
-      on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
-        cfg.is_keybind_enabled = Some(v == "true");
       }),
     })
     .child(divider());
@@ -260,14 +260,14 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
         .text("Press \"C\" with the overlay open to open this window again!")
         .color(MUTED_GRAY)
         .font_size(12.)
-        .padding(16.)
+        .margin(16.)
         .text_align(TextAlign::Center)
         .width(Size::fill()),
     );
 
   rect()
-    .width(Size::px(WIDTH))
-    .height(Size::px(HEIGHT))
+    .width(Size::fill())
+    .height(Size::fill())
     .background(GRAY)
     .direction(Direction::Vertical)
     .child(

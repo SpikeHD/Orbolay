@@ -156,10 +156,10 @@ impl Component for KeybindControl {
       .border(border)
       .corner_radius(theme_layout.corner_radius)
       .padding(theme_layout.inner_margin)
-      .width(Size::px(200.0))
+      .width(Size::px(300.0))
       .height(Size::px(32.0))
       .main_align(Alignment::Center)
       .cross_align(Alignment::Start)
-      .child(label().color(text_color).font_size(12.0).text(display_text))
+      .child(label().color(text_color).font_size(16.0).text(display_text))
   }
 }
