@@ -4,15 +4,17 @@ use freya::prelude::*;
 use rdev::Key;
 
 use crate::{
-  configurator::{
-    dropdown::DropdownControl, input::InputControl, keybind::KeybindControl, toggle::ToggleControl,
-  },
+  configurator::{dropdown::DropdownControl, input::InputControl, toggle::ToggleControl},
   util::colors::MUTED_GRAY,
 };
+
+#[cfg(not(target_os = "macos"))]
+use crate::configurator::keybind::KeybindControl;
 
 #[derive(PartialEq)]
 pub enum SettingChange {
   Value(String),
+  #[cfg(not(target_os = "macos"))]
   Keys(Vec<Key>),
 }
 
@@ -29,6 +31,7 @@ pub enum SettingKind {
   Toggle(bool),
   Dropdown(Vec<String>, Option<String>),
   Input(Option<String>),
+  #[cfg(not(target_os = "macos"))]
   Keybind(Option<Vec<Key>>),
 }
 
@@ -40,6 +43,7 @@ impl Component for SettingRow {
     let oc_toggle = self.on_change.clone();
     let oc_dropdown = self.on_change.clone();
     let oc_input = self.on_change.clone();
+    #[cfg(not(target_os = "macos"))]
     let oc_keybind = self.on_change.clone();
 
     let toggle_initial = match &self.kind {

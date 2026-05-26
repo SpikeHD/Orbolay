@@ -74,6 +74,7 @@ fn make_updater(
   })
 }
 
+#[cfg(not(target_os = "macos"))]
 fn make_keybind_updater(
   shared: SharedAppState,
   redraw_tx: flume::Sender<()>,
@@ -101,6 +102,146 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
 
   let config = shared.read().unwrap().config.clone();
 
+  let inner = rect()
+    .direction(Direction::Vertical)
+    .width(Size::fill())
+    .padding(Gaps::new_symmetric(0., 16.));
+
+  #[cfg(not(target_os = "macos"))]
+  let inner = inner
+    .child(SettingRow {
+      name: "Overlay Keybind".into(),
+      description: Some("The keybind used to open the overlay".into()),
+      kind: SettingKind::Keybind(Some(strings_to_keys(
+        config
+          .overlay_keybind
+          .clone()
+          .unwrap_or_else(|| DEFAULT_OVERLAY_TOGGLE.clone()),
+      ))),
+      on_change: make_keybind_updater(shared.clone(), redraw_tx.clone(), |cfg, keys| {
+        cfg.overlay_keybind = Some(keys_to_strings(keys));
+      }),
+    })
+    .child(divider());
+
+  let inner = inner
+    .child(SettingRow {
+      name: "Semi-Transparent Voice Users".into(),
+      description: Some(
+        "Fade voice users when not actively speaking and the overlay is closed".into(),
+      ),
+      kind: SettingKind::Toggle(config.voice_semitransparent.unwrap_or(true)),
+      on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
+        cfg.voice_semitransparent = Some(v == "true");
+      }),
+    })
+    .child(divider())
+    .child(SettingRow {
+      name: "Semi-Transparent Notifications".into(),
+      description: Some("Fade notifications when the overlay is closed".into()),
+      kind: SettingKind::Toggle(config.messages_semitransparent),
+      on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
+        cfg.messages_semitransparent = v == "true";
+      }),
+    })
+    .child(divider());
+
+  #[cfg(not(target_os = "macos"))]
+  let inner = inner
+    .child(SettingRow {
+      name: "Enable Keybind".into(),
+      description: Some("Toggle overlay visibility with a keybind".into()),
+      kind: SettingKind::Toggle(config.is_keybind_enabled.unwrap_or(true)),
+      on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
+        cfg.is_keybind_enabled = Some(v == "true");
+      }),
+    })
+    .child(divider());
+
+  let inner = inner
+    .child(SettingRow {
+      name: "Voice Alignment".into(),
+      description: Some("Screen position for voice users".into()),
+      kind: SettingKind::Dropdown(
+        ALIGNMENTS.iter().map(|s| s.to_string()).collect(),
+        config
+          .user_alignment
+          .clone()
+          .or_else(|| Some("topleft".into())),
+      ),
+      on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
+        cfg.user_alignment = Some(v);
+      }),
+    })
+    .child(divider())
+    .child(SettingRow {
+      name: "Voice X Offset (px)".into(),
+      description: None,
+      kind: SettingKind::Input(Some(config.user_offset_x.to_string())),
+      on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
+        if let Ok(n) = v.trim().parse::<i32>() {
+          cfg.user_offset_x = n;
+        }
+      }),
+    })
+    .child(divider())
+    .child(SettingRow {
+      name: "Voice Y Offset (px)".into(),
+      description: None,
+      kind: SettingKind::Input(Some(config.user_offset_y.to_string())),
+      on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
+        if let Ok(n) = v.trim().parse::<i32>() {
+          cfg.user_offset_y = n;
+        }
+      }),
+    })
+    .child(divider())
+    .child(SettingRow {
+      name: "Notification Alignment".into(),
+      description: Some("Screen position for notifications".into()),
+      kind: SettingKind::Dropdown(
+        ALIGNMENTS.iter().map(|s| s.to_string()).collect(),
+        config
+          .message_alignment
+          .clone()
+          .or_else(|| Some("topright".into())),
+      ),
+      on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
+        cfg.message_alignment = Some(v);
+      }),
+    })
+    .child(divider())
+    .child(SettingRow {
+      name: "Messages X Offset (px)".into(),
+      description: None,
+      kind: SettingKind::Input(Some(config.message_offset_x.to_string())),
+      on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
+        if let Ok(n) = v.trim().parse::<i32>() {
+          cfg.message_offset_x = n;
+        }
+      }),
+    })
+    .child(divider())
+    .child(SettingRow {
+      name: "Messages Y Offset (px)".into(),
+      description: None,
+      kind: SettingKind::Input(Some(config.message_offset_y.to_string())),
+      on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
+        if let Ok(n) = v.trim().parse::<i32>() {
+          cfg.message_offset_y = n;
+        }
+      }),
+    })
+    .child(
+      label()
+        .text("Press \"C\" with the overlay open to open this window again!")
+        .color(MUTED_GRAY)
+        .font_size(12.)
+        .padding(16.)
+        .text_align(TextAlign::Center)
+        .width(Size::fill()),
+    );
+
   rect()
     .width(Size::px(WIDTH))
     .height(Size::px(HEIGHT))
@@ -111,137 +252,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
         .height(Size::fill())
         .width(Size::fill())
         .direction(Direction::Vertical)
-        .child(
-          rect()
-            .direction(Direction::Vertical)
-            .width(Size::fill())
-            .padding(Gaps::new_symmetric(0., 16.))
-            .child(SettingRow {
-              name: "Overlay Keybind".into(),
-              description: Some("The keybind used to open the overlay".into()),
-              kind: SettingKind::Keybind(Some(strings_to_keys(
-                config
-                  .overlay_keybind
-                  .clone()
-                  .unwrap_or_else(|| DEFAULT_OVERLAY_TOGGLE.clone()),
-              ))),
-              on_change: make_keybind_updater(shared.clone(), redraw_tx.clone(), |cfg, keys| {
-                cfg.overlay_keybind = Some(keys_to_strings(keys));
-              }),
-            })
-            .child(divider())
-            .child(SettingRow {
-              name: "Semi-Transparent Voice Users".into(),
-              description: Some(
-                "Fade voice users when not actively speaking and the overlay is closed".into(),
-              ),
-              kind: SettingKind::Toggle(config.voice_semitransparent.unwrap_or(true)),
-              on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
-                cfg.voice_semitransparent = Some(v == "true");
-              }),
-            })
-            .child(divider())
-            .child(SettingRow {
-              name: "Semi-Transparent Notifications".into(),
-              description: Some("Fade notifications when the overlay is closed".into()),
-              kind: SettingKind::Toggle(config.messages_semitransparent),
-              on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
-                cfg.messages_semitransparent = v == "true";
-              }),
-            })
-            .child(divider())
-            .child(SettingRow {
-              name: "Enable Keybind".into(),
-              description: Some("Toggle overlay visibility with a keybind".into()),
-              kind: SettingKind::Toggle(config.is_keybind_enabled.unwrap_or(true)),
-              on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
-                cfg.is_keybind_enabled = Some(v == "true");
-              }),
-            })
-            .child(divider())
-            .child(SettingRow {
-              name: "Voice Alignment".into(),
-              description: Some("Screen position for voice users".into()),
-              kind: SettingKind::Dropdown(
-                ALIGNMENTS.iter().map(|s| s.to_string()).collect(),
-                config
-                  .user_alignment
-                  .clone()
-                  .or_else(|| Some("topleft".into())),
-              ),
-              on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
-                cfg.user_alignment = Some(v);
-              }),
-            })
-            .child(divider())
-            .child(SettingRow {
-              name: "Voice X Offset (px)".into(),
-              description: None,
-              kind: SettingKind::Input(Some(config.user_offset_x.to_string())),
-              on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
-                if let Ok(n) = v.trim().parse::<i32>() {
-                  cfg.user_offset_x = n;
-                }
-              }),
-            })
-            .child(divider())
-            .child(SettingRow {
-              name: "Voice Y Offset (px)".into(),
-              description: None,
-              kind: SettingKind::Input(Some(config.user_offset_y.to_string())),
-              on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
-                if let Ok(n) = v.trim().parse::<i32>() {
-                  cfg.user_offset_y = n;
-                }
-              }),
-            })
-            .child(divider())
-            .child(SettingRow {
-              name: "Notification Alignment".into(),
-              description: Some("Screen position for notifications".into()),
-              kind: SettingKind::Dropdown(
-                ALIGNMENTS.iter().map(|s| s.to_string()).collect(),
-                config
-                  .message_alignment
-                  .clone()
-                  .or_else(|| Some("topright".into())),
-              ),
-              on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
-                cfg.message_alignment = Some(v);
-              }),
-            })
-            .child(divider())
-            .child(SettingRow {
-              name: "Messages X Offset (px)".into(),
-              description: None,
-              kind: SettingKind::Input(Some(config.message_offset_x.to_string())),
-              on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
-                if let Ok(n) = v.trim().parse::<i32>() {
-                  cfg.message_offset_x = n;
-                }
-              }),
-            })
-            .child(divider())
-            .child(SettingRow {
-              name: "Messages Y Offset (px)".into(),
-              description: None,
-              kind: SettingKind::Input(Some(config.message_offset_y.to_string())),
-              on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
-                if let Ok(n) = v.trim().parse::<i32>() {
-                  cfg.message_offset_y = n;
-                }
-              }),
-            })
-            .child(
-              label()
-                .text("Press \"C\" with the overlay open to open this window again!")
-                .color(MUTED_GRAY)
-                .font_size(12.)
-                .padding(16.)
-                .text_align(TextAlign::Center)
-                .width(Size::fill()),
-            ),
-        ),
+        .child(inner),
     )
 }
 
