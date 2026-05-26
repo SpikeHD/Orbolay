@@ -116,8 +116,8 @@ fn main() {
 
   #[cfg(target_os = "macos")]
   let window_size = (
-    (monitor_size.0 + 1) as f64 * primary.scale_factor as f64,
-    (monitor_size.1 + 1) as f64 * primary.scale_factor as f64,
+    (monitor_size.0 + 1) as f64 * display.scale_factor as f64,
+    (monitor_size.1 + 1) as f64 * display.scale_factor as f64,
   );
   #[cfg(not(target_os = "macos"))]
   let window_size = ((monitor_size.0 + 1) as f64, (monitor_size.1 - 1) as f64);
