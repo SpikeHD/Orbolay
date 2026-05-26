@@ -1,10 +1,14 @@
-use std::{cell::LazyCell, sync::atomic::{AtomicBool, Ordering}};
+use std::{
+  cell::LazyCell,
+  sync::atomic::{AtomicBool, Ordering},
+};
 
 use rdev::Key;
 
 use super::event::KeyEvent;
 
-pub const DEFAULT_OVERLAY_TOGGLE: LazyCell<Vec<String>> = LazyCell::new(|| vec!["ControlLeft".into(), "BackQuote".into()]);
+pub const DEFAULT_OVERLAY_TOGGLE: LazyCell<Vec<String>> =
+  LazyCell::new(|| vec!["ControlLeft".into(), "BackQuote".into()]);
 
 pub struct Keybind {
   pub keys: Vec<Key>,
@@ -46,10 +50,7 @@ pub fn string_to_key(string: impl AsRef<str>) -> Option<Key> {
 }
 
 pub fn strings_to_keys(strings: Vec<impl AsRef<str>>) -> Vec<Key> {
-  strings
-    .iter()
-    .filter_map(|s| string_to_key(s))
-    .collect()
+  strings.iter().filter_map(string_to_key).collect()
 }
 
 pub fn key_to_string(key: &Key) -> String {
@@ -60,7 +61,7 @@ pub fn key_to_string(key: &Key) -> String {
 }
 
 pub fn keys_to_strings(keys: Vec<Key>) -> Vec<String> {
-  keys.iter().map(|k| key_to_string(k)).collect()
+  keys.iter().map(key_to_string).collect()
 }
 
 pub fn default_keybinds() -> Vec<Keybind> {

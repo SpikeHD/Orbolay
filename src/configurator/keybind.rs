@@ -1,4 +1,7 @@
-use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
+use std::sync::{
+  Arc,
+  atomic::{AtomicBool, Ordering},
+};
 
 use freya::animation::*;
 use freya::prelude::*;
@@ -7,7 +10,11 @@ use rdev::Key;
 use crate::keys::{bind::key_to_string, convert::code_to_rdev};
 
 pub fn keys_display(keys: &[Key]) -> String {
-  keys.iter().map(key_to_string).collect::<Vec<_>>().join(" + ")
+  keys
+    .iter()
+    .map(key_to_string)
+    .collect::<Vec<_>>()
+    .join(" + ")
 }
 
 #[derive(PartialEq)]
@@ -51,9 +58,9 @@ impl Component for KeybindControl {
     });
 
     // Keys currently being physically held down
-    let mut pressing = use_state(|| Vec::<Key>::new());
+    let mut pressing = use_state(Vec::<Key>::new);
     // All keys pressed in the current recording session
-    let mut candidate = use_state(|| Vec::<Key>::new());
+    let mut candidate = use_state(Vec::<Key>::new);
     let mut recorded = use_state(|| self.initial.clone().unwrap_or_default());
 
     let on_change = self.on_change.clone();
@@ -153,11 +160,6 @@ impl Component for KeybindControl {
       .height(Size::px(32.0))
       .main_align(Alignment::Center)
       .cross_align(Alignment::Start)
-      .child(
-        label()
-          .color(text_color)
-          .font_size(12.0)
-          .text(display_text),
-      )
+      .child(label().color(text_color).font_size(12.0).text(display_text))
   }
 }

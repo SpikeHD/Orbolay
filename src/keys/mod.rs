@@ -33,26 +33,31 @@ pub fn watch_keybinds(shared: SharedAppState, keybind_tx: flume::Sender<KeyEvent
     let enabled = enabled.clone();
     let keybinds = keybinds.clone();
     let shared = shared.clone();
-    thread::spawn(move || loop {
-      let config = shared.read().unwrap().config.clone();
+    thread::spawn(move || {
+      loop {
+        let config = shared.read().unwrap().config.clone();
 
-      enabled.store(config.is_keybind_enabled.unwrap_or(true), Ordering::Relaxed);
+        enabled.store(config.is_keybind_enabled.unwrap_or(true), Ordering::Relaxed);
 
-      let overlay_keys = strings_to_keys(
-        config.overlay_keybind.clone().unwrap_or_else(|| DEFAULT_OVERLAY_TOGGLE.clone()),
-      );
+        let overlay_keys = strings_to_keys(
+          config
+            .overlay_keybind
+            .clone()
+            .unwrap_or_else(|| DEFAULT_OVERLAY_TOGGLE.clone()),
+        );
 
-      let mut kbs = keybinds.lock().unwrap();
-      for kb in kbs.iter_mut() {
-        if matches!(kb.event, KE::ToggleOverlay) && kb.keys != overlay_keys {
-          kb.keys = overlay_keys.clone();
-          kb.reset();
-          break;
+        let mut kbs = keybinds.lock().unwrap();
+        for kb in kbs.iter_mut() {
+          if matches!(kb.event, KE::ToggleOverlay) && kb.keys != overlay_keys {
+            kb.keys = overlay_keys.clone();
+            kb.reset();
+            break;
+          }
         }
-      }
-      drop(kbs);
+        drop(kbs);
 
-      thread::sleep(Duration::from_secs(1));
+        thread::sleep(Duration::from_secs(1));
+      }
     });
   }
 
@@ -67,7 +72,12 @@ pub fn watch_keybinds(shared: SharedAppState, keybind_tx: flume::Sender<KeyEvent
     let grab_result = grab(move |event: Event| {
       if !recording_grab.load(Ordering::Relaxed) && enabled_grab.load(Ordering::Relaxed) {
         let kbs = keybinds_grab.lock().unwrap();
-        process(&event.event_type, &mut key_state_grab.borrow_mut(), &kbs, &keybind_tx_grab);
+        process(
+          &event.event_type,
+          &mut key_state_grab.borrow_mut(),
+          &kbs,
+          &keybind_tx_grab,
+        );
       }
       Some(event)
     });
@@ -79,7 +89,12 @@ pub fn watch_keybinds(shared: SharedAppState, keybind_tx: flume::Sender<KeyEvent
       if let Err(e) = listen(move |event: Event| {
         if !recording.load(Ordering::Relaxed) && enabled.load(Ordering::Relaxed) {
           let kbs = keybinds.lock().unwrap();
-          process(&event.event_type, &mut key_state_listen.borrow_mut(), &kbs, &keybind_tx);
+          process(
+            &event.event_type,
+            &mut key_state_listen.borrow_mut(),
+            &kbs,
+            &keybind_tx,
+          );
         }
       }) {
         log!("Failed to listen for global hotkeys: {:?}", e);

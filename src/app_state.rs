@@ -1,8 +1,4 @@
-use std::sync::{
-  Arc,
-  RwLock,
-  atomic::AtomicBool,
-};
+use std::sync::{Arc, RwLock, atomic::AtomicBool};
 
 use crate::{
   config::Config, payloads::MessageNotification, user::User, util::bridge::BridgeMessage,

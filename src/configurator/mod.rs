@@ -11,8 +11,8 @@ use setting::{SettingChange, SettingKind, SettingRow};
 
 mod dropdown;
 mod input;
-mod setting;
 mod keybind;
+mod setting;
 mod toggle;
 
 const WIDTH: f32 = 500.;
@@ -115,10 +115,13 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
             .padding(Gaps::new_symmetric(0., 16.))
             .child(SettingRow {
               name: "Overlay Keybind".into(),
-              description: Some(
-                "The keybind used to open the overlay".into(),
-              ),
-              kind: SettingKind::Keybind(Some(strings_to_keys(config.overlay_keybind.clone().unwrap_or_else(|| DEFAULT_OVERLAY_TOGGLE.clone())))),
+              description: Some("The keybind used to open the overlay".into()),
+              kind: SettingKind::Keybind(Some(strings_to_keys(
+                config
+                  .overlay_keybind
+                  .clone()
+                  .unwrap_or_else(|| DEFAULT_OVERLAY_TOGGLE.clone()),
+              ))),
               on_change: make_keybind_updater(shared.clone(), redraw_tx.clone(), |cfg, keys| {
                 cfg.overlay_keybind = Some(keys_to_strings(keys));
               }),

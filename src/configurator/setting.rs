@@ -2,7 +2,9 @@ use freya::prelude::*;
 use rdev::Key;
 
 use crate::{
-  configurator::{dropdown::DropdownControl, input::InputControl, keybind::KeybindControl, toggle::ToggleControl},
+  configurator::{
+    dropdown::DropdownControl, input::InputControl, keybind::KeybindControl, toggle::ToggleControl,
+  },
   util::colors::MUTED_GRAY,
 };
 
