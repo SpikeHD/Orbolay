@@ -39,10 +39,7 @@ pub fn update_monitor() {
   let monitor_size = (display.width, display.height);
 
   Platform::get().with_window(None, move |w| {
-    let new_size = PhysicalSize::new(
-      (monitor_size.0 + 1) as f64,
-      (monitor_size.1 - 1) as f64,
-    );
+    let new_size = PhysicalSize::new((monitor_size.0 + 1) as f64, (monitor_size.1 - 1) as f64);
 
     w.set_outer_position(PhysicalPosition::new(
       monitor_position.0,
