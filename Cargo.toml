@@ -40,7 +40,7 @@ url = "2.5.8"
 winit = "0.30"
 
 [target.'cfg(not(target_os = "macos"))'.dependencies]
-rdev = { version = "0.5", features = ["unstable_grab"] }
+rdev = { version = "0.5", features = ["unstable_grab", "serialize"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows = "0.61.3"

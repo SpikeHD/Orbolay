@@ -1,16 +1,29 @@
 use freya::prelude::*;
 
+#[cfg(not(target_os = "macos"))]
+use rdev::Key;
+
 use crate::{
   configurator::{dropdown::DropdownControl, input::InputControl, toggle::ToggleControl},
   util::colors::MUTED_GRAY,
 };
+
+#[cfg(not(target_os = "macos"))]
+use crate::configurator::keybind::KeybindControl;
+
+#[derive(PartialEq)]
+pub enum SettingChange {
+  Value(String),
+  #[cfg(not(target_os = "macos"))]
+  Keys(Vec<Key>),
+}
 
 #[derive(PartialEq)]
 pub struct SettingRow {
   pub name: String,
   pub description: Option<String>,
   pub kind: SettingKind,
-  pub on_change: EventHandler<String>,
+  pub on_change: EventHandler<SettingChange>,
 }
 
 #[derive(PartialEq)]
@@ -18,6 +31,8 @@ pub enum SettingKind {
   Toggle(bool),
   Dropdown(Vec<String>, Option<String>),
   Input(Option<String>),
+  #[cfg(not(target_os = "macos"))]
+  Keybind(Option<Vec<Key>>),
 }
 
 impl Component for SettingRow {
@@ -28,6 +43,8 @@ impl Component for SettingRow {
     let oc_toggle = self.on_change.clone();
     let oc_dropdown = self.on_change.clone();
     let oc_input = self.on_change.clone();
+    #[cfg(not(target_os = "macos"))]
+    let oc_keybind = self.on_change.clone();
 
     let toggle_initial = match &self.kind {
       SettingKind::Toggle(b) => Some(*b),
@@ -41,28 +58,53 @@ impl Component for SettingRow {
       SettingKind::Input(initial) => Some(initial.clone()),
       _ => None,
     };
+    #[cfg(not(target_os = "macos"))]
+    let keybind_initial = match &self.kind {
+      SettingKind::Keybind(initial) => Some(initial.clone()),
+      _ => None,
+    };
 
     rect()
       .direction(Direction::Vertical)
       .width(Size::fill())
       .padding(Gaps::new(10., 12., 10., 12.))
-      .child(
-        rect()
+      .child({
+        let control = rect()
           .direction(Direction::Horizontal)
           .main_align(Alignment::SpaceBetween)
           .cross_align(Alignment::Center)
           .width(Size::fill())
           .child(label().text(name).color(Color::WHITE).font_size(14.))
           .map(toggle_initial, move |el, initial| {
-            el.child(ToggleControl::new(initial, oc_toggle))
+            el.child(ToggleControl::new(
+              initial,
+              EventHandler::new(move |v: String| oc_toggle.call(SettingChange::Value(v))),
+            ))
           })
           .map(dropdown_data, move |el, (opts, initial)| {
-            el.child(DropdownControl::new(opts, initial, oc_dropdown))
+            el.child(DropdownControl::new(
+              opts,
+              initial,
+              EventHandler::new(move |v: String| oc_dropdown.call(SettingChange::Value(v))),
+            ))
           })
           .map(input_initial, move |el, initial| {
-            el.child(InputControl::new(initial, oc_input))
-          }),
-      )
+            el.child(InputControl::new(
+              initial,
+              EventHandler::new(move |v: String| oc_input.call(SettingChange::Value(v))),
+            ))
+          });
+
+        #[cfg(not(target_os = "macos"))]
+        let control = control.map(keybind_initial, move |el, initial| {
+          el.child(KeybindControl::new(
+            initial,
+            EventHandler::new(move |keys: Vec<Key>| oc_keybind.call(SettingChange::Keys(keys))),
+          ))
+        });
+
+        control
+      })
       .map(description, |el, desc| {
         el.child(
           label()

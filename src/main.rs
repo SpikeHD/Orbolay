@@ -2,6 +2,8 @@
   all(not(debug_assertions), target_os = "windows"),
   windows_subsystem = "windows"
 )]
+#![allow(clippy::borrow_interior_mutable_const)]
+#![allow(clippy::declare_interior_mutable_const)]
 
 use display_info::DisplayInfo;
 use freya::prelude::*;

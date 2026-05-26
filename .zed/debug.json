@@ -5,9 +5,9 @@
 [
   {
     "adapter": "CodeLLDB",
-    "label": "cargo run -- --lite",
+    "label": "cargo run",
     "build": {
-      "label": "cargo run -- --lite",
+      "label": "cargo run",
       "command": "cargo",
       "args": [
         "run",
