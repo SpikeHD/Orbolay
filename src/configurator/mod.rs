@@ -92,6 +92,10 @@ fn make_keybind_updater(
 fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl IntoElement {
   use_init_theme(dark_theme);
 
+  // Make the recording flag available to KeybindControl
+  let recording_flag = shared.read().unwrap().recording_keybind.clone();
+  use_provide_context(move || recording_flag);
+
   let config = shared.read().unwrap().config.clone();
 
   rect()

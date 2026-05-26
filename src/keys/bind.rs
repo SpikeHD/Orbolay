@@ -5,7 +5,6 @@ use rdev::Key;
 use super::event::KeyEvent;
 
 pub const DEFAULT_OVERLAY_TOGGLE: LazyCell<Vec<String>> = LazyCell::new(|| vec!["ControlLeft".into(), "BackQuote".into()]);
-pub const DEFAULT_CONFIGURATOR_TOGGLE: LazyCell<Vec<String>> = LazyCell::new(|| vec!["ControlLeft".into(), "KeyP".into()]);
 
 pub struct Keybind {
   pub keys: Vec<Key>,
@@ -40,7 +39,10 @@ impl Keybind {
 }
 
 pub fn string_to_key(string: impl AsRef<str>) -> Option<Key> {
-  serde_json::from_str::<Key>(string.as_ref()).ok()
+  let s = string.as_ref();
+  serde_json::from_str::<Key>(s)
+    .or_else(|_| serde_json::from_str::<Key>(&format!("\"{}\"", s)))
+    .ok()
 }
 
 pub fn strings_to_keys(strings: Vec<impl AsRef<str>>) -> Vec<Key> {
@@ -51,7 +53,10 @@ pub fn strings_to_keys(strings: Vec<impl AsRef<str>>) -> Vec<Key> {
 }
 
 pub fn key_to_string(key: &Key) -> String {
-  serde_json::to_string(key).unwrap_or_default()
+  serde_json::to_string(key)
+    .unwrap_or_default()
+    .trim_matches('"')
+    .to_owned()
 }
 
 pub fn keys_to_strings(keys: Vec<Key>) -> Vec<String> {
@@ -64,6 +69,6 @@ pub fn default_keybinds() -> Vec<Keybind> {
       strings_to_keys(DEFAULT_OVERLAY_TOGGLE.clone()),
       KeyEvent::ToggleOverlay,
     ),
-    Keybind::new(strings_to_keys(DEFAULT_CONFIGURATOR_TOGGLE.clone()), KeyEvent::OpenConfigurator),
+    Keybind::new(vec![Key::KeyC], KeyEvent::OpenConfigurator),
   ]
 }

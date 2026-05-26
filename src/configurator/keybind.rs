@@ -1,3 +1,5 @@
+use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
+
 use freya::animation::*;
 use freya::prelude::*;
 use rdev::Key;
@@ -33,9 +35,15 @@ impl Component for KeybindControl {
       AnimColor::new(focus_border_fill, Color::from_rgb(200, 50, 50)).time(500)
     });
 
+    let recording_flag = use_try_consume::<Arc<AtomicBool>>();
+
     use_side_effect(move || {
+      let is_focused = focus_status.read().is_focused();
+      if let Some(flag) = &recording_flag {
+        flag.store(is_focused, Ordering::Relaxed);
+      }
       let mut anim = border_anim;
-      if focus_status.read().is_focused() {
+      if is_focused {
         anim.start();
       } else {
         anim.reset();

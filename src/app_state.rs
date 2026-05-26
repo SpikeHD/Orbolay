@@ -1,4 +1,8 @@
-use std::sync::{Arc, RwLock};
+use std::sync::{
+  Arc,
+  RwLock,
+  atomic::AtomicBool,
+};
 
 use crate::{
   config::Config, payloads::MessageNotification, user::User, util::bridge::BridgeMessage,
@@ -17,6 +21,8 @@ pub struct AppState {
   pub messages: Vec<MessageNotification>,
 
   pub ws_sender: Option<flume::Sender<BridgeMessage>>,
+
+  pub recording_keybind: Arc<AtomicBool>,
 }
 
 impl Default for AppState {
@@ -36,6 +42,7 @@ impl AppState {
       messages: vec![],
 
       ws_sender: None,
+      recording_keybind: Arc::new(AtomicBool::new(false)),
     }
   }
 
