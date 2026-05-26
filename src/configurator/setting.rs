@@ -1,4 +1,6 @@
 use freya::prelude::*;
+
+#[cfg(not(target_os = "macos"))]
 use rdev::Key;
 
 use crate::{
@@ -8,9 +10,6 @@ use crate::{
   util::colors::MUTED_GRAY,
 };
 
-/// Typed change value emitted by `SettingRow::on_change`.
-/// String-based controls (Toggle, Dropdown, Input) emit `Value`; the
-/// Keybind control emits `Keys` so callers never have to re-parse strings.
 #[derive(PartialEq)]
 pub enum SettingChange {
   Value(String),
@@ -55,6 +54,7 @@ impl Component for SettingRow {
       SettingKind::Input(initial) => Some(initial.clone()),
       _ => None,
     };
+    #[cfg(not(target_os = "macos"))]
     let keybind_initial = match &self.kind {
       SettingKind::Keybind(initial) => Some(initial.clone()),
       _ => None,
@@ -64,8 +64,8 @@ impl Component for SettingRow {
       .direction(Direction::Vertical)
       .width(Size::fill())
       .padding(Gaps::new(10., 12., 10., 12.))
-      .child(
-        rect()
+      .child({
+        let control = rect()
           .direction(Direction::Horizontal)
           .main_align(Alignment::SpaceBetween)
           .cross_align(Alignment::Center)
@@ -89,14 +89,18 @@ impl Component for SettingRow {
               initial,
               EventHandler::new(move |v: String| oc_input.call(SettingChange::Value(v))),
             ))
-          })
-          .map(keybind_initial, move |el, initial| {
-            el.child(KeybindControl::new(
-              initial,
-              EventHandler::new(move |keys: Vec<Key>| oc_keybind.call(SettingChange::Keys(keys))),
-            ))
-          }),
-      )
+          });
+
+        #[cfg(not(target_os = "macos"))]
+        let control = control.map(keybind_initial, move |el, initial| {
+          el.child(KeybindControl::new(
+            initial,
+            EventHandler::new(move |keys: Vec<Key>| oc_keybind.call(SettingChange::Keys(keys))),
+          ))
+        });
+
+        control
+      })
       .map(description, |el, desc| {
         el.child(
           label()

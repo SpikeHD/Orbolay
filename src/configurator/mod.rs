@@ -3,14 +3,17 @@ use freya::prelude::*;
 use crate::{
   app_state::SharedAppState,
   config::{Config, save_config},
-  keys::bind::{DEFAULT_OVERLAY_TOGGLE, keys_to_strings, strings_to_keys},
   util::colors::{GRAY, MUTED_GRAY, TRANSPARENT},
 };
+
+#[cfg(not(target_os = "macos"))]
+use crate::keys::bind::{DEFAULT_OVERLAY_TOGGLE, keys_to_strings, strings_to_keys};
 
 use setting::{SettingChange, SettingKind, SettingRow};
 
 mod dropdown;
 mod input;
+#[cfg(not(target_os = "macos"))]
 mod keybind;
 mod setting;
 mod toggle;
