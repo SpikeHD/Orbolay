@@ -48,7 +48,7 @@ pub fn update_monitor() {
       monitor_position.0,
       monitor_position.1,
     ));
-    w.set_min_inner_size(Some(new_size));
-    w.set_max_inner_size(Some(new_size));
+
+    let _ = w.request_inner_size(new_size);
   });
 }
