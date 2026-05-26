@@ -4,8 +4,7 @@
 )]
 #![allow(clippy::borrow_interior_mutable_const)]
 #![allow(clippy::declare_interior_mutable_const)]
-
-use display_info::DisplayInfo;
+c
 use freya::prelude::*;
 use gumdrop::Options;
 use native_dialog::{MessageDialogBuilder, MessageLevel};
@@ -17,17 +16,7 @@ use winit::{
 };
 
 use crate::{
-  app_state::{AppState, SharedAppState},
-  components::{MessageRow, UserRow, VoiceControls},
-  config::{CornerAlignment, is_first_run, load_config, save_config},
-  config_watcher::start_config_watcher,
-  configurator::{open_configurator, open_configurator_standalone},
-  manager::OverlayManager,
-  notifications::create_notification_thread,
-  payloads::MessageNotification,
-  transport::create_transport_thread,
-  updates::maybe_notify_update,
-  util::{colors, text::censor},
+  app_state::{AppState, SharedAppState}, components::{MessageRow, UserRow, VoiceControls}, config::{CornerAlignment, is_first_run, load_config, save_config}, config_watcher::start_config_watcher, configurator::{open_configurator, open_configurator_standalone}, display::{specific_monitor_or_primary, update_monitor}, manager::OverlayManager, notifications::create_notification_thread, payloads::MessageNotification, transport::create_transport_thread, updates::maybe_notify_update, util::{colors, text::censor}
 };
 
 mod app_state;
@@ -35,6 +24,7 @@ mod components;
 mod config;
 mod config_watcher;
 mod configurator;
+mod display;
 mod ipc;
 #[cfg(not(target_os = "macos"))]
 mod keys;
@@ -108,13 +98,10 @@ fn main() {
     std::process::exit(0);
   }
 
-  let displays = DisplayInfo::all().expect("Failed to get display information");
-  let primary = displays
-    .iter()
-    .find(|m| m.is_primary)
-    .unwrap_or(displays.first().expect("No displays found"));
-  let monitor_position = (primary.x, primary.y);
-  let monitor_size = (primary.width, primary.height);
+  let display = specific_monitor_or_primary();
+
+  let monitor_position = (display.x, display.y);
+  let monitor_size = (display.width, display.height);
 
   #[cfg(target_os = "macos")]
   let window_size = (
@@ -232,6 +219,8 @@ fn app() -> impl IntoElement {
           is_open,
           ..synced
         };
+
+        update_monitor();
       }
     });
 

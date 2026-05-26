@@ -103,6 +103,8 @@ pub struct Config {
   #[cfg(not(target_os = "macos"))]
   pub overlay_keybind: Option<Vec<String>>,
   #[serde(default)]
+  pub display_idx: Option<usize>,
+  #[serde(default)]
   pub port: Option<u16>,
   #[serde(default)]
   pub user_id: String,
@@ -131,6 +133,7 @@ impl Default for Config {
     Self {
       #[cfg(not(target_os = "macos"))]
       overlay_keybind: Some(DEFAULT_OVERLAY_TOGGLE.clone()),
+      display_idx: None,
       port: Some(6888),
       user_id: String::new(),
       message_alignment: None,

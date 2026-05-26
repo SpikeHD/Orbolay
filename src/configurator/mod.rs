@@ -1,3 +1,4 @@
+use display_info::DisplayInfo;
 use freya::prelude::*;
 
 use crate::{
@@ -101,6 +102,12 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
   use_provide_context(move || recording_flag);
 
   let config = shared.read().unwrap().config.clone();
+  let all_displays = DisplayInfo::all().unwrap_or_default();
+  let display_names: Vec<String> = all_displays
+    .iter()
+    .map(|d| format!("{} ({}x{})", d.friendly_name.clone(), d.width, d.height))
+    .collect();
+  let display_names_for_update = display_names.clone();
 
   let inner = rect()
     .direction(Direction::Vertical)
@@ -125,6 +132,25 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
     .child(divider());
 
   let inner = inner
+    .child(SettingRow {
+      name: "Display".into(),
+      description: Some("The display to show the overlay on".into()),
+      kind: SettingKind::Dropdown(
+        display_names.clone(),
+        config
+          .display_idx
+          .and_then(|i| display_names.get(i).cloned()),
+      ),
+      on_change: make_updater(shared.clone(), redraw_tx.clone(), move |cfg, v| {
+        if let Some(idx) = display_names_for_update
+          .iter()
+          .position(|name| name == &v)
+        {
+          cfg.display_idx = Some(idx);
+        }
+      }),
+    })
+    .child(divider())
     .child(SettingRow {
       name: "Semi-Transparent Voice Users".into(),
       description: Some(
