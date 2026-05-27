@@ -33,14 +33,30 @@ pub fn specific_monitor_or_primary() -> DisplayInfo {
   }
 }
 
+pub fn window_size_for_display(display: &DisplayInfo) -> PhysicalSize<f64> {
+  let monitor_size = (display.width, display.height);
+
+  #[cfg(target_os = "macos")]
+  {
+    PhysicalSize::new(
+      (monitor_size.0 + 1) as f64 * display.scale_factor as f64,
+      (monitor_size.1 - 1) as f64 * display.scale_factor as f64,
+    )
+  }
+
+  #[cfg(not(target_os = "macos"))]
+  {
+    PhysicalSize::new((monitor_size.0 + 1) as f64, (monitor_size.1 - 1) as f64)
+  }
+}
+
 pub fn update_monitor() {
   let display = specific_monitor_or_primary();
   let monitor_position = (display.x, display.y);
-  let monitor_size = (display.width, display.height);
+
+  let new_size = window_size_for_display(&display);
 
   Platform::get().with_window(None, move |w| {
-    let new_size = PhysicalSize::new((monitor_size.0 + 1) as f64, (monitor_size.1 - 1) as f64);
-
     w.set_outer_position(PhysicalPosition::new(
       monitor_position.0,
       monitor_position.1,

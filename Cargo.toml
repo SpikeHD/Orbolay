@@ -23,7 +23,7 @@ bytes = "1"
 chrono = "0.4.41"
 colored = "3.0.0"
 dirs = "6.0.0"
-display-info = "0.5.5"
+display-info = "0.5.6"
 flume = "0.12"
 #freya = { version = "0.4.0-rc.19", features = ["engine"] }
 freya = { git = "https://github.com/marc2332/freya.git", branch = "main", features = ["engine"] }

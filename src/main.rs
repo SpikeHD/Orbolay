@@ -10,10 +10,7 @@ use gumdrop::Options;
 use native_dialog::{MessageDialogBuilder, MessageLevel};
 #[cfg(target_os = "windows")]
 use winit::platform::windows::WindowAttributesExtWindows;
-use winit::{
-  dpi::{PhysicalPosition, PhysicalSize},
-  window::WindowLevel,
-};
+use winit::{dpi::PhysicalPosition, window::WindowLevel};
 
 use crate::{
   app_state::{AppState, SharedAppState},
@@ -21,13 +18,13 @@ use crate::{
   config::{is_first_run, load_config, save_config},
   config_watcher::start_config_watcher,
   configurator::{open_configurator, open_configurator_standalone},
-  display::{specific_monitor_or_primary, update_monitor},
+  display::{specific_monitor_or_primary, update_monitor, window_size_for_display},
   manager::OverlayManager,
   notifications::create_notification_thread,
   payloads::MessageNotification,
   transport::create_transport_thread,
   updates::maybe_notify_update,
-  util::colors,
+  util::{bridge::BridgeMessage, colors},
 };
 
 mod app_state;
@@ -115,15 +112,9 @@ fn main() {
   let display = specific_monitor_or_primary();
 
   let monitor_position = (display.x, display.y);
-  let monitor_size = (display.width, display.height);
 
-  #[cfg(target_os = "macos")]
-  let window_size = (
-    (monitor_size.0 + 1) as f64 * display.scale_factor as f64,
-    (monitor_size.1 + 1) as f64 * display.scale_factor as f64,
-  );
-  #[cfg(not(target_os = "macos"))]
-  let window_size = ((monitor_size.0 + 1) as f64, (monitor_size.1 - 1) as f64);
+  // Compute the initial window size for the chosen display.
+  let window_size = window_size_for_display(&display);
 
   #[cfg(target_os = "linux")]
   {
@@ -144,7 +135,7 @@ fn main() {
         .with_background(Color::TRANSPARENT)
         .with_window_attributes(move |mut w, _event_loop| {
           w = w
-            .with_inner_size(PhysicalSize::new(window_size.0, window_size.1))
+            .with_inner_size(window_size)
             .with_resizable(false)
             .with_window_level(WindowLevel::AlwaysOnTop)
             .with_position(PhysicalPosition::new(
@@ -179,7 +170,7 @@ fn app() -> impl IntoElement {
   let mut app_state = use_state(AppState::new);
 
   use_hook(move || {
-    let (ws_sender, ws_receiver) = flume::unbounded::<crate::util::bridge::BridgeMessage>();
+    let (ws_sender, ws_receiver) = flume::unbounded::<BridgeMessage>();
     let (redraw_tx, redraw_rx) = flume::unbounded::<()>();
     #[cfg(not(target_os = "macos"))]
     let (keybind_tx, keybind_rx) = flume::unbounded::<keys::KeyEvent>();
