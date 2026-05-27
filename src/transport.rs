@@ -1,5 +1,6 @@
 use crate::{
-  Args, app_state::SharedAppState, config::TransportMode, error, ipc, util::bridge::BridgeMessage, websocket,
+  Args, app_state::SharedAppState, config::TransportMode, error, ipc, util::bridge::BridgeMessage,
+  websocket,
 };
 
 pub fn create_transport_thread(
@@ -25,5 +26,7 @@ pub fn create_transport_thread(
       }
       return;
     }
+
+    error!("No valid transport mode selected.");
   });
 }

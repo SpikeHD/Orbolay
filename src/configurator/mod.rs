@@ -174,9 +174,14 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
           .clone()
           .unwrap_or_else(|| DEFAULT_OVERLAY_TOGGLE.clone()),
       ))),
-      on_change: make_keybind_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, keys| {
-        cfg.overlay_keybind = Some(keys_to_strings(keys));
-      }),
+      on_change: make_keybind_updater(
+        shared.clone(),
+        redraw_tx.clone(),
+        local_config,
+        |cfg, keys| {
+          cfg.overlay_keybind = Some(keys_to_strings(keys));
+        },
+      ),
       disabled: !config.is_keybind_enabled.unwrap_or(true),
     })
     .child(divider());
@@ -191,11 +196,16 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
           .display_idx
           .and_then(|i| display_names.get(i).cloned()),
       ),
-      on_change: make_updater(shared.clone(), redraw_tx.clone(), local_config, move |cfg, v| {
-        if let Some(idx) = display_names_for_update.iter().position(|name| name == &v) {
-          cfg.display_idx = Some(idx);
-        }
-      }),
+      on_change: make_updater(
+        shared.clone(),
+        redraw_tx.clone(),
+        local_config,
+        move |cfg, v| {
+          if let Some(idx) = display_names_for_update.iter().position(|name| name == &v) {
+            cfg.display_idx = Some(idx);
+          }
+        },
+      ),
       disabled: false,
     })
     .child(divider())
