@@ -139,7 +139,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
     .child(divider())
     .child(SettingRow {
       name: "Websocket Port".into(),
-      description: Some("Port the websocket server listens on (websocket mode only)".into()),
+      description: Some("Port the websocket server listens on (websocket mode only). REQUIRES RESTART.".into()),
       kind: SettingKind::Input(Some(config.port.unwrap_or(6888).to_string())),
       on_change: make_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
         if let Ok(n) = v.trim().parse::<u16>() {
