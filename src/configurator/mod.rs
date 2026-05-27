@@ -3,7 +3,7 @@ use freya::prelude::*;
 
 use crate::{
   app_state::SharedAppState,
-  config::{Config, TransportMode, save_config},
+  config::{Config, TransportMode, load_config, save_config},
   util::colors::{GRAY, MUTED_GRAY, TRANSPARENT},
 };
 
@@ -46,6 +46,9 @@ pub fn open_configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) {
 pub fn open_configurator_standalone() {
   // Basically a blocking, standalone version of open_configurator
   let shared = SharedAppState::default();
+  if let Some(saved) = load_config() {
+    shared.write().unwrap().config = saved;
+  }
   let (redraw_tx, _) = flume::unbounded();
 
   launch(LaunchConfig::new().with_window(configurator_window(shared.clone(), redraw_tx)));
