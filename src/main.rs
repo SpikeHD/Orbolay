@@ -214,7 +214,7 @@ fn app() -> impl IntoElement {
         GIT_HASH.unwrap_or("unknown")
       ),
       body: "by SpikeHD".to_string(),
-      timestamp: Some(chrono::Utc::now().timestamp().to_string()),
+      timestamp: Some(chrono::Utc::now().timestamp()),
       icon: "https://avatars.githubusercontent.com/u/25207995?v=4".to_string(),
       guild_id: None,
       channel_id: None,
@@ -258,14 +258,14 @@ fn app() -> impl IntoElement {
       while let Ok(event) = keybind_rx.recv_async().await {
         match event {
           keys::KeyEvent::ToggleOverlay => {
-            let current = app_state.read().is_open;
-            app_state.write().is_open = !current;
+            let mut state = app_state.write();
+            state.is_open = !state.is_open;
           }
           keys::KeyEvent::OpenConfigurator if app_state.read().is_open => {
             open_configurator(shared.clone(), redraw_tx.clone());
             app_state.write().is_open = false;
           }
-          _ => {}
+          keys::KeyEvent::OpenConfigurator => {}
         }
       }
     });
