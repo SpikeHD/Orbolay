@@ -17,8 +17,8 @@ use winit::{
 
 use crate::{
   app_state::{AppState, SharedAppState},
-  components::{MessageRow, UserRow, VoiceControls},
-  config::{CornerAlignment, is_first_run, load_config, save_config},
+  components::{MessagesSection, VoiceControls, VoiceSection},
+  config::{is_first_run, load_config, save_config},
   config_watcher::start_config_watcher,
   configurator::{open_configurator, open_configurator_standalone},
   display::{specific_monitor_or_primary, update_monitor},
@@ -27,7 +27,7 @@ use crate::{
   payloads::MessageNotification,
   transport::create_transport_thread,
   updates::maybe_notify_update,
-  util::{colors, text::censor},
+  util::colors,
 };
 
 mod app_state;
@@ -214,7 +214,7 @@ fn app() -> impl IntoElement {
         GIT_HASH.unwrap_or("unknown")
       ),
       body: "by SpikeHD".to_string(),
-      timestamp: Some(chrono::Utc::now().timestamp().to_string()),
+      timestamp: Some(chrono::Utc::now().timestamp()),
       icon: "https://avatars.githubusercontent.com/u/25207995?v=4".to_string(),
       guild_id: None,
       channel_id: None,
@@ -258,14 +258,14 @@ fn app() -> impl IntoElement {
       while let Ok(event) = keybind_rx.recv_async().await {
         match event {
           keys::KeyEvent::ToggleOverlay => {
-            let current = app_state.read().is_open;
-            app_state.write().is_open = !current;
+            let mut state = app_state.write();
+            state.is_open = !state.is_open;
           }
           keys::KeyEvent::OpenConfigurator if app_state.read().is_open => {
             open_configurator(shared.clone(), redraw_tx.clone());
             app_state.write().is_open = false;
           }
-          _ => {}
+          keys::KeyEvent::OpenConfigurator => {}
         }
       }
     });
@@ -282,77 +282,15 @@ fn app() -> impl IntoElement {
   let state = app_state.read();
   let voice_users = state.voice_users.clone();
   let messages = state.messages.clone();
+  let is_open = state.is_open;
+  let is_censor = state.is_censor;
+  let config = state.config.clone();
   let current_user = state
     .voice_users
     .iter()
     .find(|u| u.id == state.config.user_id)
     .cloned();
-
-  let user_alignment =
-    CornerAlignment::from_str(state.config.user_alignment.as_deref().unwrap_or("topleft"));
-  let msg_alignment = CornerAlignment::from_str(
-    state
-      .config
-      .message_alignment
-      .as_deref()
-      .unwrap_or("topright"),
-  );
-
-  let user_gaps = user_alignment.to_gaps(state.config.user_offset_x, state.config.user_offset_y);
-  let msg_gaps =
-    msg_alignment.to_gaps(state.config.message_offset_x, state.config.message_offset_y);
-
-  // Root container
-  let voice_section = voice_users.iter().fold(
-    rect()
-      .direction(Direction::Vertical)
-      .cross_align(user_alignment.x.to_freya())
-      .main_align(user_alignment.y.to_freya())
-      .position(Position::new_absolute().top(0.).left(0.))
-      .background(Color::TRANSPARENT)
-      .height(Size::fill())
-      .width(Size::fill())
-      .padding(user_gaps),
-    |el, user| {
-      let mut u = user.clone();
-      if state.is_censor {
-        u.name = censor(&u.name);
-      }
-      el.child(UserRow {
-        user: u,
-        is_open: state.is_open,
-        is_right_aligned: user_alignment.x == config::AxisAlignment::End,
-        is_voice_semitransparent: state.config.voice_semitransparent.unwrap_or(true),
-      })
-    },
-  );
-
-  let messages_section = messages.iter().fold(
-    rect()
-      .direction(Direction::Vertical)
-      .cross_align(msg_alignment.x.to_freya())
-      .main_align(msg_alignment.y.to_freya())
-      .position(Position::new_absolute().top(0.).left(0.))
-      .background(Color::TRANSPARENT)
-      .height(Size::fill())
-      .width(Size::fill())
-      .padding(msg_gaps)
-      .opacity(if state.config.messages_semitransparent && !state.is_open {
-        0.5
-      } else {
-        1.0
-      }),
-    |el, message| {
-      if state.is_censor {
-        el
-      } else {
-        el.child(MessageRow {
-          app_state,
-          message: message.clone(),
-        })
-      }
-    },
-  );
+  drop(state);
 
   rect()
     .width(Size::fill())
@@ -361,7 +299,7 @@ fn app() -> impl IntoElement {
     .child(
       rect()
         .position(Position::new_absolute().top(0.).left(0.))
-        .background(if state.is_open {
+        .background(if is_open {
           colors::TRANSPARENT_GRAY
         } else {
           Color::TRANSPARENT
@@ -373,11 +311,34 @@ fn app() -> impl IntoElement {
         }),
     )
     // Voice users
-    .child(voice_section)
+    .child(VoiceSection {
+      voice_users,
+      is_open,
+      is_censor,
+      user_alignment: config
+        .user_alignment
+        .clone()
+        .unwrap_or_else(|| "topleft".into()),
+      user_offset_x: config.user_offset_x,
+      user_offset_y: config.user_offset_y,
+      voice_semitransparent: config.voice_semitransparent.unwrap_or(true),
+    })
     // Messages
-    .child(messages_section)
+    .child(MessagesSection {
+      messages,
+      is_open,
+      is_censor,
+      message_alignment: config
+        .message_alignment
+        .clone()
+        .unwrap_or_else(|| "topright".into()),
+      message_offset_x: config.message_offset_x,
+      message_offset_y: config.message_offset_y,
+      messages_semitransparent: config.messages_semitransparent,
+      app_state,
+    })
     // Voice controls
-    .maybe(state.is_open, |el| {
+    .maybe(is_open, |el| {
       el.maybe_child(current_user.map(|user| {
         rect()
           .position(Position::new_absolute().top(0.).left(0.))

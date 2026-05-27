@@ -1,4 +1,5 @@
 use std::fmt::Display;
+use std::io::Write;
 
 use chrono::Local;
 use colored::Colorize;
@@ -19,7 +20,8 @@ pub fn log(s: impl AsRef<str> + Display, kind: Option<LogKind>) {
     None => "INFO".blue(),
   };
 
-  println!(
+  let _ = writeln!(
+    std::io::stdout().lock(),
     "[{}] [{}] {}",
     Local::now().format("%Y-%m-%d %H:%M:%S"),
     status,

@@ -63,39 +63,39 @@ fn ws_stream(
 
   log!("Stream connected");
 
-  loop {
-    std::thread::sleep(std::time::Duration::from_millis(50));
-
-    if let Ok(msg) = websocket.read() {
-      if msg.is_close() {
-        log!("Stream closed");
-        shared.write().unwrap().voice_users = vec![];
-        let _ = redraw_tx.send(());
-        break;
-      }
-
-      if msg.is_empty() {
-        continue;
-      }
-
-      let msg = msg.to_string();
-      let msg: BridgeMessage = serde_json::from_str(&msg)?;
-
-      if let Err(e) = handle_ws_message(&msg, shared.clone(), &redraw_tx) {
-        error!("Failed to handle websocket message: {}", e);
-      }
-    } else {
-      if let Ok(msg) = ws_receiver.try_recv() {
-        let msg = serde_json::to_string(&msg)?;
-        log!("Sending message to websocket: {:?}", msg);
-        websocket
-          .write(Message::Text(Utf8Bytes::from(msg)))
-          .unwrap_or_else(|_| error!("Failed to send message to websocket, socket closed?"));
-        websocket
-          .flush()
-          .unwrap_or_else(|_| error!("Failed to flush message to websocket, socket closed?"));
+  'outer: loop {
+    loop {
+      match websocket.read() {
+        Ok(msg) if msg.is_close() => {
+          log!("Stream closed");
+          shared.write().unwrap().voice_users = vec![];
+          let _ = redraw_tx.send(());
+          break 'outer;
+        }
+        Ok(msg) if msg.is_empty() => continue,
+        Ok(msg) => {
+          let msg = msg.to_string();
+          let msg: BridgeMessage = serde_json::from_str(&msg)?;
+          if let Err(e) = handle_ws_message(&msg, shared.clone(), &redraw_tx) {
+            error!("Failed to handle websocket message: {}", e);
+          }
+        }
+        Err(_) => break,
       }
     }
+
+    if let Ok(msg) = ws_receiver.try_recv() {
+      let msg = serde_json::to_string(&msg)?;
+      log!("Sending message to websocket: {:?}", msg);
+      websocket
+        .write(Message::Text(Utf8Bytes::from(msg)))
+        .unwrap_or_else(|_| error!("Failed to send message to websocket, socket closed?"));
+      websocket
+        .flush()
+        .unwrap_or_else(|_| error!("Failed to flush message to websocket, socket closed?"));
+    }
+
+    std::thread::sleep(std::time::Duration::from_millis(10));
   }
   Ok(())
 }
@@ -118,28 +118,28 @@ pub fn handle_ws_message(
         .and_then(|v| v.as_str())
         .unwrap_or_default()
         .to_string();
-      let existing = shared.read().unwrap().config.clone();
+      let mut state = shared.write().unwrap();
+      let existing = state.config.clone();
       let mut data = serde_json::from_value::<Config>(data).unwrap_or(existing);
       data.user_id = user_id;
-      shared.write().unwrap().config = data;
+      state.config = data;
     }
     "CHANNEL_JOINED" => {
       let data = serde_json::from_value::<ChannelJoinPayload>(data)?;
-      let mut users = vec![];
+      let mut state = shared.write().unwrap();
+      let user_id = state.config.user_id.clone();
+      let mut users = Vec::with_capacity(data.states.len());
 
-      let user_id = shared.read().unwrap().config.user_id.clone();
       for voice_state in data.states {
         if voice_state.user_id == user_id {
-          shared.write().unwrap().current_channel =
-            voice_state.channel_id.clone().unwrap_or("0".to_string());
+          state.current_channel = voice_state.channel_id.clone().unwrap_or("0".to_string());
         }
         users.push(voice_state.into());
       }
 
-      shared.write().unwrap().voice_users = users;
+      state.voice_users = users;
     }
     "VOICE_STATE_UPDATE" => {
-      let current_channel = shared.read().unwrap().current_channel.clone();
       let channel_is_null = msg
         .data
         .get("state")
@@ -148,12 +148,12 @@ pub fn handle_ws_message(
         .unwrap_or(false);
       let mut data = serde_json::from_value::<UpdatePayload>(msg.data.clone())?;
 
+      let mut state = shared.write().unwrap();
+
       let should_remove = match &data.state.channel_id {
-        Some(channel_id) => channel_id != &current_channel,
+        Some(channel_id) => channel_id != &state.current_channel,
         None => channel_is_null,
       };
-
-      let mut state = shared.write().unwrap();
 
       if should_remove {
         state
@@ -183,7 +183,7 @@ pub fn handle_ws_message(
     }
     "MESSAGE_NOTIFICATION" => {
       let mut data = serde_json::from_value::<MessageNotificationPayload>(data)?;
-      data.message.timestamp = Some(chrono::Utc::now().timestamp().to_string());
+      data.message.timestamp = Some(chrono::Utc::now().timestamp());
       data.message.icon = data.message.icon.replace(".webp", ".png");
       shared.write().unwrap().notify(data.message);
     }

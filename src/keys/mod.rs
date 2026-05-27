@@ -35,16 +35,18 @@ pub fn watch_keybinds(shared: SharedAppState, keybind_tx: flume::Sender<KeyEvent
     let shared = shared.clone();
     thread::spawn(move || {
       loop {
-        let config = shared.read().unwrap().config.clone();
+        let (is_enabled, overlay_keybind) = {
+          let state = shared.read().unwrap();
+          (
+            state.config.is_keybind_enabled.unwrap_or(true),
+            state.config.overlay_keybind.clone(),
+          )
+        };
 
-        enabled.store(config.is_keybind_enabled.unwrap_or(true), Ordering::Relaxed);
+        enabled.store(is_enabled, Ordering::Relaxed);
 
-        let overlay_keys = strings_to_keys(
-          config
-            .overlay_keybind
-            .clone()
-            .unwrap_or_else(|| DEFAULT_OVERLAY_TOGGLE.clone()),
-        );
+        let overlay_keys =
+          strings_to_keys(overlay_keybind.unwrap_or_else(|| DEFAULT_OVERLAY_TOGGLE.clone()));
 
         {
           let mut kbs = keybinds.write().unwrap();

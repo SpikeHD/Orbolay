@@ -139,7 +139,7 @@ pub fn handle_ipc_message(
         message_id: message.and_then(|m| m.id.clone()),
         title: data.title.clone(),
         body: data.body.clone(),
-        timestamp: Some(chrono::Utc::now().timestamp().to_string()),
+        timestamp: Some(chrono::Utc::now().timestamp()),
         icon: data
           .icon_url
           .clone()

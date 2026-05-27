@@ -64,7 +64,8 @@ pub struct MessageNotification {
   pub guild_id: Option<String>,
   pub channel_id: Option<String>,
   pub message_id: Option<String>,
-  pub timestamp: Option<String>,
+  #[serde(default, skip_deserializing)]
+  pub timestamp: Option<i64>,
 }
 
 impl Default for MessageNotification {
@@ -76,7 +77,7 @@ impl Default for MessageNotification {
       guild_id: None,
       channel_id: None,
       message_id: None,
-      timestamp: Some(chrono::Utc::now().timestamp().to_string()),
+      timestamp: Some(chrono::Utc::now().timestamp()),
     }
   }
 }
