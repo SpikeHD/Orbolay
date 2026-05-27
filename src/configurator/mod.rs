@@ -3,7 +3,7 @@ use freya::prelude::*;
 
 use crate::{
   app_state::SharedAppState,
-  config::{Config, save_config},
+  config::{Config, TransportMode, save_config},
   util::colors::{GRAY, MUTED_GRAY, TRANSPARENT},
 };
 
@@ -62,6 +62,7 @@ fn configurator_window(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> 
 fn make_updater(
   shared: SharedAppState,
   redraw_tx: flume::Sender<()>,
+  mut local_config: State<Config>,
   update_fn: impl Fn(&mut Config, String) + 'static,
 ) -> EventHandler<SettingChange> {
   EventHandler::new(move |change: SettingChange| {
@@ -72,6 +73,7 @@ fn make_updater(
         state.config.clone()
       };
       save_config(&updated);
+      local_config.set(updated);
       redraw_tx.send(()).ok();
     }
   })
@@ -81,6 +83,7 @@ fn make_updater(
 fn make_keybind_updater(
   shared: SharedAppState,
   redraw_tx: flume::Sender<()>,
+  mut local_config: State<Config>,
   update_fn: impl Fn(&mut Config, Vec<rdev::Key>) + 'static,
 ) -> EventHandler<SettingChange> {
   EventHandler::new(move |change: SettingChange| {
@@ -91,6 +94,7 @@ fn make_keybind_updater(
         state.config.clone()
       };
       save_config(&updated);
+      local_config.set(updated);
       redraw_tx.send(()).ok();
     }
   })
@@ -103,7 +107,9 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
   let recording_flag = shared.read().unwrap().recording_keybind.clone();
   use_provide_context(move || recording_flag);
 
-  let config = shared.read().unwrap().config.clone();
+  let local_config = use_state(|| shared.read().unwrap().config.clone());
+  let config = local_config.read().clone();
+
   let all_displays = DisplayInfo::all().unwrap_or_default();
   let display_names: Vec<String> = all_displays
     .iter()
@@ -125,10 +131,22 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
         TRANSPORT_MODES.iter().map(|s| s.to_string()).collect(),
         Some(config.transport_mode.to_string()),
       ),
-      on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
+      on_change: make_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
         cfg.transport_mode = v.into();
       }),
       disabled: false,
+    })
+    .child(divider())
+    .child(SettingRow {
+      name: "Websocket Port".into(),
+      description: Some("Port the websocket server listens on (websocket mode only)".into()),
+      kind: SettingKind::Input(Some(config.port.unwrap_or(6888).to_string())),
+      on_change: make_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
+        if let Ok(n) = v.trim().parse::<u16>() {
+          cfg.port = Some(n);
+        }
+      }),
+      disabled: config.transport_mode != TransportMode::Websocket,
     })
     .child(divider());
 
@@ -138,7 +156,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
       name: "Enable Keybind".into(),
       description: Some("Toggle overlay visibility with a keybind".into()),
       kind: SettingKind::Toggle(config.is_keybind_enabled.unwrap_or(true)),
-      on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
+      on_change: make_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
         cfg.is_keybind_enabled = Some(v == "true");
       }),
       disabled: false,
@@ -156,10 +174,10 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
           .clone()
           .unwrap_or_else(|| DEFAULT_OVERLAY_TOGGLE.clone()),
       ))),
-      on_change: make_keybind_updater(shared.clone(), redraw_tx.clone(), |cfg, keys| {
+      on_change: make_keybind_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, keys| {
         cfg.overlay_keybind = Some(keys_to_strings(keys));
       }),
-      disabled: false,
+      disabled: !config.is_keybind_enabled.unwrap_or(true),
     })
     .child(divider());
 
@@ -173,7 +191,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
           .display_idx
           .and_then(|i| display_names.get(i).cloned()),
       ),
-      on_change: make_updater(shared.clone(), redraw_tx.clone(), move |cfg, v| {
+      on_change: make_updater(shared.clone(), redraw_tx.clone(), local_config, move |cfg, v| {
         if let Some(idx) = display_names_for_update.iter().position(|name| name == &v) {
           cfg.display_idx = Some(idx);
         }
@@ -187,7 +205,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
         "Fade voice users when not actively speaking and the overlay is closed".into(),
       ),
       kind: SettingKind::Toggle(config.voice_semitransparent.unwrap_or(true)),
-      on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
+      on_change: make_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
         cfg.voice_semitransparent = Some(v == "true");
       }),
       disabled: false,
@@ -197,7 +215,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
       name: "Semi-Transparent Notifications".into(),
       description: Some("Fade notifications when the overlay is closed".into()),
       kind: SettingKind::Toggle(config.messages_semitransparent),
-      on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
+      on_change: make_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
         cfg.messages_semitransparent = v == "true";
       }),
       disabled: false,
@@ -215,7 +233,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
           .clone()
           .or_else(|| Some("topleft".into())),
       ),
-      on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
+      on_change: make_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
         cfg.user_alignment = Some(v);
       }),
       disabled: false,
@@ -225,7 +243,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
       name: "Voice X Offset (px)".into(),
       description: None,
       kind: SettingKind::Input(Some(config.user_offset_x.to_string())),
-      on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
+      on_change: make_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
         if let Ok(n) = v.trim().parse::<i32>() {
           cfg.user_offset_x = n;
         }
@@ -237,7 +255,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
       name: "Voice Y Offset (px)".into(),
       description: None,
       kind: SettingKind::Input(Some(config.user_offset_y.to_string())),
-      on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
+      on_change: make_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
         if let Ok(n) = v.trim().parse::<i32>() {
           cfg.user_offset_y = n;
         }
@@ -255,7 +273,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
           .clone()
           .or_else(|| Some("topright".into())),
       ),
-      on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
+      on_change: make_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
         cfg.message_alignment = Some(v);
       }),
       disabled: false,
@@ -265,7 +283,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
       name: "Messages X Offset (px)".into(),
       description: None,
       kind: SettingKind::Input(Some(config.message_offset_x.to_string())),
-      on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
+      on_change: make_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
         if let Ok(n) = v.trim().parse::<i32>() {
           cfg.message_offset_x = n;
         }
@@ -277,7 +295,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
       name: "Messages Y Offset (px)".into(),
       description: None,
       kind: SettingKind::Input(Some(config.message_offset_y.to_string())),
-      on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
+      on_change: make_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
         if let Ok(n) = v.trim().parse::<i32>() {
           cfg.message_offset_y = n;
         }

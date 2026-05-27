@@ -69,6 +69,7 @@ impl Component for SettingRow {
       .direction(Direction::Vertical)
       .width(Size::fill())
       .padding(Gaps::new(10., 12., 10., 12.))
+      .opacity(if self.disabled { 0.4 } else { 1.0 })
       .child({
         let control = rect()
           .direction(Direction::Horizontal)
