@@ -8,7 +8,7 @@ pub use event::KeyEvent;
 
 use std::cell::RefCell;
 use std::sync::{
-  Arc, Mutex,
+  Arc, RwLock,
   atomic::{AtomicBool, Ordering},
 };
 use std::thread;
@@ -25,7 +25,7 @@ use state::{KeyState, process};
 
 pub fn watch_keybinds(shared: SharedAppState, keybind_tx: flume::Sender<KeyEvent>) {
   let enabled = Arc::new(AtomicBool::new(true));
-  let keybinds: Arc<Mutex<Vec<Keybind>>> = Arc::new(Mutex::new(default_keybinds()));
+  let keybinds: Arc<RwLock<Vec<Keybind>>> = Arc::new(RwLock::new(default_keybinds()));
   let recording = shared.read().unwrap().recording_keybind.clone();
 
   // Poll config every second to sync keybind/enabled state
@@ -46,12 +46,14 @@ pub fn watch_keybinds(shared: SharedAppState, keybind_tx: flume::Sender<KeyEvent
             .unwrap_or_else(|| DEFAULT_OVERLAY_TOGGLE.clone()),
         );
 
-        let mut kbs = keybinds.lock().unwrap();
-        for kb in kbs.iter_mut() {
-          if matches!(kb.event, KE::ToggleOverlay) && kb.keys != overlay_keys {
-            kb.keys = overlay_keys.clone();
-            kb.reset();
-            break;
+        {
+          let mut kbs = keybinds.write().unwrap();
+          for kb in kbs.iter_mut() {
+            if matches!(kb.event, KE::ToggleOverlay) && kb.keys != overlay_keys {
+              kb.keys = overlay_keys.clone();
+              kb.reset();
+              break;
+            }
           }
         }
 
@@ -70,7 +72,7 @@ pub fn watch_keybinds(shared: SharedAppState, keybind_tx: flume::Sender<KeyEvent
 
     let grab_result = grab(move |event: Event| {
       if !recording_grab.load(Ordering::Relaxed) && enabled_grab.load(Ordering::Relaxed) {
-        let kbs = keybinds_grab.lock().unwrap();
+        let kbs = keybinds_grab.read().unwrap();
         process(
           &event.event_type,
           &mut key_state_grab.borrow_mut(),
@@ -87,7 +89,7 @@ pub fn watch_keybinds(shared: SharedAppState, keybind_tx: flume::Sender<KeyEvent
       let key_state_listen = RefCell::new(KeyState::new());
       if let Err(e) = listen(move |event: Event| {
         if !recording.load(Ordering::Relaxed) && enabled.load(Ordering::Relaxed) {
-          let kbs = keybinds.lock().unwrap();
+          let kbs = keybinds.read().unwrap();
           process(
             &event.event_type,
             &mut key_state_listen.borrow_mut(),
