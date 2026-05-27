@@ -3,12 +3,7 @@ use freya::prelude::*;
 use crate::{
   app_state::AppState,
   payloads::MessageNotification,
-  util::{
-    bridge::BridgeMessage,
-    colors,
-    image::{circular_with_border, fetch_icon, image_from_bytes},
-    text::strip,
-  },
+  util::{bridge::BridgeMessage, colors, image::avatar_image, text::strip},
 };
 
 #[derive(PartialEq)]
@@ -50,7 +45,7 @@ impl Component for MessageRow {
           .width(Size::fill())
           .height(Size::fill())
           .child(
-            image_from_bytes(icon(&self.message.icon))
+            avatar_image(&self.message.icon, None)
               .width(Size::px(54.))
               .height(Size::px(54.))
               .margin(Gaps::new(0., 0., 0., 10.)),
@@ -84,8 +79,4 @@ impl Component for MessageRow {
           ),
       )
   }
-}
-
-fn icon(url: &str) -> Vec<u8> {
-  circular_with_border(fetch_icon(url, true).unwrap_or_default(), None).unwrap_or_default()
 }

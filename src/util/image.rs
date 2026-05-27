@@ -17,22 +17,68 @@ use crate::log;
 static AVATAR_CACHE: LazyLock<Mutex<HashMap<String, Vec<u8>>>> =
   LazyLock::new(|| Mutex::new(HashMap::new()));
 
+struct CachedAvatar {
+  image: SkImage,
+  bytes: Bytes,
+}
+
+type AvatarImageCache = Mutex<HashMap<(String, Option<u32>), CachedAvatar>>;
+
+static AVATAR_IMAGE_CACHE: LazyLock<AvatarImageCache> =
+  LazyLock::new(|| Mutex::new(HashMap::new()));
+
 pub static DEFAULT_AVATAR: &[u8] = include_bytes!("../../assets/discordgrey.png");
 
 const OUTPUT_RES: (i32, i32) = (256, 256);
 
-pub fn image_from_bytes(bytes: Vec<u8>) -> FreyaImage {
-  let data = if bytes.is_empty() {
-    DEFAULT_AVATAR
-  } else {
-    &bytes
+fn border_key(border: Option<SkColor>) -> Option<u32> {
+  border.map(|c| {
+    ((c.a() as u32) << 24) | ((c.r() as u32) << 16) | ((c.g() as u32) << 8) | (c.b() as u32)
+  })
+}
+
+pub fn avatar_image(url: &str, border: Option<SkColor>) -> FreyaImage {
+  let key = (url.to_string(), border_key(border));
+
+  let hit = {
+    let cache = AVATAR_IMAGE_CACHE.lock().unwrap();
+    cache.get(&key).map(|c| (c.image.clone(), c.bytes.clone()))
   };
-  let sk_image = SkImage::from_encoded(SkData::new_copy(data))
-    .or_else(|| SkImage::from_encoded(SkData::new_copy(DEFAULT_AVATAR)))
-    .expect("Failed to decode avatar and fallback image");
+  if let Some((image, bytes)) = hit {
+    return img_fn(ImageHolder {
+      image: Rc::new(RefCell::new(image)),
+      bytes,
+    });
+  }
+
+  let raw = fetch_icon(url, true).unwrap_or_default();
+  let processed = circular_with_border(raw, border).unwrap_or_default();
+
+  if processed.is_empty() {
+    let bytes = Bytes::from_static(DEFAULT_AVATAR);
+    let sk_image =
+      SkImage::from_encoded(SkData::new_copy(&bytes)).expect("Failed to decode default avatar");
+    return img_fn(ImageHolder {
+      image: Rc::new(RefCell::new(sk_image)),
+      bytes,
+    });
+  }
+
+  let bytes = Bytes::from(processed);
+  let sk_image =
+    SkImage::from_encoded(SkData::new_copy(&bytes)).expect("Failed to decode processed avatar");
+
+  AVATAR_IMAGE_CACHE.lock().unwrap().insert(
+    key,
+    CachedAvatar {
+      image: sk_image.clone(),
+      bytes: bytes.clone(),
+    },
+  );
+
   img_fn(ImageHolder {
     image: Rc::new(RefCell::new(sk_image)),
-    bytes: Bytes::from(bytes),
+    bytes,
   })
 }
 
