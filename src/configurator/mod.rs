@@ -69,16 +69,16 @@ fn make_updater(
   update_fn: impl Fn(&mut Config, String) + 'static,
 ) -> EventHandler<SettingChange> {
   EventHandler::new(move |change: SettingChange| {
-    let SettingChange::Value(value) = change;
-
-    let updated = {
-      let mut state = shared.write().unwrap();
-      update_fn(&mut state.config, value);
-      state.config.clone()
-    };
-    save_config(&updated);
-    local_config.set(updated);
-    redraw_tx.send(()).ok();
+    if let SettingChange::Value(value) = change {
+      let updated = {
+        let mut state = shared.write().unwrap();
+        update_fn(&mut state.config, value);
+        state.config.clone()
+      };
+      save_config(&updated);
+      local_config.set(updated);
+      redraw_tx.send(()).ok();
+    }
   })
 }
 
