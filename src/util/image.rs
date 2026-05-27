@@ -44,6 +44,7 @@ pub fn avatar_image(url: &str, border: Option<SkColor>) -> FreyaImage {
     let cache = AVATAR_IMAGE_CACHE.lock().unwrap();
     cache.get(&key).map(|c| (c.image.clone(), c.bytes.clone()))
   };
+
   if let Some((image, bytes)) = hit {
     return img_fn(ImageHolder {
       image: Rc::new(RefCell::new(image)),
