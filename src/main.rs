@@ -71,6 +71,9 @@ pub struct Args {
   #[options(help = "Force websocket mode instead of IPC")]
   websocket: bool,
 
+  #[options(help = "Force IPC mode instead of websocket")]
+  ipc: bool,
+
   #[options(help = "Open the configuration window")]
   config: bool,
 }

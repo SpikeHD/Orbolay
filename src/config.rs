@@ -3,6 +3,33 @@ use std::fmt::Display;
 use freya::prelude::{Alignment, Gaps};
 use serde::{Deserialize, Serialize};
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[serde(rename_all = "camelCase")]
+pub enum TransportMode {
+  #[default]
+  Ipc,
+  Websocket,
+}
+
+impl Display for TransportMode {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    match self {
+      TransportMode::Ipc => write!(f, "ipc"),
+      TransportMode::Websocket => write!(f, "websocket"),
+    }
+  }
+}
+
+impl From<String> for TransportMode {
+  fn from(value: String) -> Self {
+    match value.as_ref() {
+      "ipc" => TransportMode::Ipc,
+      "websocket" => TransportMode::Websocket,
+      _ => TransportMode::Ipc,
+    }
+  }
+}
+
 #[cfg(not(target_os = "macos"))]
 use crate::keys::bind::DEFAULT_OVERLAY_TOGGLE;
 
@@ -126,6 +153,8 @@ pub struct Config {
   pub messages_semitransparent: bool,
   #[serde(default)]
   pub is_keybind_enabled: Option<bool>,
+  #[serde(default)]
+  pub transport_mode: TransportMode,
 }
 
 impl Default for Config {
@@ -145,6 +174,7 @@ impl Default for Config {
       voice_semitransparent: None,
       messages_semitransparent: false,
       is_keybind_enabled: None,
+      transport_mode: TransportMode::Ipc,
     }
   }
 }

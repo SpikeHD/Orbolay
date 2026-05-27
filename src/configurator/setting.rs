@@ -24,6 +24,7 @@ pub struct SettingRow {
   pub description: Option<String>,
   pub kind: SettingKind,
   pub on_change: EventHandler<SettingChange>,
+  pub disabled: bool,
 }
 
 #[derive(PartialEq)]

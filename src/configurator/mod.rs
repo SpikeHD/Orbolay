@@ -22,6 +22,8 @@ mod toggle;
 const WIDTH: f32 = 600.;
 const HEIGHT: f32 = 600.;
 
+const TRANSPORT_MODES: &[&str] = &["ipc", "websocket"];
+
 const ALIGNMENTS: &[&str] = &[
   "topleft",
   "topright",
@@ -112,7 +114,23 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
   let inner = rect()
     .direction(Direction::Vertical)
     .width(Size::fill())
-    .padding(Gaps::new_symmetric(0., 16.));
+    .padding(Gaps::new_symmetric(0., 16.))
+    .child(SettingRow {
+      name: "Connection Mode".into(),
+      description: Some(
+        "Set the communication method between Orbolay and Discord. If using an offical client, use \"ipc\", otherwise, use \"websocket\"."
+          .into(),
+      ),
+      kind: SettingKind::Dropdown(
+        TRANSPORT_MODES.iter().map(|s| s.to_string()).collect(),
+        Some(config.transport_mode.to_string()),
+      ),
+      on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
+        cfg.transport_mode = v.into();
+      }),
+      disabled: false,
+    })
+    .child(divider());
 
   #[cfg(not(target_os = "macos"))]
   let inner = inner
@@ -123,6 +141,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
       on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
         cfg.is_keybind_enabled = Some(v == "true");
       }),
+      disabled: false,
     })
     .child(divider());
 
@@ -140,6 +159,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
       on_change: make_keybind_updater(shared.clone(), redraw_tx.clone(), |cfg, keys| {
         cfg.overlay_keybind = Some(keys_to_strings(keys));
       }),
+      disabled: false,
     })
     .child(divider());
 
@@ -158,6 +178,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
           cfg.display_idx = Some(idx);
         }
       }),
+      disabled: false,
     })
     .child(divider())
     .child(SettingRow {
@@ -169,6 +190,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
       on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
         cfg.voice_semitransparent = Some(v == "true");
       }),
+      disabled: false,
     })
     .child(divider())
     .child(SettingRow {
@@ -178,6 +200,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
       on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
         cfg.messages_semitransparent = v == "true";
       }),
+      disabled: false,
     })
     .child(divider());
 
@@ -195,6 +218,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
       on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
         cfg.user_alignment = Some(v);
       }),
+      disabled: false,
     })
     .child(divider())
     .child(SettingRow {
@@ -206,6 +230,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
           cfg.user_offset_x = n;
         }
       }),
+      disabled: false,
     })
     .child(divider())
     .child(SettingRow {
@@ -217,6 +242,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
           cfg.user_offset_y = n;
         }
       }),
+      disabled: false,
     })
     .child(divider())
     .child(SettingRow {
@@ -232,6 +258,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
       on_change: make_updater(shared.clone(), redraw_tx.clone(), |cfg, v| {
         cfg.message_alignment = Some(v);
       }),
+      disabled: false,
     })
     .child(divider())
     .child(SettingRow {
@@ -243,6 +270,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
           cfg.message_offset_x = n;
         }
       }),
+      disabled: false,
     })
     .child(divider())
     .child(SettingRow {
@@ -254,6 +282,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
           cfg.message_offset_y = n;
         }
       }),
+      disabled: false,
     })
     .child(
       label()
