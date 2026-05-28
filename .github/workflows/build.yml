@@ -29,16 +29,20 @@ jobs:
 
           - platform: macos-latest
             target: 'x86_64-apple-darwin'
+
           - platform: macos-latest
             target: 'aarch64-apple-darwin'
 
           - platform: windows-latest
             target: 'x86_64-pc-windows-msvc'
     steps:
+      - uses: actions/checkout@v6
+
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: stable
           cache: false
+
       - uses: actions/cache@v5
         with:
           path: |
@@ -49,17 +53,12 @@ jobs:
             target/
           key: ${{ runner.os }}-${{ matrix.config.target }}-cargo-${{ hashFiles('Cargo.lock') }}
 
-      - uses: actions/checkout@v6
-
       - name: Install Dependencies
         if: matrix.config.platform == 'ubuntu-22.04'
         run: sudo apt-get install -y build-essential libssl-dev pkg-config cmake libgtk-3-dev libclang-dev libglib2.0-dev libx11-dev
 
       - name: Add targets
         run: rustup target add ${{ matrix.config.target }}
-
-      - name: Add bundler
-        run: cargo install cargo-bundle --locked
 
       - name: Define GIT_HASH
         id: sha
@@ -71,6 +70,76 @@ jobs:
           GIT_HASH: ${{ steps.sha.outputs.GIT_HASH }}
           RUSTFLAGS: -Awarnings
 
+      - name: Upload binary
+        if: matrix.config.platform != 'windows-latest'
+        uses: actions/upload-artifact@v7
+        with:
+          name: orbolay-${{ matrix.config.target }}
+          path: target/${{ matrix.config.target }}/release/orbolay
+
+      - name: Upload binary (Windows)
+        if: matrix.config.platform == 'windows-latest'
+        uses: actions/upload-artifact@v7
+        with:
+          name: orbolay-${{ matrix.config.target }}
+          path: target/${{ matrix.config.target }}/release/orbolay.exe
+
+  bundle:
+    needs: build
+    runs-on: ${{ matrix.config.platform }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - platform: ubuntu-22.04
+            target: 'x86_64-unknown-linux-gnu'
+            bundles: ['appimage', 'deb']
+
+          - platform: macos-latest
+            target: 'x86_64-apple-darwin'
+            bundles: ['osx']
+
+          - platform: macos-latest
+            target: 'aarch64-apple-darwin'
+            bundles: ['osx']
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          cache: false
+
+      - uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-${{ matrix.config.target }}-cargo-${{ hashFiles('Cargo.lock') }}
+
+      - name: Install Dependencies
+        if: matrix.config.platform == 'ubuntu-22.04'
+        run: sudo apt-get install -y build-essential libssl-dev pkg-config cmake libgtk-3-dev libclang-dev libglib2.0-dev libx11-dev
+
+      - name: Add targets
+        run: rustup target add ${{ matrix.config.target }}
+
+      - name: Add bundler
+        run: cargo install cargo-bundle --locked
+
+      - name: Download binary
+        uses: actions/download-artifact@v4
+        with:
+          name: orbolay-${{ matrix.config.target }}
+          path: target/${{ matrix.config.target }}/release/
+
+      - name: Define GIT_HASH
+        id: sha
+        run: echo "GIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
       - name: Bundle
         run: cargo bundle --release --target ${{ matrix.config.target }}
         env:
@@ -79,33 +148,25 @@ jobs:
 
       - name: (macOS) Zip app
         if: matrix.config.platform == 'macos-latest'
-        run: zip -r target/${{ matrix.config.target }}/release/bundle/osx/Orbolay.app.zip target/release/bundle/osx/Orbolay.app
+        run: zip -r target/${{ matrix.config.target }}/release/bundle/osx/Orbolay.app.zip target/${{ matrix.config.target }}/release/bundle/osx/Orbolay.app
 
-      - name: Upload
-        if: matrix.config.platform != 'windows-latest'
-        uses: actions/upload-artifact@v7
-        with:
-          name: orbolay-${{ matrix.config.target }}
-          path: target/${{ matrix.config.target }}/release/orbolay
-
-      - name: Upload (Windows)
-        if: matrix.config.platform == 'windows-latest'
-        uses: actions/upload-artifact@v7
-        with:
-          name: orbolay-${{ matrix.config.target }}
-          path: target/${{ matrix.config.target }}/release/orbolay.exe
-
-      - name: Upload Linux bundles
+      - name: Upload AppImage
         if: matrix.config.platform == 'ubuntu-22.04'
         uses: actions/upload-artifact@v7
         with:
-          path: |
-              target/${{ matrix.config.target }}/release/bundle/appimage/orbolay*.AppImage
-              target/${{ matrix.config.target }}/release/bundle/deb/orbolay*.deb
+          name: orbolay-${{ matrix.config.target }}.AppImage
+          path: target/${{ matrix.config.target }}/release/bundle/appimage/orbolay*.AppImage
 
-      - name: Upload macOS bundles
+      - name: Upload deb
+        if: matrix.config.platform == 'ubuntu-22.04'
+        uses: actions/upload-artifact@v7
+        with:
+          name: orbolay-${{ matrix.config.target }}.deb
+          path: target/${{ matrix.config.target }}/release/bundle/deb/orbolay*.deb
+
+      - name: Upload macOS app
         if: matrix.config.platform == 'macos-latest'
         uses: actions/upload-artifact@v7
         with:
-          path: |
-              target/${{ matrix.config.target }}/release/bundle/osx/Orbolay.app.zip
+          name: orbolay-${{ matrix.config.target }}.app
+          path: target/${{ matrix.config.target }}/release/bundle/osx/Orbolay-${{ matrix.config.target }}.app.zip

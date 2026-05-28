@@ -35,17 +35,19 @@ jobs:
           for artifact in artifacts/*/; do
             target=$(basename $artifact)
 
-            # target folder should have files in it, rename them (with the extension, if any) to the target name
             for file in $artifact*; do
               filename=$(basename $file)
-              ext=".${filename##*.}"
+              ext="${filename##*.}"
 
-              # If the ext is the filename, then there was no extension
-              if [ "$ext" == ".$filename" ]; then
-                ext=""
+              if [ "$ext" == "$filename" ]; then
+                # No extension
+                mv "$file" "renamed_artifacts/$target"
+              elif [[ "$target" == *".$ext" ]]; then
+                # Artifact name already ends with this extension (e.g. .AppImage, .deb), don't double it
+                mv "$file" "renamed_artifacts/$target"
+              else
+                mv "$file" "renamed_artifacts/$target.$ext"
               fi
-
-              mv "$file" "renamed_artifacts/$target$ext"
             done
           done
 

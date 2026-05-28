@@ -15,6 +15,7 @@ panic = "abort"
 [package.metadata.bundle]
 name = "Orbolay"
 identifier = "dev.spikehd.orbolay"
+package-types = ["deb"]
 
 [dependencies]
 bytes = "1"
