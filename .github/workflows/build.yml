@@ -120,10 +120,6 @@ jobs:
             target/
           key: ${{ runner.os }}-${{ matrix.config.target }}-cargo-${{ hashFiles('Cargo.lock') }}
 
-      - name: Install Dependencies
-        if: matrix.config.platform == 'ubuntu-22.04'
-        run: sudo apt-get install -y build-essential libssl-dev pkg-config cmake libgtk-3-dev libclang-dev libglib2.0-dev libx11-dev
-
       - name: Add targets
         run: rustup target add ${{ matrix.config.target }}
 
@@ -136,10 +132,6 @@ jobs:
           name: orbolay-${{ matrix.config.target }}
           path: target/${{ matrix.config.target }}/release/
 
-      - name: Define GIT_HASH
-        id: sha
-        run: echo "GIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-
       - name: Bundle
         run: cargo bundle --release --target ${{ matrix.config.target }}
         env:
@@ -149,7 +141,7 @@ jobs:
 
       - name: (macOS) Zip app
         if: matrix.config.platform == 'macos-latest'
-        run: zip -r target/${{ matrix.config.target }}/release/bundle/osx/Orbolay.app.zip target/${{ matrix.config.target }}/release/bundle/osx/Orbolay.app
+        run: zip -r target/${{ matrix.config.target }}/release/bundle/osx/Orbolay.app.zip target/${{ matrix.config.target }}/release/bundle/osx/Orbolay-${{ matrix.config.target }}.app
 
       - name: Upload AppImage
         if: matrix.config.platform == 'ubuntu-22.04'
