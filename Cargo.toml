@@ -3,6 +3,8 @@ name = "orbolay"
 version = "3.1.0"
 edition = "2024"
 rust-version = "1.95"
+authors = ["SpikeHD"]
+description = "Quick, small, native, multi-platform Discord overlay alternative."
 
 [profile.release]
 opt-level = 3
@@ -10,10 +12,6 @@ lto = true
 codegen-units = 1
 strip = true
 panic = "abort"
-
-[package.metadata.bundle]
-name = "Orbolay"
-identifier = "dev.spikehd.orbolay"
 
 [dependencies]
 bytes = "1"
@@ -41,3 +39,7 @@ rdev = { version = "0.5", features = ["unstable_grab", "serialize"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows = "0.62.2"
+
+[build-dependencies]
+tauri-bundler = "2.9.2"
+cargo_toml = "0.22.3"

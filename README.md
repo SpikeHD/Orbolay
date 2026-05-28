@@ -1,6 +1,6 @@
 <div align="center">
   <h1>Orbolay</h1>
-  <p>Quick, small, native Discord overlay alternative</p>
+  <p>Quick, small, native, multi-platform Discord overlay alternative</p>
 </div>
 
 <div align="center">
