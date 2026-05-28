@@ -143,6 +143,7 @@ jobs:
       - name: Bundle
         run: cargo bundle --release --target ${{ matrix.config.target }}
         env:
+          CARGO_BUNDLE_SKIP_BUILD: 1
           GIT_HASH: ${{ steps.sha.outputs.GIT_HASH }}
           RUSTFLAGS: -Awarnings
 
