@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use cargo_toml::Manifest;
-use tauri_bundler::{PackageSettings, SettingsBuilder, bundle_project};
+use tauri_bundler::{BundleBinary, PackageSettings, SettingsBuilder, bundle_project};
 
 static CREATE_BUNDLES: Option<&str> = option_env!("CREATE_BUNDLES");
 
@@ -16,6 +16,7 @@ pub fn main() {
     return;
   }
 
+  let bundle_binary = BundleBinary::new("orbolay".into(), true);
   let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
   let manifest_path = Path::new(&manifest_dir).join("Cargo.toml");
   let manifest = Manifest::from_path(manifest_path).expect("Failed to read Cargo manifest");
@@ -30,7 +31,8 @@ pub fn main() {
   };
 
   let settings = SettingsBuilder::new()
-    .project_out_directory::<String>("target/bundles".into())
+    .project_out_directory::<String>("target/release".into())
+    .binaries(vec![bundle_binary])
     .package_settings(package_settings)
     .no_sign(true)
     .build()
