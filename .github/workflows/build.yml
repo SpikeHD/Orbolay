@@ -79,7 +79,7 @@ jobs:
 
       - name: (macOS) Zip app
         if: matrix.config.platform == 'macos-latest'
-        run: zip -r target/release/bundle/osx/Orbolay.app.zip target/release/bundle/osx/Orbolay.app
+        run: zip -r target/${{ matrix.config.target }}/release/bundle/osx/Orbolay.app.zip target/release/bundle/osx/Orbolay.app
 
       - name: Upload
         if: matrix.config.platform != 'windows-latest'
@@ -100,12 +100,12 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           path: |
-              target/release/bundle/appimage/orbolay*.AppImage
-              target/release/bundle/deb/orbolay*.deb
+              target/${{ matrix.config.target }}/release/bundle/appimage/orbolay*.AppImage
+              target/${{ matrix.config.target }}/release/bundle/deb/orbolay*.deb
 
       - name: Upload macOS bundles
         if: matrix.config.platform == 'macos-latest'
         uses: actions/upload-artifact@v7
         with:
           path: |
-              target/release/bundle/osx/Orbolay.app.zip
+              target/${{ matrix.config.target }}/release/bundle/osx/Orbolay.app.zip
