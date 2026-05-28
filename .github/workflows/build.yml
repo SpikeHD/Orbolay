@@ -58,6 +58,9 @@ jobs:
       - name: Add targets
         run: rustup target add ${{ matrix.config.target }}
 
+      - name: Add bundler
+        run: cargo install cargo-bundle --locked
+
       - name: Define GIT_HASH
         id: sha
         run: echo "GIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
@@ -81,3 +84,8 @@ jobs:
         with:
           name: orbolay-${{ matrix.config.target }}
           path: target/${{ matrix.config.target }}/release/orbolay.exe
+
+      - name: Upload bundles
+        uses: actions/upload-artifact@v7
+        with:
+          path: target/release/bundle/*

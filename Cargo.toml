@@ -11,12 +11,9 @@ codegen-units = 1
 strip = true
 panic = "abort"
 
-[package.metadata.packager]
-product-name = "Orbolay"
+[package.metadata.bundle]
+name = "Orbolay"
 identifier = "dev.spikehd.orbolay"
-out-dir = "bins"
-log-level = "debug"
-formats = ["all"]
 
 [dependencies]
 bytes = "1"
