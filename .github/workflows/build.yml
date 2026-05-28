@@ -71,6 +71,12 @@ jobs:
           GIT_HASH: ${{ steps.sha.outputs.GIT_HASH }}
           RUSTFLAGS: -Awarnings
 
+      - name: Bundle
+        run: cargo bundle --release --target ${{ matrix.config.target }}
+        env:
+          GIT_HASH: ${{ steps.sha.outputs.GIT_HASH }}
+          RUSTFLAGS: -Awarnings
+
       - name: Upload
         if: matrix.config.platform != 'windows-latest'
         uses: actions/upload-artifact@v7
@@ -85,7 +91,17 @@ jobs:
           name: orbolay-${{ matrix.config.target }}
           path: target/${{ matrix.config.target }}/release/orbolay.exe
 
-      - name: Upload bundles
+      - name: Upload Linux bundles
+        if: matrix.config.platform == 'ubuntu-22.04'
         uses: actions/upload-artifact@v7
         with:
-          path: target/release/bundle/*
+          path: |
+              target/release/bundle/appimage/orbolay*.AppImage
+              target/release/bundle/deb/orbolay*.deb
+
+      - name: Upload macOS bundles
+        if: matrix.config.platform == 'macos-latest'
+        uses: actions/upload-artifact@v7
+        with:
+          path: |
+              target/release/bundle/dmg/Orbolay.app
