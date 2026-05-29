@@ -122,23 +122,20 @@ On first run, Orbolay should open the configurator automatically. In the future,
 
 ## Hyprland
 
-To use Orbolay with Hyprland, you will need to manually set some window rules (taken from [#22](https://github.com/SpikeHD/Orbolay/issues/22)). Note that this prevents the keybind and clickable controls from working:
+To use Orbolay with Hyprland, you will need to manually set some window rules (taken from [#28](https://github.com/SpikeHD/Orbolay/issues/28)). Note that this prevents the keybind and clickable controls from working:
 
-```lua
--- Orbolay
-hl.window_rule({match = {title = "^(orbolay)$"},                            no_initial_focus = true})
-hl.window_rule({match = {title = "^(orbolay)$"},                            suppress_event = "activatefocus"})
-hl.window_rule({match = {title = "^(orbolay)$"},                            float = true})
-hl.window_rule({match = {title = "^(orbolay)$"},                            pin = true})
-hl.window_rule({match = {title = "^(orbolay)$"},                            center = true})
-hl.window_rule({match = {title = "^(orbolay)$"},                            no_blur = true})
-hl.window_rule({match = {title = "^(orbolay)$"},                            no_dim = true})
-hl.window_rule({match = {title = "^(orbolay)$"},                            no_follow_mouse = true})
-hl.window_rule({match = {title = "^(orbolay)$"},                            no_shadow = true})
-hl.window_rule({match = {title = "^(orbolay)$"},                            border_size = 0})
-hl.window_rule({match = {title = "^(orbolay)$"},                            no_focus = true})
-hl.window_rule({match = {title = "^(orbolay)$"},                            move = {"monitor_w", "monitor_h"} })
-hl.window_rule({match = {title = "^(orbolay)$"},                            size = {"monitor_w - 5", "monitor_h - 5"} })
+```
+windowrule {
+    name = orbolay-overlay
+    match:title = ^(orbolay)$
+    no_blur = on
+    no_shadow = on
+    no_anim = on
+    no_initial_focus = on
+    no_focus = on
+    pin = on
+    rounding = 0
+}
 ```
 
 # Building
