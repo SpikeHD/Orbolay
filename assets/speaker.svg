@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="24"
+   height="24"
+   viewBox="0 0 24 24"
+   fill="none"
+   stroke="#FFFFFF"
+   stroke-width="2"
+   stroke-linecap="round"
+   stroke-linejoin="round"
+   version="1.1"
+   id="svg3"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs3" />
+  <path
+     d="m 12.93698,6.864613 a 5,5 0 0 1 4.24264,4.242641"
+     id="path2" />
+  <path
+     d="M 21.937035,11.107254 A 9,9 0 0 0 12.93698,2.1071983"
+     id="path3" />
+  <path
+     d="M 16.397353,18.30598 2.0121166,23.09306 C 1.3423882,23.325735 0.69964928,22.682995 0.93232431,22.013267 L 5.7194043,7.6280315 c 0,0 -1.0508616,2.5967785 4.2297304,7.3745575 4.6982903,4.250923 6.4482183,3.303391 6.4482183,3.303391 z"
+     id="path1"
+     style="fill:#FFFFFF;fill-opacity:1;stroke-width:1.69673" />
+  <ellipse
+     cx="-16.988512"
+     cy="-0.967839"
+     rx="7.6352859"
+     ry="2.5450954"
+     id="ellipse1"
+     transform="rotate(-135)"
+     style="stroke:#FFFFFF;stroke-width:1.69673" />
+</svg>

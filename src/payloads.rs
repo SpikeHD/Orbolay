@@ -81,3 +81,17 @@ impl Default for MessageNotification {
     }
   }
 }
+
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+pub struct SoundboardSoundPayload {
+  pub sound_id: String,
+  pub name: String,
+  pub volume: f64,
+  // Custom emoji
+  pub emoji_id: Option<String>,
+  // Standard emoji, this is the emoji itself (not a name, even though it says that)
+  pub emoji_name: Option<String>,
+  pub guild_id: Option<String>,
+  // Can this be used?
+  pub available: bool,
+}

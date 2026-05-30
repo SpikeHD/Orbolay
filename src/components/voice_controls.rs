@@ -3,6 +3,7 @@ use serde_json::Value;
 
 use crate::{
   app_state::AppState,
+  config::TransportMode,
   user::{User, UserVoiceState},
   util::{bridge::BridgeMessage, colors},
 };
@@ -13,6 +14,7 @@ static MUTED_SVG: &[u8] = include_bytes!("../../assets/muted.svg");
 static MUTE_SVG: &[u8] = include_bytes!("../../assets/mute.svg");
 static DISCONNECT_SVG: &[u8] = include_bytes!("../../assets/disconnect.svg");
 static STOP_STREAM_SVG: &[u8] = include_bytes!("../../assets/stopstream.svg");
+static SOUNDBOARD_SVG: &[u8] = include_bytes!("../../assets/speaker.svg");
 
 #[derive(PartialEq)]
 struct ControlButton {
@@ -105,6 +107,22 @@ impl Component for VoiceControls {
         })
         .into(),
       })
+      .maybe(
+        app_state.read().transport_mode == TransportMode::Ipc,
+        |el| {
+          el.child(ControlButton {
+            icon: SOUNDBOARD_SVG,
+            is_red: false,
+            on_click: (move |()| {
+              println!(
+                "open soundboard with sounds: {:?}",
+                app_state.read().soundboard_cache
+              );
+            })
+            .into(),
+          })
+        },
+      )
       .child(ControlButton {
         icon: DISCONNECT_SVG,
         is_red: true,

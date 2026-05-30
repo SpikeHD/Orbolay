@@ -61,6 +61,16 @@ pub fn handle_ipc_message(
         if let Err(e) = subscribe_voice_channel(stream, &state.current_channel) {
           error!("Failed to subscribe to voice channel events: {}", e);
         }
+
+        let request = serde_json::json!({
+          "cmd": "GET_SOUNDBOARD_SOUNDS",
+          "args": {},
+          "nonce": "GET_SOUNDBOARD_SOUNDS",
+        });
+
+        if let Err(e) = ipc_write(stream, OP_FRAME, &request.to_string()) {
+          error!("Failed to request soundboard sounds: {}", e);
+        }
       } else {
         state.voice_users.clear();
         state.current_channel = String::new();
