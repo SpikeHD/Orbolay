@@ -1,4 +1,3 @@
-
 use freya::prelude::*;
 use serde_json::json;
 
@@ -90,11 +89,12 @@ pub struct Soundboard {
 impl Component for Soundboard {
   fn render(&self) -> impl IntoElement {
     let app_state = self.app_state;
-    let (current_guild_id, cache) = {
+    let (current_guild_id, cache, guild_names) = {
       let state = app_state.read();
       (
         state.current_guild_id.clone(),
         state.soundboard_cache.clone(),
+        state.guild_names.clone(),
       )
     };
 
@@ -143,7 +143,7 @@ impl Component for Soundboard {
                   let label = if guild_name.is_empty() {
                     "Default".to_string()
                   } else {
-                    guild_name
+                    guild_names.get(&guild_name).cloned().unwrap_or(guild_name)
                   };
                   col.child(GuildLabel { name: label }).child(
                     guild_sounds.into_iter().fold(

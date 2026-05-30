@@ -72,6 +72,38 @@ pub fn play_soundboard_sound(
   Ok(())
 }
 
+pub fn get_guild(
+  stream: &mut LocalSocketStream,
+  guild_id: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+  ipc_write(
+    stream,
+    OP_FRAME,
+    &serde_json::to_string(&serde_json::json!({
+      "cmd": "GET_GUILD",
+      "args": { "guild_id": guild_id },
+      "nonce": "GET_GUILD",
+    }))?,
+  )?;
+  Ok(())
+}
+
+pub fn get_channel(
+  stream: &mut LocalSocketStream,
+  channel_id: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+  ipc_write(
+    stream,
+    OP_FRAME,
+    &serde_json::to_string(&serde_json::json!({
+      "cmd": "GET_CHANNEL",
+      "args": { "channel_id": channel_id },
+      "nonce": "GET_CHANNEL",
+    }))?,
+  )?;
+  Ok(())
+}
+
 pub fn disconnect(stream: &mut LocalSocketStream) -> Result<(), Box<dyn std::error::Error>> {
   let payload = serde_json::json!({ "channel_id": Value::Null });
   ipc_write(

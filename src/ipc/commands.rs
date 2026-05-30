@@ -9,8 +9,10 @@ use interprocess::local_socket::{GenericNamespaced, ToNsName, prelude::*};
 
 use crate::app_state::SharedAppState;
 use crate::ipc::{
-  OP_CLOSE, OP_FRAME, OP_HANDSHAKE, SelectedVoiceChannelPayload, handle_ipc_message,
-  handle_ui_message, ipc_read, ipc_write, subscribe_voice_channel, subscribe_voice_global,
+  GetChannelPayload, GetGuildPayload, OP_CLOSE, OP_FRAME, OP_HANDSHAKE,
+  SelectedVoiceChannelPayload, handle_ipc_message, handle_ui_message, ipc_read, ipc_write,
+  setters::{get_channel, get_guild},
+  subscribe_voice_channel, subscribe_voice_global,
 };
 use crate::log;
 use crate::payloads::{MessageNotification, SoundboardSoundPayload};
@@ -218,11 +220,40 @@ pub fn handle_command(
         .filter(|d| d.id.is_some())
       {
         let channel_id = data.id.unwrap();
+        let guild_id = data.guild_id.unwrap_or_default();
         let mut state = shared.write().unwrap();
         state.current_channel = channel_id.clone();
-        state.current_guild_id = data.guild_id.unwrap_or_default();
+        state.current_guild_id = guild_id.clone();
+
         drop(state);
+
         subscribe_voice_channel(stream, &channel_id)?;
+        get_channel(stream, &channel_id)?;
+        if !guild_id.is_empty() {
+          get_guild(stream, &guild_id)?;
+        }
+        let _ = redraw_tx.send(());
+      }
+    }
+    "GET_GUILD" => {
+      let data = msg.data.get("data").cloned().unwrap_or_default();
+      if let Ok(payload) = serde_json::from_value::<GetGuildPayload>(data) {
+        shared
+          .write()
+          .unwrap()
+          .guild_names
+          .insert(payload.id, payload.name);
+        let _ = redraw_tx.send(());
+      }
+    }
+    "GET_CHANNEL" => {
+      let data = msg.data.get("data").cloned().unwrap_or_default();
+      if let Ok(payload) = serde_json::from_value::<GetChannelPayload>(data) {
+        shared
+          .write()
+          .unwrap()
+          .channel_names
+          .insert(payload.id, payload.name);
         let _ = redraw_tx.send(());
       }
     }
@@ -235,6 +266,19 @@ pub fn handle_command(
             .entry(sound.guild_id.clone().unwrap_or_default())
             .or_default()
             .push(sound);
+        }
+        let known_guilds: Vec<String> = {
+          let state = shared.read().unwrap();
+          by_guild
+            .keys()
+            .filter(|id| !id.is_empty() && !state.guild_names.contains_key(*id))
+            .cloned()
+            .collect()
+        };
+        for guild_id in known_guilds {
+          if let Err(e) = get_guild(stream, &guild_id) {
+            error!("Failed to fetch guild name for {}: {}", guild_id, e);
+          }
         }
         let mut state = shared.write().unwrap();
         for (guild_id, sounds) in by_guild {
