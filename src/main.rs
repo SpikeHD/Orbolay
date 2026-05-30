@@ -46,6 +46,8 @@ mod user;
 mod util;
 mod websocket;
 
+static NOTO_COLOR_EMOJI_FONT: &[u8] = include_bytes!("../assets/fonts/NotoColorEmojiCompat.ttf");
+
 const GIT_HASH: Option<&str> = option_env!("GIT_HASH");
 const APP_NAME: Option<&str> = option_env!("CARGO_PKG_NAME");
 const APP_VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
@@ -127,41 +129,44 @@ fn main() {
   }
 
   launch(
-    LaunchConfig::new().with_window(
-      WindowConfig::new(app)
-        .with_title("orbolay")
-        .with_decorations(false)
-        .with_transparency(true)
-        .with_background(Color::TRANSPARENT)
-        .with_window_attributes(move |mut w, _event_loop| {
-          w = w
-            .with_inner_size(window_size)
-            .with_resizable(false)
-            .with_window_level(WindowLevel::AlwaysOnTop)
-            .with_position(PhysicalPosition::new(
-              monitor_position.0,
-              monitor_position.1,
-            ));
+    LaunchConfig::new()
+      .with_font("Noto Color Emoji", NOTO_COLOR_EMOJI_FONT)
+      .with_fallback_font("Noto Color Emoji")
+      .with_window(
+        WindowConfig::new(app)
+          .with_title("orbolay")
+          .with_decorations(false)
+          .with_transparency(true)
+          .with_background(Color::TRANSPARENT)
+          .with_window_attributes(move |mut w, _event_loop| {
+            w = w
+              .with_inner_size(window_size)
+              .with_resizable(false)
+              .with_window_level(WindowLevel::AlwaysOnTop)
+              .with_position(PhysicalPosition::new(
+                monitor_position.0,
+                monitor_position.1,
+              ));
 
-          #[cfg(target_os = "windows")]
-          {
-            w = w.with_skip_taskbar(true);
-          }
+            #[cfg(target_os = "windows")]
+            {
+              w = w.with_skip_taskbar(true);
+            }
 
-          #[cfg(target_os = "linux")]
-          {
-            use winit::platform::wayland::WindowAttributesExtWayland;
-            use winit::platform::x11::{WindowAttributesExtX11, WindowType};
+            #[cfg(target_os = "linux")]
+            {
+              use winit::platform::wayland::WindowAttributesExtWayland;
+              use winit::platform::x11::{WindowAttributesExtX11, WindowType};
 
-            w = WindowAttributesExtX11::with_name(w, "orbolay", "orbolay")
-              .with_x11_window_type(vec![WindowType::Utility])
-              .with_override_redirect(true);
-            w = WindowAttributesExtWayland::with_name(w, "orbolay", "orbolay");
-          }
+              w = WindowAttributesExtX11::with_name(w, "orbolay", "orbolay")
+                .with_x11_window_type(vec![WindowType::Utility])
+                .with_override_redirect(true);
+              w = WindowAttributesExtWayland::with_name(w, "orbolay", "orbolay");
+            }
 
-          w
-        }),
-    ),
+            w
+          }),
+      ),
   );
 }
 
