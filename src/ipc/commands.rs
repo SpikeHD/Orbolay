@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::time::Duration;
 
 use interprocess::TryClone;
@@ -8,9 +9,8 @@ use interprocess::local_socket::{GenericNamespaced, ToNsName, prelude::*};
 
 use crate::app_state::SharedAppState;
 use crate::ipc::{
-  OP_CLOSE, OP_FRAME, OP_HANDSHAKE, SelectedVoiceChannelPayload,
-  handle_ipc_message, handle_ui_message, ipc_read, ipc_write, subscribe_voice_channel,
-  subscribe_voice_global,
+  OP_CLOSE, OP_FRAME, OP_HANDSHAKE, SelectedVoiceChannelPayload, handle_ipc_message,
+  handle_ui_message, ipc_read, ipc_write, subscribe_voice_channel, subscribe_voice_global,
 };
 use crate::log;
 use crate::payloads::{MessageNotification, SoundboardSoundPayload};
@@ -223,7 +223,7 @@ pub fn handle_command(
     "GET_SOUNDBOARD_SOUNDS" => {
       let data = msg.data.get("data").cloned().unwrap_or_default();
       if let Ok(payload) = serde_json::from_value::<Vec<SoundboardSoundPayload>>(data) {
-        let mut by_guild: std::collections::HashMap<String, Vec<_>> = std::collections::HashMap::new();
+        let mut by_guild: HashMap<String, Vec<_>> = HashMap::new();
         for sound in payload {
           by_guild
             .entry(sound.guild_id.clone().unwrap_or_default())

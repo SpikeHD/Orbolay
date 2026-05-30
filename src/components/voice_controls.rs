@@ -59,11 +59,13 @@ impl Component for ControlButton {
 pub struct VoiceControls {
   pub user: User,
   pub app_state: State<AppState>,
+  pub soundboard_open: State<bool>,
 }
 
 impl Component for VoiceControls {
   fn render(&self) -> impl IntoElement {
     let mut app_state = self.app_state;
+    let mut soundboard_open = self.soundboard_open;
     let is_muted = self.user.voice_state == UserVoiceState::Muted;
     let is_deafened = self.user.voice_state == UserVoiceState::Deafened;
     let is_streaming = self.user.streaming;
@@ -114,10 +116,8 @@ impl Component for VoiceControls {
             icon: SOUNDBOARD_SVG,
             is_red: false,
             on_click: (move |()| {
-              println!(
-                "open soundboard with sounds: {:?}",
-                app_state.read().soundboard_cache
-              );
+              let is_open = *soundboard_open.read();
+              soundboard_open.set(!is_open);
             })
             .into(),
           })

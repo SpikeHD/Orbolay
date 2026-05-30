@@ -14,7 +14,7 @@ use winit::{dpi::PhysicalPosition, window::WindowLevel};
 
 use crate::{
   app_state::{AppState, SharedAppState},
-  components::{MessagesSection, VoiceControls, VoiceSection},
+  components::{MessagesSection, Soundboard, VoiceControls, VoiceSection},
   config::{is_first_run, load_config, save_config},
   config_watcher::start_config_watcher,
   configurator::{open_configurator, open_configurator_standalone},
@@ -168,6 +168,7 @@ fn main() {
 fn app() -> impl IntoElement {
   let args = Args::parse_args_default_or_exit();
   let mut app_state = use_state(AppState::new);
+  let mut soundboard_open = use_state(|| false);
 
   use_hook(move || {
     let (ws_sender, ws_receiver) = flume::unbounded::<BridgeMessage>();
@@ -262,9 +263,12 @@ fn app() -> impl IntoElement {
     });
   });
 
-  // Sync is_open -> cursor hit-test
+  // Sync is_open -> cursor hit-test, and close soundboard when overlay closes
   use_side_effect(move || {
     let is_open = app_state.read().is_open;
+    if !is_open {
+      soundboard_open.set(false);
+    }
     Platform::get().with_window(None, move |w| {
       let _ = w.set_cursor_hittest(is_open);
     });
@@ -328,17 +332,36 @@ fn app() -> impl IntoElement {
       messages_semitransparent: config.messages_semitransparent,
       app_state,
     })
-    // Voice controls
+    // Voice controls + soundboard
     .maybe(is_open, |el| {
-      el.maybe_child(current_user.map(|user| {
-        rect()
-          .position(Position::new_absolute().top(0.).left(0.))
-          .direction(Direction::Horizontal)
-          .main_align(Alignment::Center)
-          .cross_align(Alignment::End)
-          .height(Size::percent(90.))
-          .width(Size::fill())
-          .child(VoiceControls { user, app_state })
-      }))
+      el
+        // Transparent backdrop that catches clicks outside the popup to dismiss it
+        // TODO maybe rework to be used for any sort of popup
+        .maybe(*soundboard_open.read(), |el| {
+          el.child(
+            rect()
+              .position(Position::new_absolute().top(0.).left(0.))
+              .width(Size::fill())
+              .height(Size::fill())
+              .on_press(move |_| soundboard_open.set(false)),
+          )
+        })
+        .maybe_child(current_user.map(|user| {
+          rect()
+            .position(Position::new_absolute().top(0.).left(0.))
+            .direction(Direction::Vertical)
+            .main_align(Alignment::End)
+            .cross_align(Alignment::Center)
+            .height(Size::percent(90.))
+            .width(Size::fill())
+            .maybe(*soundboard_open.read(), |el| {
+              el.child(Soundboard { app_state })
+            })
+            .child(VoiceControls {
+              user,
+              app_state,
+              soundboard_open,
+            })
+        }))
     })
 }
