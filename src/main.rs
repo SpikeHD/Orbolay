@@ -46,6 +46,7 @@ mod user;
 mod util;
 mod websocket;
 
+// Twemoji isn't working for some reason
 static NOTO_COLOR_EMOJI_FONT: &[u8] = include_bytes!("../assets/fonts/NotoColorEmojiCompat.ttf");
 
 const GIT_HASH: Option<&str> = option_env!("GIT_HASH");

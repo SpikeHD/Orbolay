@@ -213,9 +213,15 @@ pub fn handle_command(
     }
     "GET_SELECTED_VOICE_CHANNEL" => {
       let data = msg.data.get("data").cloned().unwrap_or_default();
-      let data = serde_json::from_value::<SelectedVoiceChannelPayload>(data).ok();
-      if let Some(channel_id) = data.and_then(|d| d.id) {
-        shared.write().unwrap().current_channel = channel_id.clone();
+      if let Some(data) = serde_json::from_value::<SelectedVoiceChannelPayload>(data)
+        .ok()
+        .filter(|d| d.id.is_some())
+      {
+        let channel_id = data.id.unwrap();
+        let mut state = shared.write().unwrap();
+        state.current_channel = channel_id.clone();
+        state.current_guild_id = data.guild_id.unwrap_or_default();
+        drop(state);
         subscribe_voice_channel(stream, &channel_id)?;
         let _ = redraw_tx.send(());
       }

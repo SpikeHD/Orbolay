@@ -56,6 +56,7 @@ pub fn handle_ipc_message(
       }
 
       state.current_channel = new_channel;
+      state.current_guild_id = data.guild_id.unwrap_or_default();
 
       if !state.current_channel.is_empty() {
         if let Err(e) = subscribe_voice_channel(stream, &state.current_channel) {

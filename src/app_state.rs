@@ -18,6 +18,7 @@ pub struct AppState {
   pub config: Config,
   pub transport_mode: TransportMode,
   pub current_channel: String,
+  pub current_guild_id: String,
   pub is_open: bool,
   pub is_censor: bool, // Used in modded clients but not IPC
   pub voice_users: Vec<User>,
@@ -41,6 +42,7 @@ impl AppState {
       config: Config::default(),
       transport_mode: TransportMode::Ipc,
       current_channel: String::new(),
+      current_guild_id: String::new(),
       is_open: false,
       is_censor: false,
       voice_users: vec![],

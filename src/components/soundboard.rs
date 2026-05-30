@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 
 use freya::prelude::*;
 use serde_json::json;
@@ -8,6 +7,16 @@ use crate::{
   payloads::SoundboardSoundPayload,
   util::{bridge::BridgeMessage, colors},
 };
+
+fn guild_order(guild_id: &str, current: &str) -> u8 {
+  if !current.is_empty() && guild_id == current {
+    0
+  } else if guild_id.is_empty() || guild_id == "0" {
+    1
+  } else {
+    2
+  }
+}
 
 #[derive(PartialEq)]
 struct SoundButton {
@@ -23,7 +32,7 @@ impl Component for SoundButton {
     let source_guild_id = self.sound.guild_id.clone();
     let available = self.sound.available;
     let text = match &self.sound.emoji_name {
-      Some(e) => format!("{}", e),
+      Some(e) => e.to_string(),
       None => "?".into(),
     };
 
@@ -81,10 +90,22 @@ pub struct Soundboard {
 impl Component for Soundboard {
   fn render(&self) -> impl IntoElement {
     let app_state = self.app_state;
-    let sounds: HashMap<String, Vec<SoundboardSoundPayload>> =
-      app_state.read().soundboard_cache.clone();
+    let (current_guild_id, cache) = {
+      let state = app_state.read();
+      (
+        state.current_guild_id.clone(),
+        state.soundboard_cache.clone(),
+      )
+    };
 
-    if sounds.is_empty() {
+    let mut guilds: Vec<(String, Vec<SoundboardSoundPayload>)> = cache.into_iter().collect();
+    guilds.sort_by(|(a, _), (b, _)| {
+      guild_order(a, &current_guild_id)
+        .cmp(&guild_order(b, &current_guild_id))
+        .then(b.cmp(a))
+    });
+
+    if guilds.is_empty() {
       rect()
         .direction(Direction::Vertical)
         .background(colors::GRAY)
@@ -113,7 +134,7 @@ impl Component for Soundboard {
             .width(Size::fill())
             .height(Size::fill())
             .child(
-              sounds.into_iter().fold(
+              guilds.into_iter().fold(
                 rect()
                   .direction(Direction::Vertical)
                   .width(Size::fill())
