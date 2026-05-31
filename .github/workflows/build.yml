@@ -141,7 +141,9 @@ jobs:
 
       - name: (macOS) Zip app
         if: matrix.config.platform == 'macos-latest'
-        run: zip -r target/${{ matrix.config.target }}/release/bundle/osx/Orbolay.app.zip target/${{ matrix.config.target }}/release/bundle/osx/Orbolay-${{ matrix.config.target }}.app
+        run: |
+            cd target/${{ matrix.config.target }}/release/bundle/osx/
+            zip -r Orbolay-${{ matrix.config.target }}.app.zip Orbolay.app
 
       - name: Upload AppImage
         if: matrix.config.platform == 'ubuntu-22.04'
