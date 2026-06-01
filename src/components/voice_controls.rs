@@ -3,6 +3,7 @@ use serde_json::Value;
 
 use crate::{
   app_state::AppState,
+  config::TransportMode,
   user::{User, UserVoiceState},
   util::{bridge::BridgeMessage, colors},
 };
@@ -13,6 +14,7 @@ static MUTED_SVG: &[u8] = include_bytes!("../../assets/muted.svg");
 static MUTE_SVG: &[u8] = include_bytes!("../../assets/mute.svg");
 static DISCONNECT_SVG: &[u8] = include_bytes!("../../assets/disconnect.svg");
 static STOP_STREAM_SVG: &[u8] = include_bytes!("../../assets/stopstream.svg");
+static SOUNDBOARD_SVG: &[u8] = include_bytes!("../../assets/speaker.svg");
 
 #[derive(PartialEq)]
 struct ControlButton {
@@ -57,11 +59,13 @@ impl Component for ControlButton {
 pub struct VoiceControls {
   pub user: User,
   pub app_state: State<AppState>,
+  pub soundboard_open: State<bool>,
 }
 
 impl Component for VoiceControls {
   fn render(&self) -> impl IntoElement {
     let mut app_state = self.app_state;
+    let mut soundboard_open = self.soundboard_open;
     let is_muted = self.user.voice_state == UserVoiceState::Muted;
     let is_deafened = self.user.voice_state == UserVoiceState::Deafened;
     let is_streaming = self.user.streaming;
@@ -105,6 +109,20 @@ impl Component for VoiceControls {
         })
         .into(),
       })
+      .maybe(
+        app_state.read().transport_mode == TransportMode::Ipc,
+        |el| {
+          el.child(ControlButton {
+            icon: SOUNDBOARD_SVG,
+            is_red: false,
+            on_click: (move |()| {
+              let is_open = *soundboard_open.read();
+              soundboard_open.set(!is_open);
+            })
+            .into(),
+          })
+        },
+      )
       .child(ControlButton {
         icon: DISCONNECT_SVG,
         is_red: true,

@@ -1,7 +1,13 @@
-use std::sync::{Arc, RwLock, atomic::AtomicBool};
+use std::{
+  collections::HashMap,
+  sync::{Arc, RwLock, atomic::AtomicBool},
+};
 
 use crate::{
-  config::Config, payloads::MessageNotification, user::User, util::bridge::BridgeMessage,
+  config::{Config, TransportMode},
+  payloads::{MessageNotification, SoundboardSoundPayload},
+  user::User,
+  util::bridge::BridgeMessage,
 };
 
 /// Thread-safe shared state for background threads.
@@ -10,11 +16,18 @@ pub type SharedAppState = Arc<RwLock<AppState>>;
 #[derive(Debug, Clone)]
 pub struct AppState {
   pub config: Config,
+  pub transport_mode: TransportMode,
   pub current_channel: String,
+  pub current_guild_id: String,
   pub is_open: bool,
   pub is_censor: bool, // Used in modded clients but not IPC
   pub voice_users: Vec<User>,
   pub messages: Vec<MessageNotification>,
+  pub soundboard_cache: HashMap<String, Vec<SoundboardSoundPayload>>,
+
+  // Name caches
+  pub guild_names: HashMap<String, String>,
+  pub channel_names: HashMap<String, String>,
 
   pub ws_sender: Option<flume::Sender<BridgeMessage>>,
 
@@ -29,13 +42,22 @@ impl Default for AppState {
 
 impl AppState {
   pub fn new() -> Self {
+    let mut default_guild_names: HashMap<String, String> = HashMap::new();
+    default_guild_names.insert("0".into(), "Default".into());
+
     Self {
       config: Config::default(),
+      transport_mode: TransportMode::Ipc,
       current_channel: String::new(),
+      current_guild_id: String::new(),
       is_open: false,
       is_censor: false,
       voice_users: vec![],
       messages: vec![],
+      soundboard_cache: HashMap::new(),
+
+      guild_names: default_guild_names,
+      channel_names: HashMap::new(),
 
       ws_sender: None,
       recording_keybind: Arc::new(AtomicBool::new(false)),

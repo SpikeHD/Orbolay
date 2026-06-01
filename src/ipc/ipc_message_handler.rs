@@ -4,6 +4,7 @@ use crate::app_state::SharedAppState;
 use crate::ipc::{
   NotificationCreatePayload, OP_FRAME, ReadyPayload, SpeakingPayload, VoiceChannelSelectPayload,
   VoiceConnectionStatusPayload, VoiceSettingsUpdatePayload, VoiceState, ipc_write,
+  setters::{get_channel, get_guild},
   subscribe_voice_channel, unsubscribe_voice_channel,
 };
 use crate::log;
@@ -56,10 +57,31 @@ pub fn handle_ipc_message(
       }
 
       state.current_channel = new_channel;
+      state.current_guild_id = data.guild_id.unwrap_or_default();
+      let channel_id = state.current_channel.clone();
+      let guild_id = state.current_guild_id.clone();
 
-      if !state.current_channel.is_empty() {
-        if let Err(e) = subscribe_voice_channel(stream, &state.current_channel) {
+      if !channel_id.is_empty() {
+        if let Err(e) = subscribe_voice_channel(stream, &channel_id) {
           error!("Failed to subscribe to voice channel events: {}", e);
+        }
+
+        let request = serde_json::json!({
+          "cmd": "GET_SOUNDBOARD_SOUNDS",
+          "args": {},
+          "nonce": "GET_SOUNDBOARD_SOUNDS",
+        });
+
+        if let Err(e) = ipc_write(stream, OP_FRAME, &request.to_string()) {
+          error!("Failed to request soundboard sounds: {}", e);
+        }
+        if let Err(e) = get_channel(stream, &channel_id) {
+          error!("Failed to request channel name: {}", e);
+        }
+        if !guild_id.is_empty()
+          && let Err(e) = get_guild(stream, &guild_id)
+        {
+          error!("Failed to request guild name: {}", e);
         }
       } else {
         state.voice_users.clear();

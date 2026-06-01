@@ -51,6 +51,59 @@ pub fn stop_streaming(stream: &mut LocalSocketStream) -> Result<(), Box<dyn std:
   Ok(())
 }
 
+pub fn play_soundboard_sound(
+  stream: &mut LocalSocketStream,
+  sound_id: &str,
+  source_guild_id: Option<&str>,
+) -> Result<(), Box<dyn std::error::Error>> {
+  let mut args = serde_json::json!({ "sound_id": sound_id });
+  if let Some(guild_id) = source_guild_id {
+    args["guild_id"] = serde_json::json!(guild_id);
+  }
+  ipc_write(
+    stream,
+    OP_FRAME,
+    &serde_json::to_string(&serde_json::json!({
+      "cmd": "PLAY_SOUNDBOARD_SOUND",
+      "args": args,
+      "nonce": "PLAY_SOUNDBOARD_SOUND"
+    }))?,
+  )?;
+  Ok(())
+}
+
+pub fn get_guild(
+  stream: &mut LocalSocketStream,
+  guild_id: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+  ipc_write(
+    stream,
+    OP_FRAME,
+    &serde_json::to_string(&serde_json::json!({
+      "cmd": "GET_GUILD",
+      "args": { "guild_id": guild_id },
+      "nonce": "GET_GUILD",
+    }))?,
+  )?;
+  Ok(())
+}
+
+pub fn get_channel(
+  stream: &mut LocalSocketStream,
+  channel_id: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+  ipc_write(
+    stream,
+    OP_FRAME,
+    &serde_json::to_string(&serde_json::json!({
+      "cmd": "GET_CHANNEL",
+      "args": { "channel_id": channel_id },
+      "nonce": "GET_CHANNEL",
+    }))?,
+  )?;
+  Ok(())
+}
+
 pub fn disconnect(stream: &mut LocalSocketStream) -> Result<(), Box<dyn std::error::Error>> {
   let payload = serde_json::json!({ "channel_id": Value::Null });
   ipc_write(

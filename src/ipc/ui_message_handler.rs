@@ -1,7 +1,9 @@
 use interprocess::local_socket::prelude::*;
 
 use crate::app_state::SharedAppState;
-use crate::ipc::setters::{disconnect, set_deafened, set_muted, stop_streaming};
+use crate::ipc::setters::{
+  disconnect, play_soundboard_sound, set_deafened, set_muted, stop_streaming,
+};
 use crate::log;
 use crate::util::bridge::BridgeMessage;
 
@@ -48,6 +50,22 @@ pub fn handle_ui_message(
     "STOP_STREAM" => {
       drop(state);
       stop_streaming(stream)?;
+      return Ok(());
+    }
+    "PLAY_SOUNDBOARD_SOUND" => {
+      let sound_id = msg
+        .data
+        .get("sound_id")
+        .and_then(|v| v.as_str())
+        .unwrap_or_default()
+        .to_string();
+      let source_guild_id = msg
+        .data
+        .get("source_guild_id")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string());
+      drop(state);
+      play_soundboard_sound(stream, &sound_id, source_guild_id.as_deref())?;
       return Ok(());
     }
     _ => {

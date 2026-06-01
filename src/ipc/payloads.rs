@@ -122,6 +122,19 @@ pub struct SpeakingPayload {
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
+pub struct GetGuildPayload {
+  pub id: String,
+  pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+pub struct GetChannelPayload {
+  pub id: String,
+  pub name: String,
+  pub guild_id: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct MessageNotificationInner {
   pub id: Option<String>,
   pub guild_id: Option<String>,

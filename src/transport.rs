@@ -14,6 +14,7 @@ pub fn create_transport_thread(
     let transport_mode = shared.read().unwrap().config.transport_mode.clone();
 
     if args.websocket || (transport_mode == TransportMode::Websocket && !args.ipc) {
+      shared.write().unwrap().transport_mode = TransportMode::Websocket;
       if let Err(e) = websocket::create_websocket(ws_port, shared, redraw_tx, ws_recv) {
         error!("Websocket server failed on port {}: {}", ws_port, e);
       }
@@ -21,6 +22,7 @@ pub fn create_transport_thread(
     }
 
     if args.ipc || (transport_mode == TransportMode::Ipc && !args.websocket) {
+      shared.write().unwrap().transport_mode = TransportMode::Ipc;
       if let Err(e) = ipc::create_ipc_connection(shared, redraw_tx, ws_recv) {
         error!("IPC connection failed: {}", e);
       }

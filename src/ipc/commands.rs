@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::time::Duration;
 
 use interprocess::TryClone;
@@ -8,11 +9,13 @@ use interprocess::local_socket::{GenericNamespaced, ToNsName, prelude::*};
 
 use crate::app_state::SharedAppState;
 use crate::ipc::{
-  OP_CLOSE, OP_FRAME, OP_HANDSHAKE, SelectedVoiceChannelPayload, handle_ipc_message,
-  handle_ui_message, ipc_read, ipc_write, subscribe_voice_channel, subscribe_voice_global,
+  GetChannelPayload, GetGuildPayload, OP_CLOSE, OP_FRAME, OP_HANDSHAKE,
+  SelectedVoiceChannelPayload, handle_ipc_message, handle_ui_message, ipc_read, ipc_write,
+  setters::{get_channel, get_guild},
+  subscribe_voice_channel, subscribe_voice_global,
 };
 use crate::log;
-use crate::payloads::MessageNotification;
+use crate::payloads::{MessageNotification, SoundboardSoundPayload};
 use crate::success;
 use crate::util::bridge::BridgeMessage;
 use crate::util::discord_auth::{build_rpc_authenticate_request, extract_auth_code};
@@ -177,6 +180,13 @@ pub fn handle_command(
         "nonce": "GET_SELECTED_VOICE_CHANNEL",
       });
       ipc_write(stream, OP_FRAME, &request.to_string())?;
+
+      let request = serde_json::json!({
+        "cmd": "GET_SOUNDBOARD_SOUNDS",
+        "args": {},
+        "nonce": "GET_SOUNDBOARD_SOUNDS",
+      });
+      ipc_write(stream, OP_FRAME, &request.to_string())?;
     }
     "AUTHORIZE" => {
       let code = msg
@@ -205,10 +215,75 @@ pub fn handle_command(
     }
     "GET_SELECTED_VOICE_CHANNEL" => {
       let data = msg.data.get("data").cloned().unwrap_or_default();
-      let data = serde_json::from_value::<SelectedVoiceChannelPayload>(data).ok();
-      if let Some(channel_id) = data.and_then(|d| d.id) {
-        shared.write().unwrap().current_channel = channel_id.clone();
+      if let Some(data) = serde_json::from_value::<SelectedVoiceChannelPayload>(data)
+        .ok()
+        .filter(|d| d.id.is_some())
+      {
+        let channel_id = data.id.unwrap();
+        let guild_id = data.guild_id.unwrap_or_default();
+        let mut state = shared.write().unwrap();
+        state.current_channel = channel_id.clone();
+        state.current_guild_id = guild_id.clone();
+
+        drop(state);
+
         subscribe_voice_channel(stream, &channel_id)?;
+        get_channel(stream, &channel_id)?;
+        if !guild_id.is_empty() {
+          get_guild(stream, &guild_id)?;
+        }
+        let _ = redraw_tx.send(());
+      }
+    }
+    "GET_GUILD" => {
+      let data = msg.data.get("data").cloned().unwrap_or_default();
+      if let Ok(payload) = serde_json::from_value::<GetGuildPayload>(data) {
+        shared
+          .write()
+          .unwrap()
+          .guild_names
+          .insert(payload.id, payload.name);
+        let _ = redraw_tx.send(());
+      }
+    }
+    "GET_CHANNEL" => {
+      let data = msg.data.get("data").cloned().unwrap_or_default();
+      if let Ok(payload) = serde_json::from_value::<GetChannelPayload>(data) {
+        shared
+          .write()
+          .unwrap()
+          .channel_names
+          .insert(payload.id, payload.name);
+        let _ = redraw_tx.send(());
+      }
+    }
+    "GET_SOUNDBOARD_SOUNDS" => {
+      let data = msg.data.get("data").cloned().unwrap_or_default();
+      if let Ok(payload) = serde_json::from_value::<Vec<SoundboardSoundPayload>>(data) {
+        let mut by_guild: HashMap<String, Vec<_>> = HashMap::new();
+        for sound in payload {
+          by_guild
+            .entry(sound.guild_id.clone().unwrap_or_default())
+            .or_default()
+            .push(sound);
+        }
+        let known_guilds: Vec<String> = {
+          let state = shared.read().unwrap();
+          by_guild
+            .keys()
+            .filter(|id| !id.is_empty() && !state.guild_names.contains_key(*id))
+            .cloned()
+            .collect()
+        };
+        for guild_id in known_guilds {
+          if let Err(e) = get_guild(stream, &guild_id) {
+            error!("Failed to fetch guild name for {}: {}", guild_id, e);
+          }
+        }
+        let mut state = shared.write().unwrap();
+        for (guild_id, sounds) in by_guild {
+          state.soundboard_cache.insert(guild_id, sounds);
+        }
         let _ = redraw_tx.send(());
       }
     }
