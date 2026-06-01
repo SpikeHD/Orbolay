@@ -82,9 +82,9 @@ impl Component for SoundButton {
               .font_size(11.)
               .color(colors::MUTED_GRAY)
               .max_width(Size::fill())
-                            .max_lines(1)
-                            .text(name.clone())
-                            .text_overflow(TextOverflow::Ellipsis),
+              .max_lines(1)
+              .text(name.clone())
+              .text_overflow(TextOverflow::Ellipsis),
           ),
       )
   }
