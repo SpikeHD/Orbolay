@@ -64,6 +64,7 @@ impl Component for SoundButton {
       })
       .on_pointer_enter(move |_| *hovered.write() = true)
       .on_pointer_leave(move |_| *hovered.write() = false)
+      .overflow(Overflow::Clip)
       .child(
         rect()
           .direction(Direction::Horizontal)
@@ -80,7 +81,10 @@ impl Component for SoundButton {
             label()
               .font_size(11.)
               .color(colors::MUTED_GRAY)
-              .text(name.clone()),
+              .max_width(Size::fill())
+                            .max_lines(1)
+                            .text(name.clone())
+                            .text_overflow(TextOverflow::Ellipsis),
           ),
       )
   }
