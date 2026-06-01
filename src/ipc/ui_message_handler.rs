@@ -24,7 +24,7 @@ pub fn handle_ui_message(
       let muted = state
         .voice_users
         .iter()
-        .find(|user| user.id == state.config.user_id)
+        .find(|user| user.id == state.user_id)
         .map(|user| user.voice_state == crate::user::UserVoiceState::Muted)
         .unwrap_or(false);
       drop(state);
@@ -35,7 +35,7 @@ pub fn handle_ui_message(
       let deafened = state
         .voice_users
         .iter()
-        .find(|user| user.id == state.config.user_id)
+        .find(|user| user.id == state.user_id)
         .map(|user| user.voice_state == crate::user::UserVoiceState::Deafened)
         .unwrap_or(false);
       drop(state);

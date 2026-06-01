@@ -288,7 +288,7 @@ fn app() -> impl IntoElement {
   let current_user = state
     .voice_users
     .iter()
-    .find(|u| u.id == state.config.user_id)
+    .find(|u| u.id == state.user_id)
     .cloned();
   drop(state);
 

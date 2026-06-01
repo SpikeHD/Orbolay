@@ -75,7 +75,7 @@ impl Component for SoundButton {
           .child(
             rect()
               .padding(Gaps::new(0., 4., 0., 0.))
-              .child(label().font_size(14.).text(text)),
+              .child(label().color(Color::WHITE).font_size(14.).text(text)),
           )
           .child(
             label()

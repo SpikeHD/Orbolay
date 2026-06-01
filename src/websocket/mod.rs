@@ -120,14 +120,14 @@ pub fn handle_ws_message(
         .to_string();
       let mut state = shared.write().unwrap();
       let existing = state.config.clone();
-      let mut data = serde_json::from_value::<Config>(data).unwrap_or(existing);
-      data.user_id = user_id;
+      let data = serde_json::from_value::<Config>(data).unwrap_or(existing);
       state.config = data;
+      state.user_id = user_id;
     }
     "CHANNEL_JOINED" => {
       let data = serde_json::from_value::<ChannelJoinPayload>(data)?;
       let mut state = shared.write().unwrap();
-      let user_id = state.config.user_id.clone();
+      let user_id = state.user_id.clone();
       let mut users = Vec::with_capacity(data.states.len());
 
       for voice_state in data.states {

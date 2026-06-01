@@ -36,7 +36,7 @@ pub fn handle_ipc_message(
       if let Ok(ready) = serde_json::from_value::<ReadyPayload>(data)
         && let Some(user) = ready.user
       {
-        state.config.user_id = user.id;
+        state.user_id = user.id;
       }
 
       success!("IPC connected and ready");
@@ -132,7 +132,7 @@ pub fn handle_ipc_message(
     }
     "VOICE_SETTINGS_UPDATE" => {
       let data = serde_json::from_value::<VoiceSettingsUpdatePayload>(data)?;
-      let current_user_id = state.config.user_id.clone();
+      let current_user_id = state.user_id.clone();
       if let Some(user) = state
         .voice_users
         .iter_mut()

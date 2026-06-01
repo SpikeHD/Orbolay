@@ -134,8 +134,6 @@ pub struct Config {
   #[serde(default)]
   pub port: Option<u16>,
   #[serde(default)]
-  pub user_id: String,
-  #[serde(default)]
   pub message_alignment: Option<String>,
   #[serde(default)]
   pub user_alignment: Option<String>,
@@ -164,7 +162,6 @@ impl Default for Config {
       overlay_keybind: Some(DEFAULT_OVERLAY_TOGGLE.clone()),
       display_idx: None,
       port: Some(6888),
-      user_id: String::new(),
       message_alignment: None,
       user_alignment: None,
       message_offset_x: 0,

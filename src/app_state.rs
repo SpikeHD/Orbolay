@@ -16,6 +16,7 @@ pub type SharedAppState = Arc<RwLock<AppState>>;
 #[derive(Debug, Clone)]
 pub struct AppState {
   pub config: Config,
+  pub user_id: String,
   pub transport_mode: TransportMode,
   pub current_channel: String,
   pub current_guild_id: String,
@@ -47,6 +48,7 @@ impl AppState {
 
     Self {
       config: Config::default(),
+      user_id: String::new(),
       transport_mode: TransportMode::Ipc,
       current_channel: String::new(),
       current_guild_id: String::new(),
