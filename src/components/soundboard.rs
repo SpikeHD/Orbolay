@@ -176,7 +176,19 @@ impl Component for Soundboard {
                         .content(Content::wrap())
                         .width(Size::fill())
                         .padding(Gaps::new(2., 0., 6., 0.)),
-                      |row, sound| row.child(SoundButton { sound, app_state }),
+                      |row, mut sound| {
+                        if let Some(guild_id) = &sound.guild_id {
+                          if !app_state.read().premium_type.has_nitro()
+                            && guild_id != &"0".to_string()
+                            && guild_id != &app_state.read().current_guild_id
+                          {
+                            sound.available = false;
+                          }
+                        }
+
+
+                        row.child(SoundButton { sound, app_state })
+                      },
                     ),
                   )
                 },

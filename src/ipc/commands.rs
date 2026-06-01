@@ -9,7 +9,7 @@ use interprocess::local_socket::{GenericNamespaced, ToNsName, prelude::*};
 
 use crate::app_state::SharedAppState;
 use crate::ipc::{
-  GetChannelPayload, GetGuildPayload, OP_CLOSE, OP_FRAME, OP_HANDSHAKE,
+  GetChannelPayload, GetGuildPayload, GetUserPayload, OP_CLOSE, OP_FRAME, OP_HANDSHAKE,
   SelectedVoiceChannelPayload, handle_ipc_message, handle_ui_message, ipc_read, ipc_write,
   setters::{get_channel, get_guild},
   subscribe_voice_channel, subscribe_voice_global,
@@ -187,6 +187,14 @@ pub fn handle_command(
         "nonce": "GET_SOUNDBOARD_SOUNDS",
       });
       ipc_write(stream, OP_FRAME, &request.to_string())?;
+
+      let user_id = shared.read().unwrap().user_id.clone();
+      let request = serde_json::json!({
+        "cmd": "GET_USER",
+        "args": { "id": user_id },
+        "nonce": "GET_USER",
+      });
+      ipc_write(stream, OP_FRAME, &request.to_string())?;
     }
     "AUTHORIZE" => {
       let code = msg
@@ -254,6 +262,13 @@ pub fn handle_command(
           .unwrap()
           .channel_names
           .insert(payload.id, payload.name);
+        let _ = redraw_tx.send(());
+      }
+    }
+    "GET_USER" => {
+      let data = msg.data.get("data").cloned().unwrap_or_default();
+      if let Ok(payload) = serde_json::from_value::<GetUserPayload>(data) {
+        shared.write().unwrap().premium_type = payload.premium_type;
         let _ = redraw_tx.send(());
       }
     }

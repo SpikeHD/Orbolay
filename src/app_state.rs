@@ -6,7 +6,7 @@ use std::{
 use crate::{
   config::{Config, TransportMode},
   payloads::{MessageNotification, SoundboardSoundPayload},
-  user::User,
+  user::{PremiumType, User},
   util::bridge::BridgeMessage,
 };
 
@@ -17,6 +17,7 @@ pub type SharedAppState = Arc<RwLock<AppState>>;
 pub struct AppState {
   pub config: Config,
   pub user_id: String,
+  pub premium_type: PremiumType,
   pub transport_mode: TransportMode,
   pub current_channel: String,
   pub current_guild_id: String,
@@ -49,6 +50,7 @@ impl AppState {
     Self {
       config: Config::default(),
       user_id: String::new(),
+      premium_type: PremiumType::None,
       transport_mode: TransportMode::Ipc,
       current_channel: String::new(),
       current_guild_id: String::new(),

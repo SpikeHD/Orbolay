@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use crate::user::{User, UserVoiceState};
+use crate::user::{PremiumType, User, UserVoiceState};
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct RpcUser {
@@ -139,6 +139,21 @@ pub struct MessageNotificationInner {
   pub id: Option<String>,
   pub guild_id: Option<String>,
   pub channel_id: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+pub struct GetUserPayload {
+  pub id: String,
+  #[serde(default, deserialize_with = "deserialize_premium_type")]
+  pub premium_type: PremiumType,
+}
+
+fn deserialize_premium_type<'de, D>(deserializer: D) -> Result<PremiumType, D::Error>
+where
+  D: serde::Deserializer<'de>,
+{
+  let value = u64::deserialize(deserializer)?;
+  PremiumType::try_from(value).map_err(serde::de::Error::custom)
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
