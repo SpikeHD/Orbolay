@@ -125,17 +125,22 @@ On first run, Orbolay should open the configurator automatically. In the future,
 To use Orbolay with Hyprland, you will need to manually set some window rules (taken from [#28](https://github.com/SpikeHD/Orbolay/issues/28)). Note that this prevents the keybind and clickable controls from working:
 
 ```
-windowrule {
-    name = orbolay-overlay
-    match:title = ^(orbolay)$
-    no_blur = on
-    no_shadow = on
-    no_anim = on
-    no_initial_focus = on
-    no_focus = on
-    pin = on
-    rounding = 0
-}
+hl.window_rule({
+    match = {title = "^(orbolay)$"},
+    no_initial_focus = true,
+    suppress_event = "activatefocus",
+    float = true,
+    pin = true,
+    center = true,
+    no_blur = true,
+    no_dim = true,
+    no_follow_mouse = true,
+    no_shadow = true,
+    border_size = 0,
+    no_focus = true,
+    move = {"monitor_w", "monitor_h"},
+    size = {"monitor_w - 5", "monitor_h - 5"}
+})
 ```
 
 # Building
