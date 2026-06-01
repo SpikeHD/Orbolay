@@ -155,6 +155,7 @@ windowrule {
 * [Freya](https://github.com/marc2332/freya) - the main GUI library (that I may have fallen in love with)
 * [Discover](https://github.com/trigg/Discover) - a fantastic reference for some of the IPC-related stuff
 * [docs.discord.food](https://docs.discord.food/) - incredible reference for undocumented Discord APIs
+* The [Twemoji Alpine Package](https://pkgs.alpinelinux.org/package/edge/community/x86/font-twemoji) - contains a proper CBDT Twemoji font file that I've extracted for use here
 * Everyone else who contributes positively to the Rust ecosystem :)
 
 # Contributing

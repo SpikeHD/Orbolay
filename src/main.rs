@@ -46,8 +46,7 @@ mod user;
 mod util;
 mod websocket;
 
-// Twemoji isn't working for some reason
-static NOTO_COLOR_EMOJI_FONT: &[u8] = include_bytes!("../assets/fonts/NotoColorEmojiCompat.ttf");
+static TWEMOJI_FONT: &[u8] = include_bytes!("../assets/fonts/Twemoji.ttf");
 
 const GIT_HASH: Option<&str> = option_env!("GIT_HASH");
 const APP_NAME: Option<&str> = option_env!("CARGO_PKG_NAME");
@@ -131,8 +130,8 @@ fn main() {
 
   launch(
     LaunchConfig::new()
-      .with_font("Noto Color Emoji", NOTO_COLOR_EMOJI_FONT)
-      .with_fallback_font("Noto Color Emoji")
+      .with_font("Twemoji", TWEMOJI_FONT)
+      .with_fallback_font("Twemoji")
       .with_window(
         WindowConfig::new(app)
           .with_title("orbolay")
