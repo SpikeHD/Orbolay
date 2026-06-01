@@ -79,9 +79,10 @@ pub fn handle_ipc_message(
           error!("Failed to request channel name: {}", e);
         }
         if !guild_id.is_empty()
-          && let Err(e) = get_guild(stream, &guild_id) {
-            error!("Failed to request guild name: {}", e);
-          }
+          && let Err(e) = get_guild(stream, &guild_id)
+        {
+          error!("Failed to request guild name: {}", e);
+        }
       } else {
         state.voice_users.clear();
         state.current_channel = String::new();

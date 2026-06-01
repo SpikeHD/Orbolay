@@ -34,19 +34,21 @@ impl Component for SoundButton {
       Some(e) => e.to_string(),
       None => "?".into(),
     };
+    let name = &self.sound.name;
 
     rect()
       .direction(Direction::Horizontal)
       .cross_align(Alignment::Center)
       .main_align(Alignment::Center)
-      .width(Size::px(40.))
+      .width(Size::percent(33.3))
       .height(Size::px(40.))
+      .margin(Gaps::new_all(2.))
       .corner_radius(CornerRadius::new_all(6.))
       .maybe(!available, |el| el.opacity(0.4))
       .background(if *hovered.read() {
         colors::LIGHT_GRAY
       } else {
-        Color::TRANSPARENT
+        colors::DARKISH_GRAY
       })
       .on_press(move |_| {
         if !available {
@@ -62,7 +64,25 @@ impl Component for SoundButton {
       })
       .on_pointer_enter(move |_| *hovered.write() = true)
       .on_pointer_leave(move |_| *hovered.write() = false)
-      .child(label().font_size(16.).color(Color::WHITE).text(text))
+      .child(
+        rect()
+          .direction(Direction::Horizontal)
+          .main_align(Alignment::Center)
+          .cross_align(Alignment::Center)
+          .content(Content::wrap())
+          .padding(Gaps::new_symmetric(4., 2.))
+          .child(
+            rect()
+              .padding(Gaps::new(0., 4., 0., 0.))
+              .child(label().font_size(14.).text(text)),
+          )
+          .child(
+            label()
+              .font_size(11.)
+              .color(colors::MUTED_GRAY)
+              .text(name.clone()),
+          ),
+      )
   }
 }
 
