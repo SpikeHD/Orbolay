@@ -33,7 +33,9 @@ impl Component for VoiceSection {
       .filter(|user| match self.display_voice_members {
         DisplayVoiceMembers::Always => true,
         DisplayVoiceMembers::AlwaysSemiTransparent => true,
-        DisplayVoiceMembers::WhenSpeaking => user.voice_state == UserVoiceState::Speaking || self.is_open,
+        DisplayVoiceMembers::WhenSpeaking => {
+          user.voice_state == UserVoiceState::Speaking || self.is_open
+        }
       })
       .collect();
 
@@ -56,7 +58,10 @@ impl Component for VoiceSection {
           user: u,
           is_open: self.is_open,
           is_right_aligned,
-          is_voice_semitransparent: matches!(self.display_voice_members, DisplayVoiceMembers::AlwaysSemiTransparent),
+          is_voice_semitransparent: matches!(
+            self.display_voice_members,
+            DisplayVoiceMembers::AlwaysSemiTransparent
+          ),
         })
       },
     )

@@ -35,11 +35,8 @@ const ALIGNMENTS: &[&str] = &[
   "centerright",
 ];
 
-const VOICE_DISPLAY_OPTIONS: &[&str] = &[
-  "always",
-  "always (semi-transparent)",
-  "only when speaking",
-];
+const VOICE_DISPLAY_OPTIONS: &[&str] =
+  &["always", "always (semi-transparent)", "only when speaking"];
 
 pub fn open_configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) {
   spawn(async move {
@@ -220,12 +217,19 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
     .child(divider())
     .child(SettingRow {
       name: "Display Voice Members".into(),
-      description: Some(
-        "Control when and how voice users are visible".into(),
-      ),
+      description: Some("Control when and how voice users are visible".into()),
       kind: SettingKind::Dropdown(
-        VOICE_DISPLAY_OPTIONS.iter().map(|s| s.to_string()).collect(),
-        Some(config.display_voice_members.clone().unwrap_or_default().to_string()),
+        VOICE_DISPLAY_OPTIONS
+          .iter()
+          .map(|s| s.to_string())
+          .collect(),
+        Some(
+          config
+            .display_voice_members
+            .clone()
+            .unwrap_or_default()
+            .to_string(),
+        ),
       ),
       on_change: make_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
         cfg.display_voice_members = Some(v.into());
