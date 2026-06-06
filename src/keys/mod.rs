@@ -16,7 +16,7 @@ use std::time::Duration;
 
 use rdev::{Event, grab, listen};
 
-use crate::{app_state::SharedAppState, log};
+use crate::{app_state::SharedAppState, warn};
 
 use bind::{DEFAULT_OVERLAY_TOGGLE, strings_to_keys};
 use bind::{Keybind, default_keybinds};
@@ -86,7 +86,7 @@ pub fn watch_keybinds(shared: SharedAppState, keybind_tx: flume::Sender<KeyEvent
     });
 
     if let Err(e) = grab_result {
-      log!("Failed to grab global hotkeys: {:?}", e);
+      warn!("Failed to grab global hotkeys: {:?}", e);
 
       let key_state_listen = RefCell::new(KeyState::new());
       if let Err(e) = listen(move |event: Event| {
@@ -100,7 +100,7 @@ pub fn watch_keybinds(shared: SharedAppState, keybind_tx: flume::Sender<KeyEvent
           );
         }
       }) {
-        log!("Failed to listen for global hotkeys: {:?}", e);
+        warn!("Failed to listen for global hotkeys: {:?}", e);
       }
     }
   });

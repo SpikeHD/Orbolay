@@ -1,7 +1,7 @@
 use serde_json::json;
 use url::Url;
 
-use crate::{CLIENT_ID, log};
+use crate::{CLIENT_ID, error, log};
 
 pub fn build_rpc_authorize_request() -> serde_json::Value {
   json!({
@@ -51,7 +51,7 @@ pub fn extract_auth_code(code: &str) -> Option<String> {
     );
   }
 
-  log!(
+  error!(
     "Failed to extract access token from StreamKit response after {} attempts",
     ATTEMPTS
   );
