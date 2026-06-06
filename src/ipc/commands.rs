@@ -229,7 +229,7 @@ pub fn handle_command(
         .ok()
         .filter(|d| d.id.is_some())
       {
-        let channel_id = data.id.unwrap();
+        let channel_id = data.id.unwrap_or_default();
         let guild_id = data.guild_id.unwrap_or_default();
         let mut state = shared.write().unwrap();
         state.current_channel = channel_id.clone();

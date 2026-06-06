@@ -28,7 +28,7 @@ pub fn start_config_watcher(shared: SharedAppState, redraw_tx: flume::Sender<()>
       Some(path) => path.join("config.json"),
       None => {
         warn!(
-          "Failed to get config path, config changes will not reflect until Orbolay is restarted"
+          "Failed to get config path. Config changes will not reflect until Orbolay is restarted."
         );
         return;
       }

@@ -36,18 +36,12 @@ pub fn specific_monitor_or_primary() -> DisplayInfo {
 pub fn window_size_for_display(display: &DisplayInfo) -> PhysicalSize<f64> {
   let monitor_size = (display.width, display.height);
 
-  #[cfg(target_os = "macos")]
-  {
-    PhysicalSize::new(
-      (monitor_size.0 + 1) as f64 * display.scale_factor as f64,
-      (monitor_size.1 - 1) as f64 * display.scale_factor as f64,
-    )
-  }
-
-  #[cfg(not(target_os = "macos"))]
-  {
-    PhysicalSize::new((monitor_size.0 + 1) as f64, (monitor_size.1 - 1) as f64)
-  }
+  // https://discourse.glfw.org/t/black-screen-when-setting-window-to-transparent-and-size-to-1920x1080/2585/5
+  // We do -1 specifically on the height to fix the Windows hidden taskbar thing
+  PhysicalSize::new(
+    (monitor_size.0 + 1) as f64 * display.scale_factor as f64,
+    (monitor_size.1 - 1) as f64 * display.scale_factor as f64,
+  )
 }
 
 pub fn update_monitor() {
