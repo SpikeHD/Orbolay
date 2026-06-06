@@ -18,21 +18,21 @@
   <img src="https://github.com/user-attachments/assets/030885cc-4a62-4524-b537-2cc0c8347cd4" />
 </div>
 
-## Downloads
+# Downloads
 
 <table align="center">
   <tr>
     <th>
-      <img src="docs/image/windows.png" width="23%" align="center" />
+      <img src="docs/image/windows.png" width="25%" align="center" />
     </th>
     <th>
-      <img src="docs/image/apple.png" width="23%" align="center" />
+      <img src="docs/image/apple.png" width="25%" align="center" />
     </th>
     <th>
-      <img src="docs/image/debian.png" width="23%" align="center" />
+      <img src="docs/image/debian.png" width="25%" align="center" />
     </th>
     <th>
-      <img src="docs/image/linux.png" width="23%" align="center" />
+      <img src="docs/image/linux.png" width="25%" align="center" />
     </th>
   </tr>
 
