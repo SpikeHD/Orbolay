@@ -321,7 +321,7 @@ fn app() -> impl IntoElement {
         .unwrap_or_else(|| "topleft".into()),
       user_offset_x: config.user_offset_x,
       user_offset_y: config.user_offset_y,
-      voice_semitransparent: config.voice_semitransparent.unwrap_or(true),
+      display_voice_members: config.display_voice_members.clone().unwrap_or_default(),
     })
     // Messages
     .child(MessagesSection {

@@ -2,8 +2,8 @@ use freya::prelude::*;
 
 use crate::{
   components::UserRow,
-  config::{AxisAlignment, CornerAlignment},
-  user::User,
+  config::{AxisAlignment, CornerAlignment, DisplayVoiceMembers},
+  user::{User, UserVoiceState},
   util::text::censor,
 };
 
@@ -15,7 +15,7 @@ pub struct VoiceSection {
   pub user_alignment: String,
   pub user_offset_x: i32,
   pub user_offset_y: i32,
-  pub voice_semitransparent: bool,
+  pub display_voice_members: DisplayVoiceMembers,
 }
 
 impl Component for VoiceSection {
@@ -24,7 +24,20 @@ impl Component for VoiceSection {
     let gaps = alignment.to_gaps(self.user_offset_x, self.user_offset_y);
     let is_right_aligned = alignment.x == AxisAlignment::End;
 
-    self.voice_users.iter().fold(
+    let mut sorted_users = self.voice_users.clone();
+    sorted_users.sort_by(|a, b| a.id.cmp(&b.id));
+
+    // Filter users based on display_voice_members
+    let filtered_users: Vec<_> = sorted_users
+      .into_iter()
+      .filter(|user| match self.display_voice_members {
+        DisplayVoiceMembers::Always => true,
+        DisplayVoiceMembers::AlwaysSemiTransparent => true,
+        DisplayVoiceMembers::WhenSpeaking => user.voice_state == UserVoiceState::Speaking || self.is_open,
+      })
+      .collect();
+
+    filtered_users.iter().fold(
       rect()
         .direction(Direction::Vertical)
         .cross_align(alignment.x.to_freya())
@@ -43,7 +56,7 @@ impl Component for VoiceSection {
           user: u,
           is_open: self.is_open,
           is_right_aligned,
-          is_voice_semitransparent: self.voice_semitransparent,
+          is_voice_semitransparent: matches!(self.display_voice_members, DisplayVoiceMembers::AlwaysSemiTransparent),
         })
       },
     )

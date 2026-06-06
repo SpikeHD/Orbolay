@@ -11,6 +11,15 @@ pub enum TransportMode {
   Websocket,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[serde(rename_all = "camelCase")]
+pub enum DisplayVoiceMembers {
+  Always,
+  #[default]
+  AlwaysSemiTransparent,
+  WhenSpeaking,
+}
+
 impl Display for TransportMode {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     match self {
@@ -26,6 +35,27 @@ impl From<String> for TransportMode {
       "ipc" => TransportMode::Ipc,
       "websocket" => TransportMode::Websocket,
       _ => TransportMode::Ipc,
+    }
+  }
+}
+
+impl Display for DisplayVoiceMembers {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    match self {
+      DisplayVoiceMembers::Always => write!(f, "always"),
+      DisplayVoiceMembers::AlwaysSemiTransparent => write!(f, "always (semi-transparent)"),
+      DisplayVoiceMembers::WhenSpeaking => write!(f, "only when speaking"),
+    }
+  }
+}
+
+impl From<String> for DisplayVoiceMembers {
+  fn from(value: String) -> Self {
+    match value.as_ref() {
+      "always" => DisplayVoiceMembers::Always,
+      "always (semi-transparent)" => DisplayVoiceMembers::AlwaysSemiTransparent,
+      "only when speaking" => DisplayVoiceMembers::WhenSpeaking,
+      _ => DisplayVoiceMembers::Always,
     }
   }
 }
@@ -146,7 +176,7 @@ pub struct Config {
   #[serde(default)]
   pub user_offset_y: i32,
   #[serde(default)]
-  pub voice_semitransparent: Option<bool>,
+  pub display_voice_members: Option<DisplayVoiceMembers>,
   #[serde(default)]
   pub messages_semitransparent: bool,
   #[serde(default)]
@@ -168,7 +198,7 @@ impl Default for Config {
       message_offset_y: 0,
       user_offset_x: 0,
       user_offset_y: 0,
-      voice_semitransparent: None,
+      display_voice_members: Some(DisplayVoiceMembers::AlwaysSemiTransparent),
       messages_semitransparent: false,
       is_keybind_enabled: None,
       transport_mode: TransportMode::Ipc,
