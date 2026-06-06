@@ -9,12 +9,14 @@ use interprocess::local_socket::{GenericNamespaced, ToNsName, prelude::*};
 
 use crate::app_state::SharedAppState;
 use crate::ipc::{
-  GetChannelPayload, GetGuildPayload, GetUserPayload, OP_CLOSE, OP_FRAME, OP_HANDSHAKE,
-  SelectedVoiceChannelPayload, handle_ipc_message, handle_ui_message, ipc_read, ipc_write,
+  OP_CLOSE, OP_FRAME, OP_HANDSHAKE, handle_ipc_message, handle_ui_message, ipc_read, ipc_write,
   setters::{get_channel, get_guild},
   subscribe_voice_channel, subscribe_voice_global,
 };
 use crate::log;
+use crate::payloads::ipc::{
+  GetChannelPayload, GetGuildPayload, GetUserPayload, SelectedVoiceChannelPayload,
+};
 use crate::payloads::{MessageNotification, SoundboardSoundPayload};
 use crate::success;
 use crate::util::bridge::BridgeMessage;

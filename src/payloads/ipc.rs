@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use crate::user::{PremiumType, User, UserVoiceState};
+use crate::user::PremiumType;
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct RpcUser {
@@ -46,53 +46,12 @@ pub struct VoiceStateState {
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
-pub struct VoiceState {
+pub struct RpcVoiceState {
   pub nick: Option<String>,
   pub mute: bool,
   pub volume: f32,
   pub voice_state: VoiceStateState,
   pub user: VoiceStateUser,
-}
-
-impl From<VoiceState> for User {
-  fn from(val: VoiceState) -> Self {
-    let voice_state = UserVoiceState::from(&val);
-
-    User {
-      name: val
-        .nick
-        .or(val.user.global_name)
-        .unwrap_or(val.user.username),
-      id: val.user.id,
-      avatar: val.user.avatar.unwrap_or_default(),
-      voice_state,
-      streaming: false,
-    }
-  }
-}
-
-impl From<VoiceState> for UserVoiceState {
-  fn from(val: VoiceState) -> Self {
-    if val.voice_state.deaf || val.voice_state.self_deaf {
-      UserVoiceState::Deafened
-    } else if val.voice_state.mute || val.voice_state.self_mute {
-      UserVoiceState::Muted
-    } else {
-      UserVoiceState::NotSpeaking
-    }
-  }
-}
-
-impl From<&VoiceState> for UserVoiceState {
-  fn from(val: &VoiceState) -> Self {
-    if val.voice_state.deaf || val.voice_state.self_deaf {
-      UserVoiceState::Deafened
-    } else if val.voice_state.mute || val.voice_state.self_mute {
-      UserVoiceState::Muted
-    } else {
-      UserVoiceState::NotSpeaking
-    }
-  }
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]

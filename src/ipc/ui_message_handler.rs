@@ -5,6 +5,7 @@ use crate::ipc::setters::{
   disconnect, play_soundboard_sound, set_deafened, set_muted, stop_streaming,
 };
 use crate::log;
+use crate::user::UserVoiceState;
 use crate::util::bridge::BridgeMessage;
 
 pub fn handle_ui_message(
@@ -25,7 +26,7 @@ pub fn handle_ui_message(
         .voice_users
         .iter()
         .find(|user| user.id == state.user_id)
-        .map(|user| user.voice_state == crate::user::UserVoiceState::Muted)
+        .map(|user| user.voice_state == UserVoiceState::Muted)
         .unwrap_or(false);
       drop(state);
       set_muted(stream, !muted)?;
@@ -36,7 +37,7 @@ pub fn handle_ui_message(
         .voice_users
         .iter()
         .find(|user| user.id == state.user_id)
-        .map(|user| user.voice_state == crate::user::UserVoiceState::Deafened)
+        .map(|user| user.voice_state == UserVoiceState::Deafened)
         .unwrap_or(false);
       drop(state);
       set_deafened(stream, !deafened)?;

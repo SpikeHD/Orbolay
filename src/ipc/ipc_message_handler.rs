@@ -2,13 +2,16 @@ use interprocess::local_socket::prelude::*;
 
 use crate::app_state::SharedAppState;
 use crate::ipc::{
-  NotificationCreatePayload, OP_FRAME, ReadyPayload, SpeakingPayload, VoiceChannelSelectPayload,
-  VoiceConnectionStatusPayload, VoiceSettingsUpdatePayload, VoiceState, ipc_write,
+  OP_FRAME, ipc_write,
   setters::{get_channel, get_guild},
   subscribe_voice_channel, unsubscribe_voice_channel,
 };
 use crate::log;
 use crate::payloads::MessageNotification;
+use crate::payloads::ipc::{
+  NotificationCreatePayload, ReadyPayload, RpcVoiceState, SpeakingPayload,
+  VoiceChannelSelectPayload, VoiceConnectionStatusPayload, VoiceSettingsUpdatePayload,
+};
 use crate::user::UserVoiceState;
 use crate::util::discord_auth::build_rpc_authorize_request;
 use crate::{error, success};
@@ -89,7 +92,7 @@ pub fn handle_ipc_message(
       }
     }
     "VOICE_STATE_CREATE" | "VOICE_STATE_UPDATE" => {
-      let data = serde_json::from_value::<VoiceState>(data)?;
+      let data = serde_json::from_value::<RpcVoiceState>(data)?;
       let user_id = data.user.id.clone();
 
       if let Some(user) = state.voice_users.iter_mut().find(|user| user.id == user_id) {
@@ -113,7 +116,7 @@ pub fn handle_ipc_message(
         .iter_mut()
         .find(|user| user.id == data.user_id)
       {
-        user.voice_state = crate::user::UserVoiceState::Speaking;
+        user.voice_state = UserVoiceState::Speaking;
       }
     }
     "SPEAKING_STOP" => {
@@ -123,11 +126,11 @@ pub fn handle_ipc_message(
         .iter_mut()
         .find(|user| user.id == data.user_id)
       {
-        user.voice_state = crate::user::UserVoiceState::NotSpeaking;
+        user.voice_state = UserVoiceState::NotSpeaking;
       }
     }
     "VOICE_STATE_DELETE" => {
-      let data = serde_json::from_value::<VoiceState>(data)?;
+      let data = serde_json::from_value::<RpcVoiceState>(data)?;
       state.voice_users.retain(|user| user.id != data.user.id);
     }
     "VOICE_SETTINGS_UPDATE" => {
@@ -139,11 +142,11 @@ pub fn handle_ipc_message(
         .find(|user| user.id == current_user_id)
       {
         user.voice_state = if data.deaf {
-          crate::user::UserVoiceState::Deafened
+          UserVoiceState::Deafened
         } else if data.mute {
-          crate::user::UserVoiceState::Muted
+          UserVoiceState::Muted
         } else {
-          crate::user::UserVoiceState::NotSpeaking
+          UserVoiceState::NotSpeaking
         };
       }
     }

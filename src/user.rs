@@ -43,3 +43,83 @@ pub struct User {
   pub voice_state: UserVoiceState,
   pub streaming: bool,
 }
+
+use crate::payloads::WsVoiceState;
+use crate::payloads::ipc::RpcVoiceState;
+
+impl From<WsVoiceState> for User {
+  fn from(val: WsVoiceState) -> Self {
+    let voice_state = UserVoiceState::from(&val);
+
+    User {
+      name: val.username.unwrap_or("Unknown".to_string()),
+      id: val.user_id,
+      avatar: val.avatar_url.unwrap_or_default(),
+      voice_state,
+      streaming: val.streaming.unwrap_or_default(),
+    }
+  }
+}
+
+impl From<WsVoiceState> for UserVoiceState {
+  fn from(val: WsVoiceState) -> Self {
+    match (val.mute, val.deaf, val.speaking) {
+      (_, Some(true), _) => UserVoiceState::Deafened,
+      (Some(true), _, _) => UserVoiceState::Muted,
+      (_, _, Some(true)) => UserVoiceState::Speaking,
+      _ => UserVoiceState::NotSpeaking,
+    }
+  }
+}
+
+impl From<&WsVoiceState> for UserVoiceState {
+  fn from(val: &WsVoiceState) -> Self {
+    match (val.mute, val.deaf, val.speaking) {
+      (_, Some(true), _) => UserVoiceState::Deafened,
+      (Some(true), _, _) => UserVoiceState::Muted,
+      (_, _, Some(true)) => UserVoiceState::Speaking,
+      _ => UserVoiceState::NotSpeaking,
+    }
+  }
+}
+
+impl From<RpcVoiceState> for User {
+  fn from(val: RpcVoiceState) -> Self {
+    let voice_state = UserVoiceState::from(&val);
+
+    User {
+      name: val
+        .nick
+        .or(val.user.global_name)
+        .unwrap_or(val.user.username),
+      id: val.user.id,
+      avatar: val.user.avatar.unwrap_or_default(),
+      voice_state,
+      streaming: false,
+    }
+  }
+}
+
+impl From<RpcVoiceState> for UserVoiceState {
+  fn from(val: RpcVoiceState) -> Self {
+    if val.voice_state.deaf || val.voice_state.self_deaf {
+      UserVoiceState::Deafened
+    } else if val.voice_state.mute || val.voice_state.self_mute {
+      UserVoiceState::Muted
+    } else {
+      UserVoiceState::NotSpeaking
+    }
+  }
+}
+
+impl From<&RpcVoiceState> for UserVoiceState {
+  fn from(val: &RpcVoiceState) -> Self {
+    if val.voice_state.deaf || val.voice_state.self_deaf {
+      UserVoiceState::Deafened
+    } else if val.voice_state.mute || val.voice_state.self_mute {
+      UserVoiceState::Muted
+    } else {
+      UserVoiceState::NotSpeaking
+    }
+  }
+}

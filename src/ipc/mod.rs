@@ -1,5 +1,4 @@
 mod commands;
-mod payloads;
 mod subscription;
 
 pub mod ipc_message_handler;
@@ -8,7 +7,6 @@ pub mod ui_message_handler;
 
 pub use commands::create_ipc_connection;
 pub use ipc_message_handler::handle_ipc_message;
-pub use payloads::*;
 
 pub use subscription::{
   subscribe_voice_channel, subscribe_voice_global, unsubscribe_voice_channel,
