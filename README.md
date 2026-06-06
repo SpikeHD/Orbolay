@@ -18,6 +18,53 @@
   <img src="https://github.com/user-attachments/assets/030885cc-4a62-4524-b537-2cc0c8347cd4" />
 </div>
 
+## Downloads
+
+<table align="center">
+  <tr>
+    <th>
+      <img src="docs/image/windows.png" width="23%" align="center" />
+    </th>
+    <th>
+      <img src="docs/image/apple.png" width="23%" align="center" />
+    </th>
+    <th>
+      <img src="docs/image/debian.png" width="23%" align="center" />
+    </th>
+    <th>
+      <img src="docs/image/linux.png" width="23%" align="center" />
+    </th>
+  </tr>
+
+  <tr>
+    <td width="23%">
+      <div align="center">
+        <a href="https://github.com/SpikeHD/Orbolay/releases/latest/download/orbolay-x86_64-pc-windows-msvc.exe">x86_64</a>
+      </div>
+    </td>
+    <td width="23%">
+      <div align="center">
+        <a href="https://github.com/SpikeHD/Orbolay/releases/latest/download/orbolay-x86_64-apple-darwin.app.zip">x86_64 (Intel)</a>
+        <span>|</span>
+        <a href="https://github.com/SpikeHD/Orbolay/releases/latest/download/orbolay-aarch64-apple-darwin.app.zip">ARM64 (M-series)</a>
+      </div>
+    </td>
+    <td width="23%">
+      <div align="center">
+        <a href="https://github.com/SpikeHD/Orbolay/releases/latest/download/orbolay-x86_64-unknown-linux-gnu.deb">.deb (x86_64)</a>
+      </div>
+    </td>
+    <td width="23%">
+      <div align="center">
+        <a href="https://github.com/SpikeHD/Orbolay/releases/latest/download/orbolay-x86_64-unknown-linux-gnu">x86_64</a>
+        <span>|</span>
+        <a href="https://github.com/SpikeHD/Orbolay/releases/latest/download/orbolay-x86_64-unknown-linux-gnu.AppImage">AppImage (x86_64)</a>
+      </div>
+    </td>
+  </tr>
+</table>
+
+
 # Table of Contents
 
 * [Features](#features)
