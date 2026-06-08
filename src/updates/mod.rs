@@ -1,6 +1,12 @@
+use std::sync::Arc;
+
 use serde_json::Value;
 
-use crate::{app_state::SharedAppState, payloads::Notification, warn};
+use crate::{
+  app_state::SharedAppState,
+  payloads::{Notification, NotificationAction, NotificationKind},
+  warn,
+};
 
 pub fn maybe_notify_update(shared: SharedAppState) {
   std::thread::spawn(move || {
@@ -28,6 +34,13 @@ pub fn maybe_notify_update(shared: SharedAppState) {
             "An new update of Orbolay is available and can be downloaded via the GitHub releases"
               .into(),
           icon: "https://avatars.githubusercontent.com/u/25207995?v=4".to_string(),
+          actions: Some(vec![NotificationAction {
+            label: "View on GitHub".into(),
+            action: Arc::new(|| {
+              let _ = open::that("https://github.com/SpikeHD/Orbolay/releases/latest");
+            }),
+            kind: NotificationKind::Primary,
+          }]),
           ..Default::default()
         });
       }
