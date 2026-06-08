@@ -5,7 +5,7 @@ use std::{
 
 use crate::{
   config::{Config, TransportMode},
-  payloads::{MessageNotification, SoundboardSoundPayload},
+  payloads::{Notification, SoundboardSoundPayload},
   user::{PremiumType, User},
   util::bridge::BridgeMessage,
 };
@@ -24,7 +24,7 @@ pub struct AppState {
   pub is_open: bool,
   pub is_censor: bool, // Used in modded clients but not IPC
   pub voice_users: Vec<User>,
-  pub messages: Vec<MessageNotification>,
+  pub messages: Vec<Notification>,
   pub soundboard_cache: HashMap<String, Vec<SoundboardSoundPayload>>,
 
   // Name caches
@@ -74,7 +74,7 @@ impl AppState {
     }
   }
 
-  pub fn notify(&mut self, notification: MessageNotification) {
+  pub fn notify(&mut self, notification: Notification) {
     let messages_len = self.messages.len();
 
     // Keep the last 3 elements

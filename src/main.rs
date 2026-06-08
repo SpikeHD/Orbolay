@@ -5,6 +5,8 @@
 #![allow(clippy::borrow_interior_mutable_const)]
 #![allow(clippy::declare_interior_mutable_const)]
 
+use std::sync::Arc;
+
 use freya::prelude::*;
 use gumdrop::Options;
 use native_dialog::{MessageDialogBuilder, MessageLevel};
@@ -21,7 +23,7 @@ use crate::{
   display::{specific_monitor_or_primary, update_monitor, window_size_for_display},
   manager::OverlayManager,
   notifications::create_notification_thread,
-  payloads::MessageNotification,
+  payloads::{Notification, NotificationAction, NotificationKind},
   transport::create_transport_thread,
   updates::maybe_notify_update,
   util::{bridge::BridgeMessage, colors},
@@ -204,7 +206,7 @@ fn app() -> impl IntoElement {
     create_transport_thread(shared.clone(), redraw_tx.clone(), args, ws_receiver);
     create_notification_thread(shared.clone(), redraw_tx.clone());
 
-    shared.write().unwrap().notify(MessageNotification {
+    shared.write().unwrap().notify(Notification {
       title: format!(
         "Orbolay v{} (rev {})",
         APP_VERSION.unwrap_or("0.0.0"),
@@ -216,6 +218,13 @@ fn app() -> impl IntoElement {
       guild_id: None,
       channel_id: None,
       message_id: None,
+      actions: Some(vec![NotificationAction {
+        label: "GitHub".into(),
+        action: Arc::new(|| {
+          let _ = open::that("https://github.com/SpikeHD/Orbolay");
+        }),
+        kind: NotificationKind::Primary,
+      }]),
     });
 
     // sync SharedAppState -> AppState on every redraw signal

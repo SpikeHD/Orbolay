@@ -1,13 +1,12 @@
 use freya::prelude::*;
 
 use crate::{
-  app_state::AppState, components::MessageRow, config::CornerAlignment,
-  payloads::MessageNotification,
+  app_state::AppState, components::MessageRow, config::CornerAlignment, payloads::Notification,
 };
 
 #[derive(PartialEq)]
 pub struct MessagesSection {
-  pub messages: Vec<MessageNotification>,
+  pub messages: Vec<Notification>,
   pub is_open: bool,
   pub is_censor: bool,
   pub message_alignment: String,

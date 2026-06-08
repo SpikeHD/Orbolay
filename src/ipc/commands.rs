@@ -17,7 +17,7 @@ use crate::log;
 use crate::payloads::ipc::{
   GetChannelPayload, GetGuildPayload, GetUserPayload, SelectedVoiceChannelPayload,
 };
-use crate::payloads::{MessageNotification, SoundboardSoundPayload};
+use crate::payloads::{Notification, SoundboardSoundPayload};
 use crate::success;
 use crate::util::bridge::BridgeMessage;
 use crate::util::discord_auth::{build_rpc_authenticate_request, extract_auth_code};
@@ -151,7 +151,7 @@ pub fn create_ipc_connection(
 
     {
       let mut state = shared.write().unwrap();
-      state.notify(MessageNotification {
+      state.notify(Notification {
         title: "Disconnected".into(),
         body: "The connection to the Discord client has been closed, retrying in 10 seconds..."
           .into(),

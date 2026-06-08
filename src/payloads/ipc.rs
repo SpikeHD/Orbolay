@@ -94,7 +94,7 @@ pub struct GetChannelPayload {
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
-pub struct MessageNotificationInner {
+pub struct NotificationInner {
   pub id: Option<String>,
   pub guild_id: Option<String>,
   pub channel_id: Option<String>,
@@ -117,7 +117,7 @@ where
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct NotificationCreatePayload {
-  pub message: Option<MessageNotificationInner>,
+  pub message: Option<NotificationInner>,
   pub icon_url: Option<String>,
   pub title: String,
   pub body: String,

@@ -7,7 +7,7 @@ use crate::ipc::{
   subscribe_voice_channel, unsubscribe_voice_channel,
 };
 use crate::log;
-use crate::payloads::MessageNotification;
+use crate::payloads::Notification;
 use crate::payloads::ipc::{
   NotificationCreatePayload, ReadyPayload, RpcVoiceState, SpeakingPayload,
   VoiceChannelSelectPayload, VoiceConnectionStatusPayload, VoiceSettingsUpdatePayload,
@@ -158,7 +158,7 @@ pub fn handle_ipc_message(
     "NOTIFICATION_CREATE" => {
       let data = serde_json::from_value::<NotificationCreatePayload>(data)?;
       let message = data.message.as_ref();
-      let notification = MessageNotification {
+      let notification = Notification {
         guild_id: message.and_then(|m| m.guild_id.clone()),
         channel_id: message.and_then(|m| m.channel_id.clone()),
         message_id: message.and_then(|m| m.id.clone()),
@@ -170,6 +170,7 @@ pub fn handle_ipc_message(
           .clone()
           .unwrap_or(String::new())
           .replace(".webp", ".png"),
+        actions: None,
       };
       state.notify(notification);
     }

@@ -24,6 +24,6 @@ pub struct UpdatePayload {
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
-pub struct MessageNotificationPayload {
-  pub message: super::MessageNotification,
+pub struct NotificationPayload {
+  pub message: super::Notification,
 }

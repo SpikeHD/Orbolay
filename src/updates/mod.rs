@@ -1,6 +1,6 @@
 use serde_json::Value;
 
-use crate::{app_state::SharedAppState, payloads::MessageNotification, warn};
+use crate::{app_state::SharedAppState, payloads::Notification, warn};
 
 pub fn maybe_notify_update(shared: SharedAppState) {
   std::thread::spawn(move || {
@@ -22,7 +22,7 @@ pub fn maybe_notify_update(shared: SharedAppState) {
     if let Some(latest_version) = json.get("tag_name").and_then(|v| v.as_str()) {
       let current_version = format!("v{}", env!("CARGO_PKG_VERSION"));
       if latest_version != current_version {
-        shared.write().unwrap().notify(MessageNotification {
+        shared.write().unwrap().notify(Notification {
           title: "Update Available!".into(),
           body:
             "An new update of Orbolay is available and can be downloaded via the GitHub releases"

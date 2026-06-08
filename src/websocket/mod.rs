@@ -6,7 +6,7 @@ use crate::{
   app_state::SharedAppState,
   config::Config,
   error, log,
-  payloads::{ChannelJoinPayload, MessageNotificationPayload, UpdatePayload},
+  payloads::{ChannelJoinPayload, NotificationPayload, UpdatePayload},
   success,
   util::bridge::BridgeMessage,
   warn,
@@ -182,7 +182,7 @@ pub fn handle_ws_message(
       state.current_channel = String::new();
     }
     "MESSAGE_NOTIFICATION" => {
-      let mut data = serde_json::from_value::<MessageNotificationPayload>(data)?;
+      let mut data = serde_json::from_value::<NotificationPayload>(data)?;
       data.message.timestamp = Some(chrono::Utc::now().timestamp());
       data.message.icon = data.message.icon.replace(".webp", ".png");
       shared.write().unwrap().notify(data.message);
