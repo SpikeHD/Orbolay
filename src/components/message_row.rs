@@ -17,6 +17,13 @@ impl Component for MessageRow {
   fn render(&self) -> impl IntoElement {
     let mut app_state = self.app_state;
     let message = self.message.clone();
+    let mut hovered = use_state(|| false);
+
+    use_drop(move || {
+      if *hovered.read() {
+        Cursor::set(CursorIcon::default());
+      }
+    });
 
     rect()
       .direction(Direction::Horizontal)
@@ -37,6 +44,14 @@ impl Component for MessageRow {
             "message_id": message.message_id,
           }),
         })
+      })
+      .on_pointer_enter(move |_| {
+        *hovered.write() = true;
+        Cursor::set(CursorIcon::Pointer);
+      })
+      .on_pointer_leave(move |_| {
+        *hovered.write() = false;
+        Cursor::set(CursorIcon::default());
       })
       .child(
         avatar_image(&self.message.icon, None)

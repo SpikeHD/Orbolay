@@ -65,6 +65,14 @@ impl Component for KeybindControl {
 
     let on_change = self.on_change.clone();
 
+    let mut hovered = use_state(|| false);
+
+    use_drop(move || {
+      if *hovered.read() {
+        Cursor::set(CursorIcon::default());
+      }
+    });
+
     let on_press = move |_| id.request_focus();
 
     let on_global_press = move |_| {
@@ -149,6 +157,14 @@ impl Component for KeybindControl {
       .a11y_id(id)
       .a11y_focusable(true)
       .on_press(on_press)
+      .on_pointer_enter(move |_| {
+        *hovered.write() = true;
+        Cursor::set(CursorIcon::Pointer);
+      })
+      .on_pointer_leave(move |_| {
+        *hovered.write() = false;
+        Cursor::set(CursorIcon::default());
+      })
       .on_global_pointer_press(on_global_press)
       .on_global_key_down(on_key_down)
       .on_global_key_up(on_key_up)

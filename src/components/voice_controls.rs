@@ -30,6 +30,12 @@ impl Component for ControlButton {
     let icon = self.icon;
     let on_click = self.on_click.clone();
 
+    use_drop(move || {
+      if *hovered.read() {
+        Cursor::set(CursorIcon::default());
+      }
+    });
+
     rect()
       .direction(Direction::Vertical)
       .main_align(Alignment::Center)
@@ -49,8 +55,14 @@ impl Component for ControlButton {
         Color::TRANSPARENT
       })
       .on_press(move |_| on_click.call(()))
-      .on_pointer_enter(move |_| *hovered.write() = true)
-      .on_pointer_leave(move |_| *hovered.write() = false)
+      .on_pointer_enter(move |_| {
+        *hovered.write() = true;
+        Cursor::set(CursorIcon::Pointer);
+      })
+      .on_pointer_leave(move |_| {
+        *hovered.write() = false;
+        Cursor::set(CursorIcon::default());
+      })
       .child(svg(icon).width(Size::px(24.)).height(Size::px(24.)))
   }
 }
