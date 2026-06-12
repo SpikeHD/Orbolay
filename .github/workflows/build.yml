@@ -127,7 +127,7 @@ jobs:
         run: cargo install cargo-bundle --locked
 
       - name: Download binary
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: orbolay-${{ matrix.config.target }}
           path: target/${{ matrix.config.target }}/release/
