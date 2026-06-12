@@ -4,7 +4,6 @@ use tungstenite::{Message, Utf8Bytes, accept};
 
 use crate::{
   app_state::SharedAppState,
-  config::Config,
   error, log,
   payloads::{ChannelJoinPayload, NotificationPayload, UpdatePayload},
   success,
@@ -118,10 +117,15 @@ pub fn handle_ws_message(
         .and_then(|v| v.as_str())
         .unwrap_or_default()
         .to_string();
+      let port = msg
+        .data
+        .get("port")
+        .and_then(|v| v.as_u64())
+        .map(|v| v as u16);
       let mut state = shared.write().unwrap();
-      let existing = state.config.clone();
-      let data = serde_json::from_value::<Config>(data).unwrap_or(existing);
-      state.config = data;
+      if let Some(port) = port {
+        state.config.port = Some(port);
+      }
       state.user_id = user_id;
     }
     "CHANNEL_JOINED" => {
