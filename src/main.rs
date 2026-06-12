@@ -183,10 +183,11 @@ fn app() -> impl IntoElement {
     #[cfg(not(target_os = "macos"))]
     let (keybind_tx, keybind_rx) = flume::unbounded::<keys::KeyEvent>();
 
-    app_state.write().ws_sender = Some(ws_sender);
+    app_state.write().ws_sender = Some(ws_sender.clone());
 
     // Shared state for background threads
     let mut initial = AppState::new();
+    initial.ws_sender = Some(ws_sender);
 
     if let Some(saved) = load_config() {
       initial.config = saved;
@@ -214,6 +215,7 @@ fn app() -> impl IntoElement {
       ),
       body: "by SpikeHD".to_string(),
       timestamp: Some(chrono::Utc::now().timestamp()),
+      timeout_secs: 5,
       icon: "https://avatars.githubusercontent.com/u/25207995?v=4".to_string(),
       guild_id: None,
       channel_id: None,

@@ -98,6 +98,8 @@ pub struct NotificationInner {
   pub id: Option<String>,
   pub guild_id: Option<String>,
   pub channel_id: Option<String>,
+  #[serde(rename = "type")]
+  pub message_type: Option<u32>,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
@@ -117,6 +119,7 @@ where
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct NotificationCreatePayload {
+  pub channel_id: Option<String>,
   pub message: Option<NotificationInner>,
   pub icon_url: Option<String>,
   pub title: String,

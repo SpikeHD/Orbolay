@@ -3,6 +3,10 @@ use std::sync::Arc;
 
 pub type NotificationFn = Arc<dyn Fn() + Send + Sync>;
 
+fn default_timeout_secs() -> i64 {
+  5
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum NotificationKind {
   Primary,
@@ -25,8 +29,12 @@ pub struct Notification {
   pub guild_id: Option<String>,
   pub channel_id: Option<String>,
   pub message_id: Option<String>,
+
+  // Stuff not part of the Discord payload
   #[serde(default, skip_deserializing)]
   pub timestamp: Option<i64>,
+  #[serde(default = "default_timeout_secs", skip_deserializing)]
+  pub timeout_secs: i64,
   #[serde(skip)]
   pub actions: Option<Vec<NotificationAction>>,
 }
@@ -69,6 +77,7 @@ impl Default for Notification {
       channel_id: None,
       message_id: None,
       timestamp: Some(chrono::Utc::now().timestamp()),
+      timeout_secs: 5,
       actions: None,
     }
   }

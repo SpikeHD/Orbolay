@@ -6,13 +6,16 @@ use crate::ipc::{
   setters::{get_channel, get_guild},
   subscribe_voice_channel, unsubscribe_voice_channel,
 };
+use std::sync::Arc;
+
 use crate::log;
-use crate::payloads::Notification;
 use crate::payloads::ipc::{
   NotificationCreatePayload, ReadyPayload, RpcVoiceState, SpeakingPayload,
   VoiceChannelSelectPayload, VoiceConnectionStatusPayload, VoiceSettingsUpdatePayload,
 };
+use crate::payloads::{Notification, NotificationAction, NotificationKind};
 use crate::user::UserVoiceState;
+use crate::util::bridge::BridgeMessage;
 use crate::util::discord_auth::build_rpc_authorize_request;
 use crate::{error, success};
 
@@ -158,19 +161,70 @@ pub fn handle_ipc_message(
     "NOTIFICATION_CREATE" => {
       let data = serde_json::from_value::<NotificationCreatePayload>(data)?;
       let message = data.message.as_ref();
+      let is_call = message.and_then(|m| m.message_type).is_some_and(|t| t == 3);
+      let channel_id = message
+        .and_then(|m| m.channel_id.clone())
+        .or_else(|| data.channel_id.clone());
+      let guild_id = message.and_then(|m| m.guild_id.clone());
+
+      let actions = if is_call {
+        channel_id.as_ref().map(|cid| {
+          vec![
+            NotificationAction {
+              label: "Accept".to_string(),
+              action: Arc::new({
+                let cid = cid.clone();
+                let shared = shared.clone();
+                move || {
+                  shared.write().unwrap().send(BridgeMessage {
+                    cmd: "ACCEPT_CALL".to_string(),
+                    data: serde_json::json!({ "channel_id": &*cid }),
+                  });
+                }
+              }),
+              kind: NotificationKind::Primary,
+            },
+            NotificationAction {
+              label: "Open".to_string(),
+              action: Arc::new({
+                let cid = cid.clone();
+                let gid = guild_id.clone().unwrap_or_default();
+                let shared = shared.clone();
+                let redraw = redraw_tx.clone();
+                move || {
+                  let mut st = shared.write().unwrap();
+                  st.send(BridgeMessage {
+                    cmd: "OPEN_CHANNEL".to_string(),
+                    data: serde_json::json!({ "channel_id": cid, "guild_id": gid }),
+                  });
+                  st.messages
+                    .retain(|m| m.channel_id.as_deref() != Some(&cid));
+                  drop(st);
+                  let _ = redraw.send(());
+                }
+              }),
+              kind: NotificationKind::Secondary,
+            },
+          ]
+        })
+      } else {
+        None
+      };
+
       let notification = Notification {
-        guild_id: message.and_then(|m| m.guild_id.clone()),
-        channel_id: message.and_then(|m| m.channel_id.clone()),
+        guild_id,
+        channel_id,
         message_id: message.and_then(|m| m.id.clone()),
         title: data.title.clone(),
         body: data.body.clone(),
         timestamp: Some(chrono::Utc::now().timestamp()),
+        timeout_secs: if is_call { 30 } else { 5 },
         icon: data
           .icon_url
           .clone()
-          .unwrap_or(String::new())
+          .unwrap_or_default()
           .replace(".webp", ".png"),
-        actions: None,
+        actions,
       };
       state.notify(notification);
     }

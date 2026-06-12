@@ -2,7 +2,8 @@ use interprocess::local_socket::prelude::*;
 
 use crate::app_state::SharedAppState;
 use crate::ipc::setters::{
-  disconnect, play_soundboard_sound, set_deafened, set_muted, stop_streaming,
+  deep_link_channel, disconnect, play_soundboard_sound, select_voice_channel, set_deafened,
+  set_muted, stop_streaming,
 };
 use crate::log;
 use crate::user::UserVoiceState;
@@ -41,6 +42,38 @@ pub fn handle_ui_message(
         .unwrap_or(false);
       drop(state);
       set_deafened(stream, !deafened)?;
+      return Ok(());
+    }
+    "OPEN_CHANNEL" => {
+      let channel_id = msg
+        .data
+        .get("channel_id")
+        .and_then(|v| v.as_str())
+        .unwrap_or_default()
+        .to_string();
+      let guild_id = msg
+        .data
+        .get("guild_id")
+        .and_then(|v| v.as_str())
+        .unwrap_or_default()
+        .to_string();
+      drop(state);
+      deep_link_channel(stream, &channel_id, &guild_id)?;
+      return Ok(());
+    }
+    "ACCEPT_CALL" => {
+      let channel_id = msg
+        .data
+        .get("channel_id")
+        .and_then(|v| v.as_str())
+        .unwrap_or_default()
+        .to_string();
+      state
+        .messages
+        .retain(|m| m.channel_id.as_deref() != Some(channel_id.as_str()));
+      drop(state);
+      select_voice_channel(stream, &channel_id)?;
+      let _ = redraw_tx.send(());
       return Ok(());
     }
     "DISCONNECT" => {

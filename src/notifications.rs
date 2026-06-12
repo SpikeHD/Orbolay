@@ -12,7 +12,7 @@ pub fn create_notification_thread(shared: SharedAppState, redraw_tx: flume::Send
 
         state.messages.retain(|message| {
           if let Some(ts) = message.timestamp {
-            return current_timestamp - ts < 5;
+            return current_timestamp - ts < message.timeout_secs;
           }
           true
         });

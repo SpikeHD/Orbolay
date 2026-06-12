@@ -104,6 +104,46 @@ pub fn get_channel(
   Ok(())
 }
 
+pub fn deep_link_channel(
+  stream: &mut LocalSocketStream,
+  channel_id: &str,
+  guild_id: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+  let guild_id = if guild_id.is_empty() { "@me" } else { guild_id };
+  ipc_write(
+    stream,
+    OP_FRAME,
+    &serde_json::to_string(&serde_json::json!({
+      "cmd": "DEEP_LINK",
+      "args": {
+        "type": "CHANNEL",
+        "params": {
+          "guildId": guild_id,
+          "channelId": channel_id,
+        }
+      },
+      "nonce": "DEEP_LINK",
+    }))?,
+  )?;
+  Ok(())
+}
+
+pub fn select_voice_channel(
+  stream: &mut LocalSocketStream,
+  channel_id: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+  ipc_write(
+    stream,
+    OP_FRAME,
+    &serde_json::to_string(&serde_json::json!({
+      "cmd": "SELECT_VOICE_CHANNEL",
+      "args": { "channel_id": channel_id },
+      "nonce": "SELECT_VOICE_CHANNEL",
+    }))?,
+  )?;
+  Ok(())
+}
+
 pub fn disconnect(stream: &mut LocalSocketStream) -> Result<(), Box<dyn std::error::Error>> {
   let payload = serde_json::json!({ "channel_id": Value::Null });
   ipc_write(

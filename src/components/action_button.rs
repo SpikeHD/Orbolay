@@ -26,6 +26,7 @@ impl Component for ActionButton {
       .height(Size::px(30.))
       .width(Size::px(80.))
       .corner_radius(CornerRadius::new_all(5.))
+      .margin(Gaps::new(0., 6., 0., 0.))
       .background(bg)
       .maybe(is_secondary, |el| {
         el.border(Border::new().fill(colors::MUTED_GRAY).width(1.))
