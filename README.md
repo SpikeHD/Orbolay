@@ -122,7 +122,7 @@ scoop install turbo/orbolay
 
 ### Arch
 ```sh
-yay -S orbolay-bin
+yay -S orbolay-git
 ```
 
 ### Void
