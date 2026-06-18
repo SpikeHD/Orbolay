@@ -42,6 +42,7 @@ mod logger;
 mod manager;
 mod notifications;
 mod payloads;
+mod target;
 mod transport;
 mod updates;
 mod user;
@@ -77,6 +78,9 @@ pub struct Args {
 
   #[options(help = "Open the configuration window")]
   config: bool,
+
+  #[options(help = "Target application to launch (if any)", free)]
+  target: Vec<String>,
 }
 
 fn main() {
@@ -128,6 +132,11 @@ fn main() {
         "You are using Wayland. Orbolay will probably not work correctly unless running with XWayland."
       );
     }
+  }
+
+  if args.target.len() > 0 {
+    log!("Launching child process: {:?}", args.target);
+    target::launch_target(args.target);
   }
 
   launch(
