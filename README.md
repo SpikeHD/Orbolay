@@ -79,6 +79,7 @@
 * [How to Use](#how-to-use)
   * [With Official Clients](#with-official-clients)
   * [With Modded Clients](#with-modded-clients)
+* [Using as a Wrapper Process](#using-as-a-wrapper-process)
 * [Configuration](#configuration)
 * [Other Notes](#other-notes)
   * [Hyprland](#hyprland)
@@ -157,6 +158,16 @@ With your client open:
 1. Install a compatible bridge plugin ([Shelter](https://github.com/SpikeHD/shelter-plugins?tab=readme-ov-file#orbolay-bridge) / [Vencord](https://github.com/SpikeHD/vc-orbolay-bridge), also available on [Equicord](https://github.com/Equicord/Equicord))
 2. Run the executable
 3. Press <kbd>Ctrl</kbd> + <kbd>`</kbd> to open the overlay and interact with voice controls
+
+# Using as a Wrapper Process
+
+Orbolay also works as a process wrapper, allowing you to have it only open when you run certain games. In Steam, for example, you
+can have Orbolay run when your game launches by setting this as your launch options (combined with whatever other options
+you may be using):
+
+```sh
+orbolay -- %command%
+```
 
 # Configuration
 
