@@ -6,7 +6,7 @@ pub fn launch_target(cmd: Vec<String>) {
     let mut proc = Command::new(cmd[0].clone());
 
     if let Some(args) = args {
-        proc.args(args);
+      proc.args(args);
     }
 
     let _ = proc.status();

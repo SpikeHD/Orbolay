@@ -48,6 +48,7 @@ mod updates;
 mod user;
 mod util;
 mod websocket;
+mod window;
 
 static TWEMOJI_FONT: &[u8] = include_bytes!("../assets/fonts/Twemoji.ttf");
 
@@ -134,7 +135,7 @@ fn main() {
     }
   }
 
-  if args.target.len() > 0 {
+  if !args.target.is_empty() {
     log!("Launching child process: {:?}", args.target);
     target::launch_target(args.target);
   }
@@ -205,9 +206,7 @@ fn app() -> impl IntoElement {
     let shared: SharedAppState = std::sync::Arc::new(std::sync::RwLock::new(initial));
 
     if !args.debug {
-      Platform::get().with_window(None, |w| {
-        w.set_cursor_hittest(false).unwrap_or_default();
-      });
+      window::set_clickable(false);
     }
 
     #[cfg(not(target_os = "macos"))]
@@ -294,9 +293,7 @@ fn app() -> impl IntoElement {
     if !is_open {
       soundboard_open.set(false);
     }
-    Platform::get().with_window(None, move |w| {
-      let _ = w.set_cursor_hittest(is_open);
-    });
+    window::set_clickable(is_open);
   });
 
   let state = app_state.read();
