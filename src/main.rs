@@ -120,7 +120,9 @@ fn main() {
 
   let config = load_config().unwrap_or_default();
 
-  if let Some(software_rendering) = config.software_rendering && software_rendering {
+  if let Some(software_rendering) = config.software_rendering
+    && software_rendering
+  {
     unsafe { std::env::set_var("FREYA_RENDERER", "software") };
   }
 
