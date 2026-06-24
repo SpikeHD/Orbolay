@@ -183,6 +183,8 @@ pub struct Config {
   pub is_keybind_enabled: Option<bool>,
   #[serde(default)]
   pub transport_mode: TransportMode,
+  #[serde(default)]
+  pub software_rendering: Option<bool>,
 }
 
 impl Default for Config {
@@ -202,6 +204,7 @@ impl Default for Config {
       messages_semitransparent: false,
       is_keybind_enabled: None,
       transport_mode: TransportMode::Ipc,
+      software_rendering: None,
     }
   }
 }

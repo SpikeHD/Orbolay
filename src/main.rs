@@ -118,8 +118,13 @@ fn main() {
     std::process::exit(0);
   }
 
-  let display = specific_monitor_or_primary();
+  let config = load_config().unwrap_or_default();
 
+  if let Some(software_rendering) = config.software_rendering && software_rendering {
+    unsafe { std::env::set_var("FREYA_RENDERER", "software") };
+  }
+
+  let display = specific_monitor_or_primary();
   let monitor_position = (display.x, display.y);
 
   // Compute the initial window size for the chosen display.

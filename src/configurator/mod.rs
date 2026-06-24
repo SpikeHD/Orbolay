@@ -216,6 +216,15 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
     })
     .child(divider())
     .child(SettingRow {
+      name: "Force Software Renderer".into(),
+      description: Some("Use software rendering instead of hardware acceleration. Requires restart.".into()),
+      kind: SettingKind::Toggle(config.software_rendering.unwrap_or(false)),
+      on_change: make_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
+        cfg.software_rendering = Some(v == "true");
+      }),
+      disabled: false,
+    })
+    .child(SettingRow {
       name: "Display Voice Members".into(),
       description: Some("Control when and how voice users are visible".into()),
       kind: SettingKind::Dropdown(
