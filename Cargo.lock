@@ -29,36 +29,16 @@ dependencies = [
 
 [[package]]
 name = "accesskit_atspi_common"
-version = "0.18.1"
+version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e8c61bee90b42a772d39d06a740207dc71a4e780004ace1db8d99fb1baaa954"
+checksum = "7e98018dbef3583d751dbb96e07b8728fb99581360e1c3df408af16f4a80b821"
 dependencies = [
  "accesskit",
- "accesskit_consumer 0.36.0",
+ "accesskit_consumer",
  "atspi-common",
  "phf",
  "serde",
  "zvariant",
-]
-
-[[package]]
-name = "accesskit_consumer"
-version = "0.35.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "53cf47daed85312e763fbf85ceca136e0d7abc68e0a7e12abe11f48172bc3b10"
-dependencies = [
- "accesskit",
- "hashbrown 0.16.1",
-]
-
-[[package]]
-name = "accesskit_consumer"
-version = "0.36.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "25e0d7e25d06f4dc21d1774d67146e9e80d6789216cbd4d1e88185b0095dba60"
-dependencies = [
- "accesskit",
- "hashbrown 0.16.1",
 ]
 
 [[package]]
@@ -72,13 +52,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "accesskit_ios"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "02ecb52198c7cf5f8d3e9ffc03d2ca0a5c7201926befd96721437829da4c5c6a"
+dependencies = [
+ "accesskit",
+ "accesskit_consumer",
+ "hashbrown 0.16.1",
+ "objc2 0.5.2",
+ "objc2-foundation 0.2.2",
+ "objc2-ui-kit",
+]
+
+[[package]]
 name = "accesskit_macos"
 version = "0.26.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "17cb8b66cef272d48161b02a6317cc2bdd5f98bb0a5e79c68f704a5862aa396b"
 dependencies = [
  "accesskit",
- "accesskit_consumer 0.37.0",
+ "accesskit_consumer",
  "hashbrown 0.16.1",
  "objc2 0.5.2",
  "objc2-app-kit 0.2.2",
@@ -87,9 +81,9 @@ dependencies = [
 
 [[package]]
 name = "accesskit_unix"
-version = "0.21.1"
+version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b016ca8db0ea0ea2ceff29a9d6240391492d960716aa471967c00e8cc8cb197c"
+checksum = "5376ba4cc23312587634abb5250b1ce8618f01a55915608209aafd01efb4bf8c"
 dependencies = [
  "accesskit",
  "accesskit_atspi_common",
@@ -105,12 +99,12 @@ dependencies = [
 
 [[package]]
 name = "accesskit_windows"
-version = "0.32.1"
+version = "0.33.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eff7009f1a532e917d66970a1e80c965140c6cfbbabbdde3d64e5431e6c78e21"
+checksum = "36e93ac7bf50b964f1cbb75f741629a4e950571baa1ef1274457ab5a80d9bcc2"
 dependencies = [
  "accesskit",
- "accesskit_consumer 0.35.0",
+ "accesskit_consumer",
  "hashbrown 0.16.1",
  "static_assertions",
  "windows",
@@ -119,11 +113,12 @@ dependencies = [
 
 [[package]]
 name = "accesskit_winit"
-version = "0.32.2"
+version = "0.33.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1fe9a94394896352cc4660ca2288bd4ef883d83238853c038b44070c8f134313"
+checksum = "41fe5862066316f6caaf02cd3aecd54bced25503ac5dbbfd0d03a42bc1246217"
 dependencies = [
  "accesskit",
+ "accesskit_ios",
  "accesskit_macos",
  "accesskit_unix",
  "accesskit_windows",
@@ -1503,8 +1498,7 @@ checksum = "d8866fac38f53fc87fa3ae1b09ddd723e0482f8fa74323518b4c59df2c55a00a"
 [[package]]
 name = "freya"
 version = "0.4.0-rc.23"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "efaf02313d620a3bbdacf4ce21aafb61ec007e7370a709af5555a0ae4c293b93"
+source = "git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position#6ec6065d259909ebdc8e9d037a56650a69e31d05"
 dependencies = [
  "cfg-if",
  "freya-android",
@@ -1513,7 +1507,7 @@ dependencies = [
  "freya-components",
  "freya-core",
  "freya-edit",
- "freya-engine",
+ "freya-engine 0.4.0-rc.23 (git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position)",
  "freya-performance-plugin",
  "freya-winit",
  "torin",
@@ -1522,8 +1516,7 @@ dependencies = [
 [[package]]
 name = "freya-android"
 version = "0.4.0-rc.23"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "423e7fc34643a65c0f9e7989f8a42aeb8234f645cd588dddb43f8ab6e6bcfb79"
+source = "git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position#6ec6065d259909ebdc8e9d037a56650a69e31d05"
 dependencies = [
  "freya-components",
  "freya-core",
@@ -1536,8 +1529,7 @@ dependencies = [
 [[package]]
 name = "freya-animation"
 version = "0.4.0-rc.23"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af9a3285ae8d99c1620e49378929ca9122a8f89dc3757563412f6cd145d782d2"
+source = "git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position#6ec6065d259909ebdc8e9d037a56650a69e31d05"
 dependencies = [
  "async-io",
  "easer",
@@ -1547,8 +1539,7 @@ dependencies = [
 [[package]]
 name = "freya-clipboard"
 version = "0.4.0-rc.23"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7a786a3310bc7a95b106c44b6187657d1d29471245c0d078a4b10df68692d2e8"
+source = "git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position#6ec6065d259909ebdc8e9d037a56650a69e31d05"
 dependencies = [
  "copypasta",
  "freya-core",
@@ -1557,19 +1548,20 @@ dependencies = [
 [[package]]
 name = "freya-components"
 version = "0.4.0-rc.23"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aefafd2736a4c85004184917baab2f1f82243039eb0a0190ccf88c548ae41ac3"
+source = "git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position#6ec6065d259909ebdc8e9d037a56650a69e31d05"
 dependencies = [
  "accesskit",
  "anyhow",
  "async-io",
+ "async-lock",
  "blocking",
  "bytes",
  "cfg-if",
+ "euclid",
  "freya-animation",
  "freya-core",
  "freya-edit",
- "freya-engine",
+ "freya-engine 0.4.0-rc.23 (git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position)",
  "freya-sdk",
  "paste",
  "thiserror 2.0.18",
@@ -1580,15 +1572,14 @@ dependencies = [
 [[package]]
 name = "freya-core"
 version = "0.4.0-rc.23"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f84e807b48ffbf889d02594e0508a08bb013b3bde6bbd804fef3fe9a15e98f3a"
+source = "git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position#6ec6065d259909ebdc8e9d037a56650a69e31d05"
 dependencies = [
  "accesskit",
  "async-broadcast",
  "bitflags 2.13.0",
  "bytes",
  "cursor-icon",
- "freya-engine",
+ "freya-engine 0.4.0-rc.23 (git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position)",
  "futures-channel",
  "futures-lite",
  "futures-util",
@@ -1609,8 +1600,7 @@ dependencies = [
 [[package]]
 name = "freya-edit"
 version = "0.4.0-rc.23"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8d7591a171abd8d8732b0ee75147aa332e541afb58373d2e7ac5f33d0d55f6f2"
+source = "git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position#6ec6065d259909ebdc8e9d037a56650a69e31d05"
 dependencies = [
  "bitflags 2.13.0",
  "freya-clipboard",
@@ -1631,21 +1621,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "freya-engine"
+version = "0.4.0-rc.23"
+source = "git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position#6ec6065d259909ebdc8e9d037a56650a69e31d05"
+dependencies = [
+ "freya-skia-safe",
+]
+
+[[package]]
 name = "freya-performance-plugin"
 version = "0.4.0-rc.23"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bb3abee999cd1adecea15d0b348d512f09987ca4c190ba53073cc476efdbadf9"
+source = "git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position#6ec6065d259909ebdc8e9d037a56650a69e31d05"
 dependencies = [
  "freya-core",
- "freya-engine",
+ "freya-engine 0.4.0-rc.23 (git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position)",
  "freya-winit",
 ]
 
 [[package]]
 name = "freya-sdk"
 version = "0.4.0-rc.23"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a2278560b6ff9d0ae8a8258533266e87524a6fb6ce9bea76f9f4d9a362175b9e"
+source = "git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position#6ec6065d259909ebdc8e9d037a56650a69e31d05"
 dependencies = [
  "async-io",
  "freya-core",
@@ -1696,8 +1692,7 @@ dependencies = [
 [[package]]
 name = "freya-winit"
 version = "0.4.0-rc.23"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f54eb4abb9eb7bea9178ad31982b9544fabbb8d29248f8c1755532be790505d0"
+source = "git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position#6ec6065d259909ebdc8e9d037a56650a69e31d05"
 dependencies = [
  "accesskit",
  "accesskit_winit",
@@ -1707,7 +1702,7 @@ dependencies = [
  "freya-clipboard",
  "freya-components",
  "freya-core",
- "freya-engine",
+ "freya-engine 0.4.0-rc.23 (git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position)",
  "futures-channel",
  "futures-lite",
  "futures-util",
@@ -3291,13 +3286,12 @@ checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
 
 [[package]]
 name = "open"
-version = "5.3.5"
+version = "5.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2fbaa89d2ddc8473c78a3adf69eea8cffa28c483b8e02a971ef31527cd0fc92c"
+checksum = "cd8d3b65c44123a56e0133d2cd06ce4361bd3ca99d41198b2f25e3c3db9b8b4a"
 dependencies = [
  "is-wsl",
  "libc",
- "pathdiff",
 ]
 
 [[package]]
@@ -3327,6 +3321,7 @@ dependencies = [
  "display-info",
  "flume",
  "freya",
+ "freya-engine 0.4.0-rc.23 (registry+https://github.com/rust-lang/crates.io-index)",
  "gumdrop",
  "interprocess",
  "native-dialog",
@@ -3405,16 +3400,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "35fb2e5f958ec131621fdd531e9fc186ed768cbe395337403ae56c17a74c68ec"
 
 [[package]]
-name = "pathdiff"
-version = "0.2.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df94ce210e5bc13cb6651479fa48d14f601d9858cfe0467f43ae157023b938d3"
-
-[[package]]
 name = "pathgraph"
 version = "0.4.0-rc.23"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9113ea1590c04a912fc9c5404f31fe362a0ac4e9bfb89e09b6440ebbb352f5a3"
+source = "git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position#6ec6065d259909ebdc8e9d037a56650a69e31d05"
 
 [[package]]
 name = "percent-encoding"
@@ -3676,8 +3664,7 @@ checksum = "f8dcc9c7d52a811697d2151c701e0d08956f92b0e24136cf4cf27b57a6a0d9bf"
 [[package]]
 name = "ragnarok"
 version = "0.4.0-rc.23"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e69c32d3c252db393e5bf1fb7990958f443c42bbd976aabbbae3427848dc8b0d"
+source = "git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position#6ec6065d259909ebdc8e9d037a56650a69e31d05"
 dependencies = [
  "euclid",
  "hotpath",
@@ -4600,8 +4587,7 @@ checksum = "756daf9b1013ebe47a8776667b466417e2d4c5679d441c26230efd9ef78692db"
 [[package]]
 name = "torin"
 version = "0.4.0-rc.23"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bcfd20a0a5301854f64cef8f0ca637cb1f7dad9eb37bc0506efa17ef6792f6ab"
+source = "git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position#6ec6065d259909ebdc8e9d037a56650a69e31d05"
 dependencies = [
  "euclid",
  "itertools 0.14.0",
