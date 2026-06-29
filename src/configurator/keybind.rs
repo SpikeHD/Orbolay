@@ -7,7 +7,7 @@ use freya::animation::*;
 use freya::prelude::*;
 use rdev::Key;
 
-use crate::configurator::{SettingKind, setting::SettingChange};
+use crate::configurator::setting::SettingChange;
 use crate::keys::{bind::key_to_string, convert::code_to_rdev};
 
 pub fn keys_display(keys: &[Key]) -> String {
@@ -21,11 +21,11 @@ pub fn keys_display(keys: &[Key]) -> String {
 #[derive(PartialEq, Clone)]
 pub struct KeybindControl {
   initial: Option<Vec<Key>>,
-  on_change: EventHandler<SettingKind>,
+  on_change: EventHandler<SettingChange>,
 }
 
 impl KeybindControl {
-  pub fn new(initial: Option<Vec<Key>>, on_change: EventHandler<SettingKind>) -> Self {
+  pub fn new(initial: Option<Vec<Key>>, on_change: EventHandler<SettingChange>) -> Self {
     Self { initial, on_change }
   }
 }
