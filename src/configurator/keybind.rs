@@ -7,7 +7,7 @@ use freya::animation::*;
 use freya::prelude::*;
 use rdev::Key;
 
-use crate::configurator::setting::SettingChange;
+use crate::configurator::{SettingKind, setting::SettingChange};
 use crate::keys::{bind::key_to_string, convert::code_to_rdev};
 
 pub fn keys_display(keys: &[Key]) -> String {
