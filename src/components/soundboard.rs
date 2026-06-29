@@ -87,9 +87,12 @@ impl Component for SoundButton {
           .content(Content::wrap())
           .padding(Gaps::new_symmetric(4., 2.))
           .child(
-            rect()
-              .padding(Gaps::new(0., 4., 0., 0.))
-              .child(label().color(self.theme.text_color).font_size(14.).text(text)),
+            rect().padding(Gaps::new(0., 4., 0., 0.)).child(
+              label()
+                .color(self.theme.text_color)
+                .font_size(14.)
+                .text(text),
+            ),
           )
           .child(
             label()
@@ -185,33 +188,35 @@ impl Component for Soundboard {
                   } else {
                     guild_names.get(&guild_name).cloned().unwrap_or(guild_name)
                   };
-                  col.child(GuildLabel {
-                    name: label,
-                    theme: self.theme,
-                  }).child(
-                    guild_sounds.into_iter().fold(
-                      rect()
-                        .direction(Direction::Horizontal)
-                        .content(Content::wrap())
-                        .width(Size::fill())
-                        .padding(Gaps::new(2., 0., 6., 0.)),
-                      |row, mut sound| {
-                        if let Some(guild_id) = &sound.guild_id
-                          && !app_state.read().premium_type.has_nitro()
-                          && guild_id != &"0".to_string()
-                          && guild_id != &app_state.read().current_guild_id
-                        {
-                          sound.available = false;
-                        }
+                  col
+                    .child(GuildLabel {
+                      name: label,
+                      theme: self.theme,
+                    })
+                    .child(
+                      guild_sounds.into_iter().fold(
+                        rect()
+                          .direction(Direction::Horizontal)
+                          .content(Content::wrap())
+                          .width(Size::fill())
+                          .padding(Gaps::new(2., 0., 6., 0.)),
+                        |row, mut sound| {
+                          if let Some(guild_id) = &sound.guild_id
+                            && !app_state.read().premium_type.has_nitro()
+                            && guild_id != &"0".to_string()
+                            && guild_id != &app_state.read().current_guild_id
+                          {
+                            sound.available = false;
+                          }
 
-                        row.child(SoundButton {
-                          sound,
-                          app_state,
-                          theme: self.theme,
-                        })
-                      },
-                    ),
-                  )
+                          row.child(SoundButton {
+                            sound,
+                            app_state,
+                            theme: self.theme,
+                          })
+                        },
+                      ),
+                    )
                 },
               ),
             ),

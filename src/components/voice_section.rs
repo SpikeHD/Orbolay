@@ -4,7 +4,7 @@ use crate::{
   components::UserRow,
   config::{AxisAlignment, CornerAlignment, DisplayVoiceMembers},
   user::{User, UserVoiceState},
-  util::{theme::Theme, text::censor},
+  util::{text::censor, theme::Theme},
 };
 
 #[derive(PartialEq)]

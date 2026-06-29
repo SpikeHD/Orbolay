@@ -26,11 +26,11 @@ impl Theme {
   pub fn from_values(accent: Color, text_color: Color, border_radius: f32) -> Self {
     Self {
       gray: accent,
-      darkish_gray: blend(DARKISH_GRAY, accent, 0.28),
-      light_gray: blend(LIGHT_GRAY, accent, 0.35),
-      superlight_gray: blend(SUPERLIGHT_GRAY, accent, 0.12),
+      darkish_gray: blend(DARKISH_GRAY, accent, 0.35),
+      light_gray: blend(LIGHT_GRAY, accent, 0.45),
+      superlight_gray: blend(SUPERLIGHT_GRAY, accent, 0.22),
       muted_gray: blend(MUTED_GRAY, accent, 0.22),
-      transparent_gray: with_alpha(blend(GRAY, accent, 0.35), 0x56),
+      transparent_gray: with_alpha(accent, 0x56),
       text_color,
       border_radius,
     }

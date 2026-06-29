@@ -1,10 +1,7 @@
 use freya::prelude::*;
 
 use crate::{
-  app_state::AppState,
-  components::MessageRow,
-  config::CornerAlignment,
-  payloads::Notification,
+  app_state::AppState, components::MessageRow, config::CornerAlignment, payloads::Notification,
   util::theme::Theme,
 };
 

@@ -1,6 +1,6 @@
 use freya::prelude::*;
 
-use crate::configurator::setting::SettingChange;
+use crate::{configurator::setting::SettingChange, util::theme};
 
 #[derive(PartialEq, Clone)]
 pub struct ColorPickerControl {
@@ -26,6 +26,13 @@ impl Component for ColorPickerControl {
       }
     };
 
-    ColorPicker::new(on_change).value(*value.read())
+    rect()
+      .border(Border::new().fill(theme::MUTED_GRAY).width(1.))
+      .corner_radius(5.)
+      .child(
+        rect()
+          .margin(Gaps::new_all(1.))
+          .child(ColorPicker::new(on_change).value(*value.read())),
+      )
   }
 }

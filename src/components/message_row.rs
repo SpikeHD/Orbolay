@@ -4,12 +4,7 @@ use crate::{
   app_state::AppState,
   components::ActionButton,
   payloads::Notification,
-  util::{
-    bridge::BridgeMessage,
-    theme::Theme,
-    image::avatar_image,
-    text::strip,
-  },
+  util::{bridge::BridgeMessage, image::avatar_image, text::strip, theme::Theme},
 };
 
 #[derive(PartialEq)]

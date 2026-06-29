@@ -3,7 +3,7 @@ use freya::prelude::*;
 
 use crate::{
   user::{User, UserVoiceState},
-  util::{theme::Theme, image::avatar_image},
+  util::{image::avatar_image, theme::Theme},
 };
 
 static DEAFENED_SVG: &[u8] = include_bytes!("../../assets/deafened.svg");
