@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use freya::prelude::{Alignment, Gaps};
+use freya::{engine::prelude::RGB, prelude::{Alignment, Gaps}};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -62,6 +62,7 @@ impl From<String> for DisplayVoiceMembers {
 
 #[cfg(not(target_os = "macos"))]
 use crate::keys::bind::DEFAULT_OVERLAY_TOGGLE;
+use crate::util::colors::{self, to_tuple};
 
 #[derive(Debug, Clone, Deserialize, PartialEq)]
 pub enum AxisAlignment {
@@ -184,7 +185,11 @@ pub struct Config {
   #[serde(default)]
   pub transport_mode: TransportMode,
   #[serde(default)]
+<<<<<<< HEAD
   pub software_rendering: Option<bool>,
+=======
+  pub accent: (u8, u8, u8),
+>>>>>>> 8ad51a7 (feat: refactor settings, add color picker)
 }
 
 impl Default for Config {
@@ -204,7 +209,11 @@ impl Default for Config {
       messages_semitransparent: false,
       is_keybind_enabled: None,
       transport_mode: TransportMode::Ipc,
+<<<<<<< HEAD
       software_rendering: None,
+=======
+      accent: to_tuple(colors::GRAY)
+>>>>>>> 8ad51a7 (feat: refactor settings, add color picker)
     }
   }
 }

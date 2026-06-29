@@ -17,7 +17,7 @@ pub fn keys_display(keys: &[Key]) -> String {
     .join(" + ")
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub struct KeybindControl {
   initial: Option<Vec<Key>>,
   on_change: EventHandler<Vec<Key>>,

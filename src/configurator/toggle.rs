@@ -1,13 +1,15 @@
 use freya::prelude::*;
 
-#[derive(PartialEq)]
+use crate::configurator::setting::SettingChange;
+
+#[derive(PartialEq, Clone)]
 pub struct ToggleControl {
   initial: bool,
-  on_change: EventHandler<String>,
+  on_change: EventHandler<SettingChange>,
 }
 
 impl ToggleControl {
-  pub fn new(initial: bool, on_change: EventHandler<String>) -> Self {
+  pub fn new(initial: bool, on_change: EventHandler<SettingChange>) -> Self {
     Self { initial, on_change }
   }
 }
@@ -18,7 +20,7 @@ impl Component for ToggleControl {
     let mut toggled = use_state(|| self.initial);
     Switch::new().toggled(toggled()).on_toggle(move |_| {
       toggled.toggle();
-      on_change.call(if toggled() { "true" } else { "false" }.to_string());
+      on_change.call(SettingChange::Bool(*toggled.read()));
     })
   }
 }
