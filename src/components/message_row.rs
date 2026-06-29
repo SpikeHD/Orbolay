@@ -4,13 +4,19 @@ use crate::{
   app_state::AppState,
   components::ActionButton,
   payloads::Notification,
-  util::{bridge::BridgeMessage, colors, image::avatar_image, text::strip},
+  util::{
+    bridge::BridgeMessage,
+    colors::ThemeColors,
+    image::avatar_image,
+    text::strip,
+  },
 };
 
 #[derive(PartialEq)]
 pub struct MessageRow {
   pub app_state: State<AppState>,
   pub message: Notification,
+  pub theme: ThemeColors,
 }
 
 impl Component for MessageRow {
@@ -33,7 +39,7 @@ impl Component for MessageRow {
       .margin(Gaps::new_all(6.))
       .padding(Gaps::new_all(10.))
       .corner_radius(CornerRadius::new_all(10.))
-      .background(colors::GRAY)
+      .background(self.theme.gray)
       .overflow(Overflow::Clip)
       .on_press(move |_| {
         app_state.write().send(BridgeMessage {
@@ -69,7 +75,7 @@ impl Component for MessageRow {
             label()
               .font_size(14.)
               .font_weight(FontWeight::BOLD)
-              .color(Color::WHITE)
+              .color(self.theme.text_color)
               .margin(Gaps::new(0., 0., 4., 0.))
               .max_lines(1)
               .text(self.message.title.clone())
@@ -78,7 +84,7 @@ impl Component for MessageRow {
           .child(
             label()
               .font_size(14.)
-              .color(colors::SUPERLIGHT_GRAY)
+              .color(self.theme.text_color)
               .max_lines(2)
               .text(strip(&self.message.body))
               .text_overflow(TextOverflow::Ellipsis),
@@ -106,6 +112,7 @@ impl Component for MessageRow {
                         }),
                         label: action.label.clone(),
                         kind: action.kind.clone(),
+                        theme: self.theme,
                       }
                       .into()
                     })

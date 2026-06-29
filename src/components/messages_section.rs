@@ -1,7 +1,11 @@
 use freya::prelude::*;
 
 use crate::{
-  app_state::AppState, components::MessageRow, config::CornerAlignment, payloads::Notification,
+  app_state::AppState,
+  components::MessageRow,
+  config::CornerAlignment,
+  payloads::Notification,
+  util::colors::ThemeColors,
 };
 
 #[derive(PartialEq)]
@@ -14,6 +18,7 @@ pub struct MessagesSection {
   pub message_offset_y: i32,
   pub messages_semitransparent: bool,
   pub app_state: State<AppState>,
+  pub theme: ThemeColors,
 }
 
 impl Component for MessagesSection {
@@ -44,6 +49,7 @@ impl Component for MessagesSection {
           el.child(MessageRow {
             app_state: self.app_state,
             message: message.clone(),
+            theme: self.theme,
           })
         }
       },

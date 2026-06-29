@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use freya::prelude::{Alignment, Gaps};
+use freya::prelude::{Alignment, Color, Gaps};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -154,6 +154,14 @@ impl CornerAlignment {
   }
 }
 
+fn default_accent() -> (u8, u8, u8) {
+  to_tuple(colors::GRAY)
+}
+
+fn default_text() -> (u8, u8, u8) {
+  to_tuple(Color::WHITE)
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Config {
@@ -186,8 +194,10 @@ pub struct Config {
   pub transport_mode: TransportMode,
   #[serde(default)]
   pub software_rendering: Option<bool>,
-  #[serde(default)]
+  #[serde(default = "default_accent")]
   pub accent: (u8, u8, u8),
+  #[serde(default = "default_text")]
+  pub text_color: (u8, u8, u8),
 }
 
 impl Default for Config {
@@ -209,6 +219,7 @@ impl Default for Config {
       transport_mode: TransportMode::Ipc,
       software_rendering: None,
       accent: to_tuple(colors::GRAY),
+      text_color: to_tuple(Color::WHITE),
     }
   }
 }

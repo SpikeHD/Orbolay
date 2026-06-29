@@ -247,6 +247,16 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
     })
     .child(divider())
     .child(SettingRow {
+      name: "Text Color".into(),
+      description: Some("The text color for the overlay".into()),
+      kind: SettingKind::Color(from_tuple(config.text_color)),
+      on_change: make_color_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
+        cfg.text_color = v;
+      }),
+      disabled: false,
+    })
+    .child(divider())
+    .child(SettingRow {
       name: "Force Software Renderer".into(),
       description: Some(
         "Use software rendering instead of hardware acceleration. Requires restart.".into(),
