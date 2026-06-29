@@ -8,7 +8,7 @@ use crate::{
     color_picker::ColorPickerControl, dropdown::DropdownControl, input::InputControl,
     toggle::ToggleControl,
   },
-  util::colors::MUTED_GRAY,
+  util::theme::MUTED_GRAY,
 };
 
 #[cfg(not(target_os = "macos"))]

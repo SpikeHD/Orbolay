@@ -6,7 +6,7 @@ use crate::{
   payloads::Notification,
   util::{
     bridge::BridgeMessage,
-    colors::ThemeColors,
+    theme::Theme,
     image::avatar_image,
     text::strip,
   },
@@ -16,7 +16,7 @@ use crate::{
 pub struct MessageRow {
   pub app_state: State<AppState>,
   pub message: Notification,
-  pub theme: ThemeColors,
+  pub theme: Theme,
 }
 
 impl Component for MessageRow {
@@ -38,7 +38,7 @@ impl Component for MessageRow {
       .max_width(Size::px(400.))
       .margin(Gaps::new_all(6.))
       .padding(Gaps::new_all(10.))
-      .corner_radius(CornerRadius::new_all(10.))
+      .corner_radius(CornerRadius::new_all(self.theme.border_radius))
       .background(self.theme.gray)
       .overflow(Overflow::Clip)
       .on_press(move |_| {

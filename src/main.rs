@@ -26,7 +26,7 @@ use crate::{
   payloads::{Notification, NotificationAction, NotificationKind},
   transport::create_transport_thread,
   updates::maybe_notify_update,
-  util::{bridge::BridgeMessage, colors},
+  util::{bridge::BridgeMessage, theme},
 };
 
 mod app_state;
@@ -309,9 +309,10 @@ fn app() -> impl IntoElement {
   let is_open = state.is_open;
   let is_censor = state.is_censor;
   let config = state.config.clone();
-  let theme = colors::ThemeColors::from_accent(
-    colors::from_tuple(config.accent),
-    colors::from_tuple(config.text_color),
+  let theme = theme::Theme::from_values(
+    theme::from_tuple(config.accent),
+    theme::from_tuple(config.text_color),
+    config.border_radius,
   );
   let current_user = state
     .voice_users

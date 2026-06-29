@@ -4,7 +4,7 @@ use serde_json::json;
 use crate::{
   app_state::AppState,
   payloads::SoundboardSoundPayload,
-  util::{bridge::BridgeMessage, colors::ThemeColors},
+  util::{bridge::BridgeMessage, theme::Theme},
 };
 
 fn guild_order(guild_id: &str, current: &str) -> u8 {
@@ -21,7 +21,7 @@ fn guild_order(guild_id: &str, current: &str) -> u8 {
 struct SoundButton {
   sound: SoundboardSoundPayload,
   app_state: State<AppState>,
-  theme: ThemeColors,
+  theme: Theme,
 }
 
 impl Component for SoundButton {
@@ -51,7 +51,7 @@ impl Component for SoundButton {
       .width(Size::percent(33.3))
       .height(Size::px(40.))
       .margin(Gaps::new_all(2.))
-      .corner_radius(CornerRadius::new_all(6.))
+      .corner_radius(CornerRadius::new_all(self.theme.border_radius))
       .maybe(!available, |el| el.opacity(0.4))
       .background(if *hovered.read() {
         self.theme.light_gray
@@ -107,7 +107,7 @@ impl Component for SoundButton {
 #[derive(PartialEq)]
 struct GuildLabel {
   name: String,
-  theme: ThemeColors,
+  theme: Theme,
 }
 
 impl Component for GuildLabel {
@@ -123,7 +123,7 @@ impl Component for GuildLabel {
 #[derive(PartialEq)]
 pub struct Soundboard {
   pub app_state: State<AppState>,
-  pub theme: ThemeColors,
+  pub theme: Theme,
 }
 
 impl Component for Soundboard {
@@ -149,7 +149,7 @@ impl Component for Soundboard {
       rect()
         .direction(Direction::Vertical)
         .background(self.theme.gray)
-        .corner_radius(CornerRadius::new_all(10.))
+        .corner_radius(CornerRadius::new_all(self.theme.border_radius))
         .max_width(Size::px(400.))
         .margin(Gaps::new(0., 0., 8., 0.))
         .padding(Gaps::new_all(16.))
@@ -165,7 +165,7 @@ impl Component for Soundboard {
       rect()
         .direction(Direction::Vertical)
         .background(self.theme.gray)
-        .corner_radius(CornerRadius::new_all(10.))
+        .corner_radius(CornerRadius::new_all(self.theme.border_radius))
         .max_width(Size::px(400.))
         .height(Size::px(220.))
         .margin(Gaps::new(0., 0., 8., 0.))

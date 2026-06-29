@@ -3,7 +3,7 @@ use freya::prelude::*;
 
 use crate::{
   user::{User, UserVoiceState},
-  util::{colors::ThemeColors, image::avatar_image},
+  util::{theme::Theme, image::avatar_image},
 };
 
 static DEAFENED_SVG: &[u8] = include_bytes!("../../assets/deafened.svg");
@@ -33,7 +33,7 @@ impl Component for AvatarIcon {
 #[derive(PartialEq)]
 struct UserLabel {
   user: User,
-  theme: ThemeColors,
+  theme: Theme,
 }
 
 impl Component for UserLabel {
@@ -48,7 +48,7 @@ impl Component for UserLabel {
       .cross_align(Alignment::Center)
       .height(Size::percent(70.))
       .background(self.theme.gray)
-      .corner_radius(CornerRadius::new_all(5.))
+      .corner_radius(CornerRadius::new_all(self.theme.border_radius))
       .margin(Gaps::new(0., 6., 0., 6.))
       .child(
         rect().padding(Gaps::new_all(4.)).child(
@@ -91,7 +91,7 @@ pub struct UserRow {
   pub is_right_aligned: bool,
   pub is_open: bool,
   pub is_voice_semitransparent: bool,
-  pub theme: ThemeColors,
+  pub theme: Theme,
 }
 
 impl Component for UserRow {

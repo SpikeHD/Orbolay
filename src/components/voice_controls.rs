@@ -7,7 +7,7 @@ use crate::{
   user::{User, UserVoiceState},
   util::{
     bridge::BridgeMessage,
-    colors::{self, ThemeColors},
+    theme::{self, Theme},
   },
 };
 
@@ -24,7 +24,7 @@ struct ControlButton {
   icon: &'static [u8],
   is_red: bool,
   on_click: EventHandler<()>,
-  theme: ThemeColors,
+  theme: Theme,
 }
 
 impl Component for ControlButton {
@@ -48,10 +48,10 @@ impl Component for ControlButton {
       .width(Size::percent(20.))
       .margin(Gaps::new_all(6.))
       .padding(Gaps::new_all(6.))
-      .corner_radius(CornerRadius::new_all(10.))
+      .corner_radius(CornerRadius::new_all(self.theme.border_radius))
       .background(if *hovered.read() {
         if is_red {
-          colors::RED_GRAY
+          theme::RED_GRAY
         } else {
           self.theme.light_gray
         }
@@ -76,7 +76,7 @@ pub struct VoiceControls {
   pub user: User,
   pub app_state: State<AppState>,
   pub soundboard_open: State<bool>,
-  pub theme: ThemeColors,
+  pub theme: Theme,
 }
 
 impl Component for VoiceControls {
@@ -95,7 +95,7 @@ impl Component for VoiceControls {
       .max_height(Size::px(60.))
       .max_width(Size::px(400.))
       .background(self.theme.gray)
-      .corner_radius(CornerRadius::new_all(10.))
+      .corner_radius(CornerRadius::new_all(self.theme.border_radius))
       .child(ControlButton {
         icon: if is_muted || is_deafened {
           MUTED_SVG

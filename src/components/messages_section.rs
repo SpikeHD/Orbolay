@@ -5,7 +5,7 @@ use crate::{
   components::MessageRow,
   config::CornerAlignment,
   payloads::Notification,
-  util::colors::ThemeColors,
+  util::theme::Theme,
 };
 
 #[derive(PartialEq)]
@@ -18,7 +18,7 @@ pub struct MessagesSection {
   pub message_offset_y: i32,
   pub messages_semitransparent: bool,
   pub app_state: State<AppState>,
-  pub theme: ThemeColors,
+  pub theme: Theme,
 }
 
 impl Component for MessagesSection {

@@ -4,7 +4,7 @@ use freya::prelude::*;
 use crate::{
   app_state::SharedAppState,
   config::{Config, TransportMode, load_config, save_config},
-  util::colors::{GRAY, MUTED_GRAY, TRANSPARENT, from_tuple, to_tuple},
+  util::theme::{GRAY, MUTED_GRAY, TRANSPARENT, from_tuple, to_tuple},
 };
 
 #[cfg(not(target_os = "macos"))]
@@ -252,6 +252,18 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
       kind: SettingKind::Color(from_tuple(config.text_color)),
       on_change: make_color_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
         cfg.text_color = v;
+      }),
+      disabled: false,
+    })
+    .child(divider())
+    .child(SettingRow {
+      name: "Border Radius (px)".into(),
+      description: Some("Corner radius used by panels and buttons".into()),
+      kind: SettingKind::Input(Some(config.border_radius.to_string())),
+      on_change: make_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
+        if let Ok(n) = v.trim().parse::<f32>() {
+          cfg.border_radius = n.max(0.);
+        }
       }),
       disabled: false,
     })

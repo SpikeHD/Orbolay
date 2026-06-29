@@ -2,7 +2,7 @@ use freya::prelude::*;
 
 use crate::{
   payloads::NotificationKind,
-  util::colors::{self, ThemeColors},
+  util::theme::{self, Theme},
 };
 
 #[derive(PartialEq)]
@@ -10,7 +10,7 @@ pub struct ActionButton {
   pub func: Callback<(), ()>,
   pub label: String,
   pub kind: NotificationKind,
-  pub theme: ThemeColors,
+  pub theme: Theme,
 }
 
 impl Component for ActionButton {
@@ -18,9 +18,9 @@ impl Component for ActionButton {
     let func = self.func.clone();
     let is_secondary = self.kind == NotificationKind::Secondary;
     let bg = if is_secondary {
-      colors::TRANSPARENT
+      theme::TRANSPARENT
     } else {
-      colors::GREEN
+      theme::GREEN
     };
     let mut hovered = use_state(|| false);
 
@@ -36,7 +36,7 @@ impl Component for ActionButton {
       .cross_align(Alignment::Center)
       .height(Size::px(30.))
       .width(Size::px(80.))
-      .corner_radius(CornerRadius::new_all(5.))
+      .corner_radius(CornerRadius::new_all(self.theme.border_radius))
       .margin(Gaps::new(0., 6., 0., 0.))
       .background(bg)
       .maybe(is_secondary, |el| {

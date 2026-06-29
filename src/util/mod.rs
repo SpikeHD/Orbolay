@@ -1,5 +1,5 @@
 pub mod bridge;
-pub mod colors;
+pub mod theme;
 pub mod discord_auth;
 pub mod image;
 pub mod process;

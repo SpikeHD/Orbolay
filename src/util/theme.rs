@@ -11,7 +11,7 @@ pub const GREEN: Color = Color::new(0xFF01863B);
 pub const TRANSPARENT: Color = Color::new(0x00000000);
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct ThemeColors {
+pub struct Theme {
   pub gray: Color,
   pub darkish_gray: Color,
   pub light_gray: Color,
@@ -19,10 +19,11 @@ pub struct ThemeColors {
   pub muted_gray: Color,
   pub transparent_gray: Color,
   pub text_color: Color,
+  pub border_radius: f32,
 }
 
-impl ThemeColors {
-  pub fn from_accent(accent: Color, text_color: Color) -> Self {
+impl Theme {
+  pub fn from_values(accent: Color, text_color: Color, border_radius: f32) -> Self {
     Self {
       gray: accent,
       darkish_gray: blend(DARKISH_GRAY, accent, 0.28),
@@ -31,6 +32,7 @@ impl ThemeColors {
       muted_gray: blend(MUTED_GRAY, accent, 0.22),
       transparent_gray: with_alpha(blend(GRAY, accent, 0.35), 0x56),
       text_color,
+      border_radius,
     }
   }
 }
