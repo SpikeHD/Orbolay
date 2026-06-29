@@ -16,6 +16,8 @@ pub fn set_clickable(clickable: bool) {
         },
       };
 
+      use crate::warn;
+
       let Ok(handle) = w.window_handle() else {
         warn!("Failed to get window handle");
         return;
