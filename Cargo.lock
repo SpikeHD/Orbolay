@@ -2429,15 +2429,9 @@ dependencies = [
 
 [[package]]
 name = "js-sys"
-<<<<<<< HEAD
-version = "0.3.102"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "03d04c30968dffe80775bd4d7fb676131cd04a1fb46d2686dbffbaec2d9dfd31"
-=======
 version = "0.3.103"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "53b44bfcdb3f8d5837a46dae1ca9660a837176eee74a28b229bc626816589102"
->>>>>>> 8ad51a7 (feat: refactor settings, add color picker)
 dependencies = [
  "cfg-if",
  "futures-util",
@@ -4823,15 +4817,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen"
-<<<<<<< HEAD
-version = "0.2.125"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ddb3f79143bced6de84270411622a2699cee572fc0875aeaf1e7867cf9fca1a"
-=======
 version = "0.2.126"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4b067c0c11094aef6b7a801c1e34a26affafdf3d051dba08456b868789aaf9a4"
->>>>>>> 8ad51a7 (feat: refactor settings, add color picker)
 dependencies = [
  "cfg-if",
  "once_cell",
@@ -4842,15 +4830,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-futures"
-<<<<<<< HEAD
-version = "0.4.75"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "503b14d284f2c8dac03b819967e155ea753f573586193b2b2c95990cb5d69280"
-=======
 version = "0.4.76"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c62df1340f32221cb9c54d6a27b030e3dba64361d4a95bed55f9aacb44da291d"
->>>>>>> 8ad51a7 (feat: refactor settings, add color picker)
 dependencies = [
  "js-sys",
  "wasm-bindgen",
@@ -4858,15 +4840,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-macro"
-<<<<<<< HEAD
-version = "0.2.125"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4e21a184b13fb19e157296e2c46056aec9092264fab83e4ba59e68c61b323c3d"
-=======
 version = "0.2.126"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "167ce5e579f6bcf889c4f7175a8a5a585de84e8ff93976ce393efa5f2837aab1"
->>>>>>> 8ad51a7 (feat: refactor settings, add color picker)
 dependencies = [
  "quote",
  "wasm-bindgen-macro-support",
@@ -4874,15 +4850,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-macro-support"
-<<<<<<< HEAD
-version = "0.2.125"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fecefd9c35bd935a20fc3fc344b5f29138961e4f47fb03297d88f2587afb5ebd"
-=======
 version = "0.2.126"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f3997c7839262f4ef12cf90b818d6340c18e80f263f1a94bf157d0ec4420380e"
->>>>>>> 8ad51a7 (feat: refactor settings, add color picker)
 dependencies = [
  "bumpalo",
  "proc-macro2",
@@ -4893,15 +4863,9 @@ dependencies = [
 
 [[package]]
 name = "wasm-bindgen-shared"
-<<<<<<< HEAD
-version = "0.2.125"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "23939e44bb9a5d7576fa2b563dc2e136628f1224e88a8deed09e04858b77871f"
-=======
 version = "0.2.126"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dc1b4cb0cc549fcf58d7dfc081778139b3d283a081644e833e84682ad71cea24"
->>>>>>> 8ad51a7 (feat: refactor settings, add color picker)
 dependencies = [
  "unicode-ident",
 ]
@@ -5043,15 +5007,9 @@ dependencies = [
 
 [[package]]
 name = "web-sys"
-<<<<<<< HEAD
-version = "0.3.102"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a6430a72df5eb332242960fe84b3002a241163998241eb596d4f739b9757061d"
-=======
 version = "0.3.103"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8622dcb61c0bcc9fffa6938bed81210af2da9a7e4a1a834b2e37a59b6dfb6141"
->>>>>>> 8ad51a7 (feat: refactor settings, add color picker)
 dependencies = [
  "js-sys",
  "wasm-bindgen",
