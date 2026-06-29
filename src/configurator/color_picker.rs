@@ -59,11 +59,6 @@ impl Component for ColorPickerControl {
       .cross_align(Alignment::Center)
       .child(
         rect()
-          .padding(Gaps::new_symmetric(0., 10.))
-          .child(Input::new(hex_value).a11y_id(input_id)),
-      )
-      .child(
-        rect()
           .border(Border::new().fill(theme::MUTED_GRAY).width(1.))
           .corner_radius(5.)
           .child(
@@ -71,6 +66,11 @@ impl Component for ColorPickerControl {
               .margin(Gaps::new_all(1.))
               .child(ColorPicker::new(apply_color).value(*value.read())),
           ),
+      )
+      .child(
+        rect()
+          .padding(Gaps::new(0., 0., 0., 10.))
+          .child(Input::new(hex_value).a11y_id(input_id)),
       )
   }
 }
