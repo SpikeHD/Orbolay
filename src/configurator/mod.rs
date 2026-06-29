@@ -4,7 +4,7 @@ use freya::prelude::*;
 use crate::{
   app_state::SharedAppState,
   config::{Config, TransportMode, load_config, save_config},
-  util::theme::{GRAY, MUTED_GRAY, TRANSPARENT, from_tuple, to_tuple},
+  util::theme::{GRAY, MUTED_GRAY, RED, TRANSPARENT, from_tuple, to_tuple},
 };
 
 #[cfg(not(target_os = "macos"))]
@@ -134,7 +134,8 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
   let recording_flag = shared.read().unwrap().recording_keybind.clone();
   use_provide_context(move || recording_flag);
 
-  let local_config = use_state(|| shared.read().unwrap().config.clone());
+  let mut local_config = use_state(|| shared.read().unwrap().config.clone());
+  let mut reset_version = use_state(|| 0usize);
   let config = local_config.read().clone();
 
   let all_displays = DisplayInfo::all().unwrap_or_default();
@@ -145,6 +146,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
   let display_names_for_update = display_names.clone();
 
   let inner = rect()
+    .key(reset_version())
     .direction(Direction::Vertical)
     .width(Size::fill())
     .padding(Gaps::new_symmetric(0., 16.))
@@ -393,6 +395,30 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
       }),
       disabled: false,
     })
+    .child(
+      rect()
+        .width(Size::fill())
+        .height(Size::px(32.))
+        .main_align(Alignment::Center)
+        .cross_align(Alignment::Center)
+        .margin(Gaps::new_symmetric(0., 12.))
+        .corner_radius(10.)
+        .background(RED)
+        .on_press(move |_| {
+          let mut state = shared.write().unwrap();
+          state.config = Config::default();
+          save_config(&state.config);
+          local_config.set(state.config.clone());
+          reset_version.set(reset_version() + 1);
+          redraw_tx.send(()).ok();
+        })
+        .child(
+          label()
+            .text("Reset to Defaults")
+            .color(Color::WHITE)
+            .font_size(14.)
+        ),
+    )
     .child(
       label()
         .text("Press \"C\" with the overlay open to open this window again!")

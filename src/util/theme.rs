@@ -1,5 +1,6 @@
 use freya::{engine::prelude::RGB, prelude::Color};
 
+pub const RED: Color = Color::new(0xFFF23F42);
 pub const RED_GRAY: Color = Color::new(0xFF3F2226);
 pub const DARKISH_GRAY: Color = Color::new(0xFF242428);
 pub const GRAY: Color = Color::new(0xFF1E1F23);
