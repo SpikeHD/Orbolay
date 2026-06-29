@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use freya::{engine::prelude::RGB, prelude::{Alignment, Gaps}};
+use freya::prelude::{Alignment, Gaps};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -185,11 +185,9 @@ pub struct Config {
   #[serde(default)]
   pub transport_mode: TransportMode,
   #[serde(default)]
-<<<<<<< HEAD
   pub software_rendering: Option<bool>,
-=======
+  #[serde(default)]
   pub accent: (u8, u8, u8),
->>>>>>> 8ad51a7 (feat: refactor settings, add color picker)
 }
 
 impl Default for Config {
@@ -209,11 +207,8 @@ impl Default for Config {
       messages_semitransparent: false,
       is_keybind_enabled: None,
       transport_mode: TransportMode::Ipc,
-<<<<<<< HEAD
       software_rendering: None,
-=======
-      accent: to_tuple(colors::GRAY)
->>>>>>> 8ad51a7 (feat: refactor settings, add color picker)
+      accent: to_tuple(colors::GRAY),
     }
   }
 }

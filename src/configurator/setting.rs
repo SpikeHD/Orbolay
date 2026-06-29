@@ -4,7 +4,10 @@ use freya::prelude::*;
 use rdev::Key;
 
 use crate::{
-  configurator::{color_picker::ColorPickerControl, dropdown::DropdownControl, input::InputControl, toggle::ToggleControl},
+  configurator::{
+    color_picker::ColorPickerControl, dropdown::DropdownControl, input::InputControl,
+    toggle::ToggleControl,
+  },
   util::colors::MUTED_GRAY,
 };
 
@@ -42,7 +45,9 @@ pub enum SettingKind {
 impl SettingKind {
   fn element(self, on_change: EventHandler<SettingChange>) -> Element {
     match self {
-      SettingKind::Dropdown(options, initial) => DropdownControl::new(options, initial, on_change.clone()).into(),
+      SettingKind::Dropdown(options, initial) => {
+        DropdownControl::new(options, initial, on_change.clone()).into()
+      }
       SettingKind::Input(initial) => InputControl::new(initial, on_change.clone()).into(),
       SettingKind::Toggle(initial) => ToggleControl::new(initial, on_change.clone()).into(),
       SettingKind::Color(initial) => ColorPickerControl::new(initial, on_change.clone()).into(),
@@ -69,7 +74,7 @@ impl Component for SettingRow {
           .cross_align(Alignment::Center)
           .width(Size::fill())
           .child(label().text(name).color(Color::WHITE).font_size(14.))
-          .child(self.kind.clone().element(self.on_change.clone()))
+          .child(self.kind.clone().element(self.on_change.clone())),
       )
       .map(description, |el, desc| {
         el.child(
