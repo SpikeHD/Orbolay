@@ -178,7 +178,7 @@ impl Component for Soundboard {
                 rect()
                   .direction(Direction::Vertical)
                   .width(Size::fill())
-                  .padding(Gaps::new_all(8.)),
+                  .padding(Gaps::new_all(16.)),
                 |col, (guild_name, guild_sounds)| {
                   let label = if guild_name.is_empty() {
                     "Default".to_string()
