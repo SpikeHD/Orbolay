@@ -3,7 +3,7 @@ use freya::prelude::*;
 
 use crate::{
   user::{User, UserVoiceState},
-  util::{colors, image::avatar_image},
+  util::{image::avatar_image, theme::Theme},
 };
 
 static DEAFENED_SVG: &[u8] = include_bytes!("../../assets/deafened.svg");
@@ -33,6 +33,7 @@ impl Component for AvatarIcon {
 #[derive(PartialEq)]
 struct UserLabel {
   user: User,
+  theme: Theme,
 }
 
 impl Component for UserLabel {
@@ -46,14 +47,14 @@ impl Component for UserLabel {
       .main_align(Alignment::Center)
       .cross_align(Alignment::Center)
       .height(Size::percent(70.))
-      .background(colors::GRAY)
-      .corner_radius(CornerRadius::new_all(5.))
+      .background(self.theme.gray)
+      .corner_radius(CornerRadius::new_all(self.theme.border_radius))
       .margin(Gaps::new(0., 6., 0., 6.))
       .child(
         rect().padding(Gaps::new_all(4.)).child(
           label()
             .font_size(14.)
-            .color(Color::WHITE)
+            .color(self.theme.text_color)
             .text(user.name.clone()),
         ),
       )
@@ -90,6 +91,7 @@ pub struct UserRow {
   pub is_right_aligned: bool,
   pub is_open: bool,
   pub is_voice_semitransparent: bool,
+  pub theme: Theme,
 }
 
 impl Component for UserRow {
@@ -105,6 +107,7 @@ impl Component for UserRow {
 
     let label = UserLabel {
       user: self.user.clone(),
+      theme: self.theme,
     };
     let icon = AvatarIcon {
       user: self.user.clone(),

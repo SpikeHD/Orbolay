@@ -4,7 +4,7 @@ use serde_json::json;
 use crate::{
   app_state::AppState,
   payloads::SoundboardSoundPayload,
-  util::{bridge::BridgeMessage, colors},
+  util::{bridge::BridgeMessage, theme::Theme},
 };
 
 fn guild_order(guild_id: &str, current: &str) -> u8 {
@@ -21,6 +21,7 @@ fn guild_order(guild_id: &str, current: &str) -> u8 {
 struct SoundButton {
   sound: SoundboardSoundPayload,
   app_state: State<AppState>,
+  theme: Theme,
 }
 
 impl Component for SoundButton {
@@ -50,12 +51,12 @@ impl Component for SoundButton {
       .width(Size::percent(33.3))
       .height(Size::px(40.))
       .margin(Gaps::new_all(2.))
-      .corner_radius(CornerRadius::new_all(6.))
+      .corner_radius(CornerRadius::new_all(self.theme.border_radius))
       .maybe(!available, |el| el.opacity(0.4))
       .background(if *hovered.read() {
-        colors::LIGHT_GRAY
+        self.theme.light_gray
       } else {
-        colors::DARKISH_GRAY
+        self.theme.darkish_gray
       })
       .on_press(move |_| {
         if !available {
@@ -86,14 +87,17 @@ impl Component for SoundButton {
           .content(Content::wrap())
           .padding(Gaps::new_symmetric(4., 2.))
           .child(
-            rect()
-              .padding(Gaps::new(0., 4., 0., 0.))
-              .child(label().color(Color::WHITE).font_size(14.).text(text)),
+            rect().padding(Gaps::new(0., 4., 0., 0.)).child(
+              label()
+                .color(self.theme.text_color)
+                .font_size(14.)
+                .text(text),
+            ),
           )
           .child(
             label()
               .font_size(11.)
-              .color(colors::MUTED_GRAY)
+              .color(self.theme.text_color)
               .max_width(Size::fill())
               .max_lines(1)
               .text(name.clone())
@@ -106,6 +110,7 @@ impl Component for SoundButton {
 #[derive(PartialEq)]
 struct GuildLabel {
   name: String,
+  theme: Theme,
 }
 
 impl Component for GuildLabel {
@@ -113,7 +118,7 @@ impl Component for GuildLabel {
     label()
       .font_size(11.)
       .width(Size::fill())
-      .color(colors::MUTED_GRAY)
+      .color(self.theme.text_color)
       .text(self.name.clone())
   }
 }
@@ -121,6 +126,7 @@ impl Component for GuildLabel {
 #[derive(PartialEq)]
 pub struct Soundboard {
   pub app_state: State<AppState>,
+  pub theme: Theme,
 }
 
 impl Component for Soundboard {
@@ -145,8 +151,8 @@ impl Component for Soundboard {
     if guilds.is_empty() {
       rect()
         .direction(Direction::Vertical)
-        .background(colors::GRAY)
-        .corner_radius(CornerRadius::new_all(10.))
+        .background(self.theme.gray)
+        .corner_radius(CornerRadius::new_all(self.theme.border_radius))
         .max_width(Size::px(400.))
         .margin(Gaps::new(0., 0., 8., 0.))
         .padding(Gaps::new_all(16.))
@@ -155,14 +161,14 @@ impl Component for Soundboard {
         .child(
           label()
             .font_size(13.)
-            .color(colors::MUTED_GRAY)
+            .color(self.theme.text_color)
             .text("No sounds available"),
         )
     } else {
       rect()
         .direction(Direction::Vertical)
-        .background(colors::GRAY)
-        .corner_radius(CornerRadius::new_all(10.))
+        .background(self.theme.gray)
+        .corner_radius(CornerRadius::new_all(self.theme.border_radius))
         .max_width(Size::px(400.))
         .height(Size::px(220.))
         .margin(Gaps::new(0., 0., 8., 0.))
@@ -175,33 +181,42 @@ impl Component for Soundboard {
                 rect()
                   .direction(Direction::Vertical)
                   .width(Size::fill())
-                  .padding(Gaps::new_all(8.)),
+                  .padding(Gaps::new_all(16.)),
                 |col, (guild_name, guild_sounds)| {
                   let label = if guild_name.is_empty() {
                     "Default".to_string()
                   } else {
                     guild_names.get(&guild_name).cloned().unwrap_or(guild_name)
                   };
-                  col.child(GuildLabel { name: label }).child(
-                    guild_sounds.into_iter().fold(
-                      rect()
-                        .direction(Direction::Horizontal)
-                        .content(Content::wrap())
-                        .width(Size::fill())
-                        .padding(Gaps::new(2., 0., 6., 0.)),
-                      |row, mut sound| {
-                        if let Some(guild_id) = &sound.guild_id
-                          && !app_state.read().premium_type.has_nitro()
-                          && guild_id != &"0".to_string()
-                          && guild_id != &app_state.read().current_guild_id
-                        {
-                          sound.available = false;
-                        }
+                  col
+                    .child(GuildLabel {
+                      name: label,
+                      theme: self.theme,
+                    })
+                    .child(
+                      guild_sounds.into_iter().fold(
+                        rect()
+                          .direction(Direction::Horizontal)
+                          .content(Content::wrap())
+                          .width(Size::fill())
+                          .padding(Gaps::new(2., 0., 6., 0.)),
+                        |row, mut sound| {
+                          if let Some(guild_id) = &sound.guild_id
+                            && !app_state.read().premium_type.has_nitro()
+                            && guild_id != &"0".to_string()
+                            && guild_id != &app_state.read().current_guild_id
+                          {
+                            sound.available = false;
+                          }
 
-                        row.child(SoundButton { sound, app_state })
-                      },
-                    ),
-                  )
+                          row.child(SoundButton {
+                            sound,
+                            app_state,
+                            theme: self.theme,
+                          })
+                        },
+                      ),
+                    )
                 },
               ),
             ),

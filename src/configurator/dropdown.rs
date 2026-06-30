@@ -1,17 +1,19 @@
 use freya::prelude::*;
 
-#[derive(PartialEq)]
+use crate::configurator::setting::SettingChange;
+
+#[derive(PartialEq, Clone)]
 pub struct DropdownControl {
   options: Vec<String>,
   initial: Option<String>,
-  on_change: EventHandler<String>,
+  on_change: EventHandler<SettingChange>,
 }
 
 impl DropdownControl {
   pub fn new(
     options: Vec<String>,
     initial: Option<String>,
-    on_change: EventHandler<String>,
+    on_change: EventHandler<SettingChange>,
   ) -> Self {
     Self {
       options,
@@ -45,7 +47,7 @@ impl Component for DropdownControl {
           .selected(selected_idx == i)
           .on_press(move |_| {
             selected.set(i);
-            on_change.call(val.clone());
+            on_change.call(SettingChange::Value(val.clone()));
           })
           .child(label)
           .into()

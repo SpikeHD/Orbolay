@@ -26,7 +26,7 @@ use crate::{
   payloads::{Notification, NotificationAction, NotificationKind},
   transport::create_transport_thread,
   updates::maybe_notify_update,
-  util::{bridge::BridgeMessage, colors},
+  util::{bridge::BridgeMessage, theme},
 };
 
 mod app_state;
@@ -309,6 +309,11 @@ fn app() -> impl IntoElement {
   let is_open = state.is_open;
   let is_censor = state.is_censor;
   let config = state.config.clone();
+  let theme = theme::Theme::from_values(
+    theme::from_tuple(config.accent),
+    theme::from_tuple(config.text_color),
+    config.border_radius,
+  );
   let current_user = state
     .voice_users
     .iter()
@@ -324,7 +329,7 @@ fn app() -> impl IntoElement {
       rect()
         .position(Position::new_absolute().top(0.).left(0.))
         .background(if is_open {
-          colors::TRANSPARENT_GRAY
+          theme.transparent_gray
         } else {
           Color::TRANSPARENT
         })
@@ -346,6 +351,7 @@ fn app() -> impl IntoElement {
       user_offset_x: config.user_offset_x,
       user_offset_y: config.user_offset_y,
       display_voice_members: config.display_voice_members.clone().unwrap_or_default(),
+      theme,
     })
     // Messages
     .child(MessagesSection {
@@ -360,6 +366,7 @@ fn app() -> impl IntoElement {
       message_offset_y: config.message_offset_y,
       messages_semitransparent: config.messages_semitransparent,
       app_state,
+      theme,
     })
     // Voice controls + soundboard
     .maybe(is_open, |el| {
@@ -384,12 +391,13 @@ fn app() -> impl IntoElement {
             .height(Size::percent(90.))
             .width(Size::fill())
             .maybe(*soundboard_open.read(), |el| {
-              el.child(Soundboard { app_state })
+              el.child(Soundboard { app_state, theme })
             })
             .child(VoiceControls {
               user,
               app_state,
               soundboard_open,
+              theme,
             })
         }))
     })

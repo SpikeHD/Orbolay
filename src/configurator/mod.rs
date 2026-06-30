@@ -2,7 +2,9 @@ use display_info::DisplayInfo;
 use freya::prelude::*;
 
 use crate::{
-  app_state::SharedAppState, config::{Config, TransportMode, load_config, save_config}, util::colors::{GRAY, MUTED_GRAY, RED, TRANSPARENT},
+  app_state::SharedAppState,
+  config::{Config, TransportMode, load_config, save_config},
+  util::theme::{GRAY, MUTED_GRAY, RED, TRANSPARENT, from_tuple, to_tuple},
 };
 
 #[cfg(not(target_os = "macos"))]
@@ -10,6 +12,7 @@ use crate::keys::bind::{DEFAULT_OVERLAY_TOGGLE, keys_to_strings, strings_to_keys
 
 use setting::{SettingChange, SettingKind, SettingRow};
 
+mod color_picker;
 mod dropdown;
 mod input;
 #[cfg(not(target_os = "macos"))]
@@ -74,6 +77,26 @@ fn make_updater(
       let updated = {
         let mut state = shared.write().unwrap();
         update_fn(&mut state.config, value);
+        state.config.clone()
+      };
+      save_config(&updated);
+      local_config.set(updated);
+      redraw_tx.send(()).ok();
+    }
+  })
+}
+
+fn make_color_updater(
+  shared: SharedAppState,
+  redraw_tx: flume::Sender<()>,
+  mut local_config: State<Config>,
+  update_fn: impl Fn(&mut Config, (u8, u8, u8)) + 'static,
+) -> EventHandler<SettingChange> {
+  EventHandler::new(move |change: SettingChange| {
+    if let SettingChange::Color(color) = change {
+      let updated = {
+        let mut state = shared.write().unwrap();
+        update_fn(&mut state.config, to_tuple(color));
         state.config.clone()
       };
       save_config(&updated);
@@ -216,6 +239,38 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
     })
     .child(divider())
     .child(SettingRow {
+      name: "Accent Color".into(),
+      description: Some("The accent color for the overlay".into()),
+      kind: SettingKind::Color(from_tuple(config.accent)),
+      on_change: make_color_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
+        cfg.accent = v;
+      }),
+      disabled: false,
+    })
+    .child(divider())
+    .child(SettingRow {
+      name: "Text Color".into(),
+      description: Some("The text color for the overlay".into()),
+      kind: SettingKind::Color(from_tuple(config.text_color)),
+      on_change: make_color_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
+        cfg.text_color = v;
+      }),
+      disabled: false,
+    })
+    .child(divider())
+    .child(SettingRow {
+      name: "Border Radius (px)".into(),
+      description: Some("Corner radius used by panels and buttons".into()),
+      kind: SettingKind::Input(Some(config.border_radius.to_string())),
+      on_change: make_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
+        if let Ok(n) = v.trim().parse::<f32>() {
+          cfg.border_radius = n.max(0.);
+        }
+      }),
+      disabled: false,
+    })
+    .child(divider())
+    .child(SettingRow {
       name: "Force Software Renderer".into(),
       description: Some(
         "Use software rendering instead of hardware acceleration. Requires restart.".into(),
@@ -226,6 +281,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
       }),
       disabled: false,
     })
+    .child(divider())
     .child(SettingRow {
       name: "Display Voice Members".into(),
       description: Some("Control when and how voice users are visible".into()),
@@ -360,7 +416,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
           label()
             .text("Reset to Defaults")
             .color(Color::WHITE)
-            .font_size(14.)
+            .font_size(14.),
         ),
     )
     .child(

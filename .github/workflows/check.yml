@@ -7,6 +7,8 @@ on:
       - 'Cargo.toml'
       - 'src/**/*'
   pull_request:
+    branches:
+      - main
     paths:
       - '.github/workflows/check.yml'
       - 'Cargo.toml'

@@ -1,13 +1,15 @@
 use freya::prelude::*;
 
-#[derive(PartialEq)]
+use crate::configurator::setting::SettingChange;
+
+#[derive(PartialEq, Clone)]
 pub struct InputControl {
   initial: Option<String>,
-  on_change: EventHandler<String>,
+  on_change: EventHandler<SettingChange>,
 }
 
 impl InputControl {
-  pub fn new(initial: Option<String>, on_change: EventHandler<String>) -> Self {
+  pub fn new(initial: Option<String>, on_change: EventHandler<SettingChange>) -> Self {
     Self { initial, on_change }
   }
 }
@@ -21,7 +23,7 @@ impl Component for InputControl {
 
     use_side_effect(move || {
       if !focus_status.read().is_focused() {
-        on_change.call(value.read().clone());
+        on_change.call(SettingChange::Value(value.read().clone()));
       }
     });
 

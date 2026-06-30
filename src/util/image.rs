@@ -1,12 +1,10 @@
 use std::{
-  cell::RefCell,
   collections::HashMap,
-  rc::Rc,
   sync::{LazyLock, Mutex},
 };
 
 use bytes::Bytes;
-use freya::elements::image::{Image as FreyaImage, ImageHolder, image as img_fn};
+use freya::elements::image::{Image as FreyaImage, ImageHandle, image as img_fn};
 use freya::engine::prelude::{
   ClipOp, DirectContext, EncodedImageFormat, Paint, PaintStyle, PathBuilder, SkColor, SkData,
   SkImage, SkPoint, SkRect, raster_n32_premul,
@@ -46,10 +44,7 @@ pub fn avatar_image(url: &str, border: Option<SkColor>) -> FreyaImage {
   };
 
   if let Some((image, bytes)) = hit {
-    return img_fn(ImageHolder {
-      image: Rc::new(RefCell::new(image)),
-      bytes,
-    });
+    return img_fn(ImageHandle { image, bytes });
   }
 
   let raw = fetch_icon(url, true).unwrap_or_default();
@@ -59,8 +54,8 @@ pub fn avatar_image(url: &str, border: Option<SkColor>) -> FreyaImage {
     let bytes = Bytes::from_static(DEFAULT_AVATAR);
     let sk_image =
       SkImage::from_encoded(SkData::new_copy(&bytes)).expect("Failed to decode default avatar");
-    return img_fn(ImageHolder {
-      image: Rc::new(RefCell::new(sk_image)),
+    return img_fn(ImageHandle {
+      image: sk_image,
       bytes,
     });
   }
@@ -77,8 +72,8 @@ pub fn avatar_image(url: &str, border: Option<SkColor>) -> FreyaImage {
     },
   );
 
-  img_fn(ImageHolder {
-    image: Rc::new(RefCell::new(sk_image)),
+  img_fn(ImageHandle {
+    image: sk_image,
     bytes,
   })
 }

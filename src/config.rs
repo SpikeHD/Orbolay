@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use freya::prelude::{Alignment, Gaps};
+use freya::prelude::{Alignment, Color, Gaps};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -62,6 +62,7 @@ impl From<String> for DisplayVoiceMembers {
 
 #[cfg(not(target_os = "macos"))]
 use crate::keys::bind::DEFAULT_OVERLAY_TOGGLE;
+use crate::util::theme::{self, to_tuple};
 
 #[derive(Debug, Clone, Deserialize, PartialEq)]
 pub enum AxisAlignment {
@@ -153,6 +154,18 @@ impl CornerAlignment {
   }
 }
 
+fn default_accent() -> (u8, u8, u8) {
+  to_tuple(theme::GRAY)
+}
+
+fn default_text() -> (u8, u8, u8) {
+  to_tuple(Color::WHITE)
+}
+
+fn default_border_radius() -> f32 {
+  10.
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Config {
@@ -185,6 +198,12 @@ pub struct Config {
   pub transport_mode: TransportMode,
   #[serde(default)]
   pub software_rendering: Option<bool>,
+  #[serde(default = "default_accent")]
+  pub accent: (u8, u8, u8),
+  #[serde(default = "default_text")]
+  pub text_color: (u8, u8, u8),
+  #[serde(default = "default_border_radius")]
+  pub border_radius: f32,
 }
 
 impl Default for Config {
@@ -205,6 +224,9 @@ impl Default for Config {
       is_keybind_enabled: None,
       transport_mode: TransportMode::Ipc,
       software_rendering: None,
+      accent: to_tuple(theme::GRAY),
+      text_color: to_tuple(Color::WHITE),
+      border_radius: 10.,
     }
   }
 }

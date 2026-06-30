@@ -5,7 +5,10 @@ use crate::{
   app_state::AppState,
   config::TransportMode,
   user::{User, UserVoiceState},
-  util::{bridge::BridgeMessage, colors},
+  util::{
+    bridge::BridgeMessage,
+    theme::{self, Theme},
+  },
 };
 
 static DEAFENED_SVG: &[u8] = include_bytes!("../../assets/deafened.svg");
@@ -21,6 +24,7 @@ struct ControlButton {
   icon: &'static [u8],
   is_red: bool,
   on_click: EventHandler<()>,
+  theme: Theme,
 }
 
 impl Component for ControlButton {
@@ -44,12 +48,12 @@ impl Component for ControlButton {
       .width(Size::percent(20.))
       .margin(Gaps::new_all(6.))
       .padding(Gaps::new_all(6.))
-      .corner_radius(CornerRadius::new_all(10.))
+      .corner_radius(CornerRadius::new_all(self.theme.border_radius))
       .background(if *hovered.read() {
         if is_red {
-          colors::RED_GRAY
+          theme::RED_GRAY
         } else {
-          colors::LIGHT_GRAY
+          self.theme.light_gray
         }
       } else {
         Color::TRANSPARENT
@@ -72,6 +76,7 @@ pub struct VoiceControls {
   pub user: User,
   pub app_state: State<AppState>,
   pub soundboard_open: State<bool>,
+  pub theme: Theme,
 }
 
 impl Component for VoiceControls {
@@ -89,8 +94,8 @@ impl Component for VoiceControls {
       .height(Size::auto())
       .max_height(Size::px(60.))
       .max_width(Size::px(400.))
-      .background(colors::GRAY)
-      .corner_radius(CornerRadius::new_all(10.))
+      .background(self.theme.gray)
+      .corner_radius(CornerRadius::new_all(self.theme.border_radius))
       .child(ControlButton {
         icon: if is_muted || is_deafened {
           MUTED_SVG
@@ -105,6 +110,7 @@ impl Component for VoiceControls {
           })
         })
         .into(),
+        theme: self.theme,
       })
       .child(ControlButton {
         icon: if is_deafened {
@@ -120,6 +126,7 @@ impl Component for VoiceControls {
           })
         })
         .into(),
+        theme: self.theme,
       })
       .maybe(
         app_state.read().transport_mode == TransportMode::Ipc,
@@ -132,6 +139,7 @@ impl Component for VoiceControls {
               soundboard_open.set(!is_open);
             })
             .into(),
+            theme: self.theme,
           })
         },
       )
@@ -145,6 +153,7 @@ impl Component for VoiceControls {
           })
         })
         .into(),
+        theme: self.theme,
       })
       .maybe(is_streaming, |el| {
         el.child(ControlButton {
@@ -157,6 +166,7 @@ impl Component for VoiceControls {
             })
           })
           .into(),
+          theme: self.theme,
         })
       })
   }

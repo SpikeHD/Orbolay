@@ -4,7 +4,7 @@ use crate::{
   components::UserRow,
   config::{AxisAlignment, CornerAlignment, DisplayVoiceMembers},
   user::{User, UserVoiceState},
-  util::text::censor,
+  util::{text::censor, theme::Theme},
 };
 
 #[derive(PartialEq)]
@@ -16,6 +16,7 @@ pub struct VoiceSection {
   pub user_offset_x: i32,
   pub user_offset_y: i32,
   pub display_voice_members: DisplayVoiceMembers,
+  pub theme: Theme,
 }
 
 impl Component for VoiceSection {
@@ -62,6 +63,7 @@ impl Component for VoiceSection {
             self.display_voice_members,
             DisplayVoiceMembers::AlwaysSemiTransparent
           ),
+          theme: self.theme,
         })
       },
     )
