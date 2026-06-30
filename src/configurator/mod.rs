@@ -2,7 +2,7 @@ use display_info::DisplayInfo;
 use freya::prelude::*;
 
 use crate::{
-  app_state::SharedAppState,
+  app_state::{AppHandle, SharedAppState},
   config::{Config, TransportMode, load_config, save_config},
   util::theme::{GRAY, MUTED_GRAY, RED, TRANSPARENT, from_tuple, to_tuple},
 };
@@ -39,27 +39,27 @@ const ALIGNMENTS: &[&str] = &[
 const VOICE_DISPLAY_OPTIONS: &[&str] =
   &["always", "always (semi-transparent)", "only when speaking"];
 
-pub fn open_configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) {
+pub fn open_configurator(app: AppHandle) {
   spawn(async move {
-    let _ = Platform::get()
-      .launch_window(configurator_window(shared, redraw_tx))
-      .await;
+    let _ = Platform::get().launch_window(configurator_window(app)).await;
   });
 }
 
 pub fn open_configurator_standalone() {
   // Basically a blocking, standalone version of open_configurator
   let shared = SharedAppState::default();
-  if let Some(saved) = load_config() {
-    shared.write().unwrap().config = saved;
-  }
   let (redraw_tx, _) = flume::unbounded();
+  let app = AppHandle::new(shared, redraw_tx);
 
-  launch(LaunchConfig::new().with_window(configurator_window(shared.clone(), redraw_tx)));
+  if let Some(saved) = load_config() {
+    app.update(|state| state.config = saved);
+  }
+
+  launch(LaunchConfig::new().with_window(configurator_window(app)));
 }
 
-fn configurator_window(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> WindowConfig {
-  WindowConfig::new(move || configurator(shared.clone(), redraw_tx.clone()))
+fn configurator_window(app: AppHandle) -> WindowConfig {
+  WindowConfig::new(move || configurator(app.clone()))
     .with_background(GRAY)
     .with_size(WIDTH as f64, HEIGHT as f64)
     .with_title("Orbolay Configurator")
@@ -67,74 +67,82 @@ fn configurator_window(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> 
 }
 
 fn make_updater(
-  shared: SharedAppState,
-  redraw_tx: flume::Sender<()>,
+  app: AppHandle,
   mut local_config: State<Config>,
   update_fn: impl Fn(&mut Config, String) + 'static,
 ) -> EventHandler<SettingChange> {
   EventHandler::new(move |change: SettingChange| {
     if let SettingChange::Value(value) = change {
-      let updated = {
-        let mut state = shared.write().unwrap();
+      let updated = app.update(|state| {
         update_fn(&mut state.config, value);
         state.config.clone()
-      };
+      });
       save_config(&updated);
       local_config.set(updated);
-      redraw_tx.send(()).ok();
+    }
+  })
+}
+
+fn make_bool_updater(
+  app: AppHandle,
+  mut local_config: State<Config>,
+  update_fn: impl Fn(&mut Config, bool) + 'static,
+) -> EventHandler<SettingChange> {
+  EventHandler::new(move |change: SettingChange| {
+    if let SettingChange::Bool(value) = change {
+      let updated = app.update(|state| {
+        update_fn(&mut state.config, value);
+        state.config.clone()
+      });
+      save_config(&updated);
+      local_config.set(updated);
     }
   })
 }
 
 fn make_color_updater(
-  shared: SharedAppState,
-  redraw_tx: flume::Sender<()>,
+  app: AppHandle,
   mut local_config: State<Config>,
   update_fn: impl Fn(&mut Config, (u8, u8, u8)) + 'static,
 ) -> EventHandler<SettingChange> {
   EventHandler::new(move |change: SettingChange| {
     if let SettingChange::Color(color) = change {
-      let updated = {
-        let mut state = shared.write().unwrap();
+      let updated = app.update(|state| {
         update_fn(&mut state.config, to_tuple(color));
         state.config.clone()
-      };
+      });
       save_config(&updated);
       local_config.set(updated);
-      redraw_tx.send(()).ok();
     }
   })
 }
 
 #[cfg(not(target_os = "macos"))]
 fn make_keybind_updater(
-  shared: SharedAppState,
-  redraw_tx: flume::Sender<()>,
+  app: AppHandle,
   mut local_config: State<Config>,
   update_fn: impl Fn(&mut Config, Vec<rdev::Key>) + 'static,
 ) -> EventHandler<SettingChange> {
   EventHandler::new(move |change: SettingChange| {
     if let SettingChange::Keys(keys) = change {
-      let updated = {
-        let mut state = shared.write().unwrap();
+      let updated = app.update(|state| {
         update_fn(&mut state.config, keys);
         state.config.clone()
-      };
+      });
       save_config(&updated);
       local_config.set(updated);
-      redraw_tx.send(()).ok();
     }
   })
 }
 
-fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl IntoElement {
+fn configurator(app: AppHandle) -> impl IntoElement {
   use_init_theme(dark_theme);
 
   // Make the recording flag available to KeybindControl
-  let recording_flag = shared.read().unwrap().recording_keybind.clone();
+  let recording_flag = app.read(|state| state.recording_keybind.clone());
   use_provide_context(move || recording_flag);
 
-  let mut local_config = use_state(|| shared.read().unwrap().config.clone());
+  let mut local_config = use_state(|| app.read(|state| state.config.clone()));
   let mut reset_version = use_state(|| 0usize);
   let config = local_config.read().clone();
 
@@ -160,7 +168,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
         TRANSPORT_MODES.iter().map(|s| s.to_string()).collect(),
         Some(config.transport_mode.to_string()),
       ),
-      on_change: make_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
+      on_change: make_updater(app.clone(), local_config, |cfg, v| {
         cfg.transport_mode = v.into();
       }),
       disabled: false,
@@ -170,7 +178,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
       name: "Websocket Port".into(),
       description: Some("Port the websocket server listens on (websocket mode only). REQUIRES RESTART.".into()),
       kind: SettingKind::Input(Some(config.port.unwrap_or(6888).to_string())),
-      on_change: make_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
+      on_change: make_updater(app.clone(), local_config, |cfg, v| {
         if let Ok(n) = v.trim().parse::<u16>() {
           cfg.port = Some(n);
         }
@@ -185,8 +193,8 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
       name: "Enable Keybind".into(),
       description: Some("Toggle overlay visibility with a keybind".into()),
       kind: SettingKind::Toggle(config.is_keybind_enabled.unwrap_or(true)),
-      on_change: make_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
-        cfg.is_keybind_enabled = Some(v == "true");
+      on_change: make_bool_updater(app.clone(), local_config, |cfg, value| {
+        cfg.is_keybind_enabled = Some(value);
       }),
       disabled: false,
     })
@@ -203,14 +211,9 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
           .clone()
           .unwrap_or_else(|| DEFAULT_OVERLAY_TOGGLE.clone()),
       ))),
-      on_change: make_keybind_updater(
-        shared.clone(),
-        redraw_tx.clone(),
-        local_config,
-        |cfg, keys| {
-          cfg.overlay_keybind = Some(keys_to_strings(keys));
-        },
-      ),
+      on_change: make_keybind_updater(app.clone(), local_config, |cfg, keys| {
+        cfg.overlay_keybind = Some(keys_to_strings(keys));
+      }),
       disabled: !config.is_keybind_enabled.unwrap_or(true),
     })
     .child(divider());
@@ -225,16 +228,11 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
           .display_idx
           .and_then(|i| display_names.get(i).cloned()),
       ),
-      on_change: make_updater(
-        shared.clone(),
-        redraw_tx.clone(),
-        local_config,
-        move |cfg, v| {
-          if let Some(idx) = display_names_for_update.iter().position(|name| name == &v) {
-            cfg.display_idx = Some(idx);
-          }
-        },
-      ),
+      on_change: make_updater(app.clone(), local_config, move |cfg, v| {
+        if let Some(idx) = display_names_for_update.iter().position(|name| name == &v) {
+          cfg.display_idx = Some(idx);
+        }
+      }),
       disabled: false,
     })
     .child(divider())
@@ -242,7 +240,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
       name: "Accent Color".into(),
       description: Some("The accent color for the overlay".into()),
       kind: SettingKind::Color(from_tuple(config.accent)),
-      on_change: make_color_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
+      on_change: make_color_updater(app.clone(), local_config, |cfg, v| {
         cfg.accent = v;
       }),
       disabled: false,
@@ -252,7 +250,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
       name: "Text Color".into(),
       description: Some("The text color for the overlay".into()),
       kind: SettingKind::Color(from_tuple(config.text_color)),
-      on_change: make_color_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
+      on_change: make_color_updater(app.clone(), local_config, |cfg, v| {
         cfg.text_color = v;
       }),
       disabled: false,
@@ -262,7 +260,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
       name: "Border Radius (px)".into(),
       description: Some("Corner radius used by panels and buttons".into()),
       kind: SettingKind::Input(Some(config.border_radius.to_string())),
-      on_change: make_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
+      on_change: make_updater(app.clone(), local_config, |cfg, v| {
         if let Ok(n) = v.trim().parse::<f32>() {
           cfg.border_radius = n.max(0.);
         }
@@ -276,8 +274,8 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
         "Use software rendering instead of hardware acceleration. Requires restart.".into(),
       ),
       kind: SettingKind::Toggle(config.software_rendering.unwrap_or(false)),
-      on_change: make_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
-        cfg.software_rendering = Some(v == "true");
+      on_change: make_bool_updater(app.clone(), local_config, |cfg, value| {
+        cfg.software_rendering = Some(value);
       }),
       disabled: false,
     })
@@ -298,7 +296,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
             .to_string(),
         ),
       ),
-      on_change: make_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
+      on_change: make_updater(app.clone(), local_config, |cfg, v| {
         cfg.display_voice_members = Some(v.into());
       }),
       disabled: false,
@@ -308,8 +306,8 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
       name: "Semi-Transparent Notifications".into(),
       description: Some("Fade notifications when the overlay is closed".into()),
       kind: SettingKind::Toggle(config.messages_semitransparent),
-      on_change: make_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
-        cfg.messages_semitransparent = v == "true";
+      on_change: make_bool_updater(app.clone(), local_config, |cfg, value| {
+        cfg.messages_semitransparent = value;
       }),
       disabled: false,
     })
@@ -326,7 +324,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
           .clone()
           .or_else(|| Some("topleft".into())),
       ),
-      on_change: make_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
+      on_change: make_updater(app.clone(), local_config, |cfg, v| {
         cfg.user_alignment = Some(v);
       }),
       disabled: false,
@@ -336,7 +334,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
       name: "Voice X Offset (px)".into(),
       description: None,
       kind: SettingKind::Input(Some(config.user_offset_x.to_string())),
-      on_change: make_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
+      on_change: make_updater(app.clone(), local_config, |cfg, v| {
         if let Ok(n) = v.trim().parse::<i32>() {
           cfg.user_offset_x = n;
         }
@@ -348,7 +346,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
       name: "Voice Y Offset (px)".into(),
       description: None,
       kind: SettingKind::Input(Some(config.user_offset_y.to_string())),
-      on_change: make_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
+      on_change: make_updater(app.clone(), local_config, |cfg, v| {
         if let Ok(n) = v.trim().parse::<i32>() {
           cfg.user_offset_y = n;
         }
@@ -366,7 +364,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
           .clone()
           .or_else(|| Some("topright".into())),
       ),
-      on_change: make_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
+      on_change: make_updater(app.clone(), local_config, |cfg, v| {
         cfg.message_alignment = Some(v);
       }),
       disabled: false,
@@ -376,7 +374,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
       name: "Messages X Offset (px)".into(),
       description: None,
       kind: SettingKind::Input(Some(config.message_offset_x.to_string())),
-      on_change: make_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
+      on_change: make_updater(app.clone(), local_config, |cfg, v| {
         if let Ok(n) = v.trim().parse::<i32>() {
           cfg.message_offset_x = n;
         }
@@ -388,7 +386,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
       name: "Messages Y Offset (px)".into(),
       description: None,
       kind: SettingKind::Input(Some(config.message_offset_y.to_string())),
-      on_change: make_updater(shared.clone(), redraw_tx.clone(), local_config, |cfg, v| {
+      on_change: make_updater(app.clone(), local_config, |cfg, v| {
         if let Ok(n) = v.trim().parse::<i32>() {
           cfg.message_offset_y = n;
         }
@@ -405,12 +403,13 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
         .corner_radius(10.)
         .background(RED)
         .on_press(move |_| {
-          let mut state = shared.write().unwrap();
-          state.config = Config::default();
-          save_config(&state.config);
-          local_config.set(state.config.clone());
+          let updated = app.update(|state| {
+            state.config = Config::default();
+            state.config.clone()
+          });
+          save_config(&updated);
+          local_config.set(updated);
           reset_version.set(reset_version() + 1);
-          redraw_tx.send(()).ok();
         })
         .child(
           label()

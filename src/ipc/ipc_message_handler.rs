@@ -1,6 +1,6 @@
 use interprocess::local_socket::prelude::*;
 
-use crate::app_state::SharedAppState;
+use crate::app_state::AppHandle;
 use crate::ipc::{
   OP_FRAME, ipc_write,
   setters::{get_channel, get_guild},
@@ -22,9 +22,9 @@ use crate::{error, success};
 pub fn handle_ipc_message(
   stream: &mut LocalSocketStream,
   msg: &crate::util::bridge::BridgeMessage,
-  shared: SharedAppState,
-  redraw_tx: &flume::Sender<()>,
+  app: AppHandle,
 ) -> Result<(), Box<dyn std::error::Error>> {
+  let shared = app.shared();
   let mut state = shared.write().unwrap();
   let evt = msg
     .data
@@ -174,9 +174,9 @@ pub fn handle_ipc_message(
               label: "Accept".to_string(),
               action: Arc::new({
                 let cid = cid.clone();
-                let shared = shared.clone();
+                let app = app.clone();
                 move || {
-                  shared.write().unwrap().send(BridgeMessage {
+                  app.send(BridgeMessage {
                     cmd: "ACCEPT_CALL".to_string(),
                     data: serde_json::json!({ "channel_id": &*cid }),
                   });
@@ -189,18 +189,16 @@ pub fn handle_ipc_message(
               action: Arc::new({
                 let cid = cid.clone();
                 let gid = guild_id.clone().unwrap_or_default();
-                let shared = shared.clone();
-                let redraw = redraw_tx.clone();
+                let app = app.clone();
                 move || {
-                  let mut st = shared.write().unwrap();
-                  st.send(BridgeMessage {
+                  app.send(BridgeMessage {
                     cmd: "OPEN_CHANNEL".to_string(),
                     data: serde_json::json!({ "channel_id": cid, "guild_id": gid }),
                   });
-                  st.messages
-                    .retain(|m| m.channel_id.as_deref() != Some(&cid));
-                  drop(st);
-                  let _ = redraw.send(());
+                  app.update(|st| {
+                    st.messages
+                      .retain(|m| m.channel_id.as_deref() != Some(&cid));
+                  });
                 }
               }),
               kind: NotificationKind::Secondary,
@@ -237,7 +235,7 @@ pub fn handle_ipc_message(
   drop(state);
 
   if changed {
-    let _ = redraw_tx.send(());
+    app.redraw();
   }
 
   Ok(())

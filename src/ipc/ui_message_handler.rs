@@ -1,6 +1,6 @@
 use interprocess::local_socket::prelude::*;
 
-use crate::app_state::SharedAppState;
+use crate::app_state::AppHandle;
 use crate::ipc::setters::{
   deep_link_channel, disconnect, play_soundboard_sound, select_voice_channel, set_deafened,
   set_muted, stop_streaming,
@@ -12,35 +12,32 @@ use crate::util::bridge::BridgeMessage;
 pub fn handle_ui_message(
   stream: &mut LocalSocketStream,
   msg: &BridgeMessage,
-  shared: SharedAppState,
-  redraw_tx: &flume::Sender<()>,
+  app: AppHandle,
 ) -> Result<(), Box<dyn std::error::Error>> {
-  let mut state = shared.write().unwrap();
-
   log!("Handling UI message: {:?}", msg);
-
-  let mut changed = true;
 
   match msg.cmd.as_str() {
     "TOGGLE_MUTE" => {
-      let muted = state
-        .voice_users
-        .iter()
-        .find(|user| user.id == state.user_id)
-        .map(|user| user.voice_state == UserVoiceState::Muted)
-        .unwrap_or(false);
-      drop(state);
+      let muted = app.read(|state| {
+        state
+          .voice_users
+          .iter()
+          .find(|user| user.id == state.user_id)
+          .map(|user| user.voice_state == UserVoiceState::Muted)
+          .unwrap_or(false)
+      });
       set_muted(stream, !muted)?;
-      return Ok(()); // IPC will send back a state update
+      return Ok(());
     }
     "TOGGLE_DEAF" => {
-      let deafened = state
-        .voice_users
-        .iter()
-        .find(|user| user.id == state.user_id)
-        .map(|user| user.voice_state == UserVoiceState::Deafened)
-        .unwrap_or(false);
-      drop(state);
+      let deafened = app.read(|state| {
+        state
+          .voice_users
+          .iter()
+          .find(|user| user.id == state.user_id)
+          .map(|user| user.voice_state == UserVoiceState::Deafened)
+          .unwrap_or(false)
+      });
       set_deafened(stream, !deafened)?;
       return Ok(());
     }
@@ -57,7 +54,6 @@ pub fn handle_ui_message(
         .and_then(|v| v.as_str())
         .unwrap_or_default()
         .to_string();
-      drop(state);
       deep_link_channel(stream, &channel_id, &guild_id)?;
       return Ok(());
     }
@@ -68,21 +64,22 @@ pub fn handle_ui_message(
         .and_then(|v| v.as_str())
         .unwrap_or_default()
         .to_string();
-      state
-        .messages
-        .retain(|m| m.channel_id.as_deref() != Some(channel_id.as_str()));
-      drop(state);
+      app.update(|state| {
+        state
+          .messages
+          .retain(|m| m.channel_id.as_deref() != Some(channel_id.as_str()));
+      });
       select_voice_channel(stream, &channel_id)?;
-      let _ = redraw_tx.send(());
       return Ok(());
     }
     "DISCONNECT" => {
       disconnect(stream)?;
-      state.current_channel = String::new();
-      state.voice_users.clear();
+      app.update(|state| {
+        state.current_channel = String::new();
+        state.voice_users.clear();
+      });
     }
     "STOP_STREAM" => {
-      drop(state);
       stop_streaming(stream)?;
       return Ok(());
     }
@@ -98,20 +95,12 @@ pub fn handle_ui_message(
         .get("source_guild_id")
         .and_then(|v| v.as_str())
         .map(|s| s.to_string());
-      drop(state);
       play_soundboard_sound(stream, &sound_id, source_guild_id.as_deref())?;
       return Ok(());
     }
     _ => {
       log!("Unknown UI command: {}", msg.cmd);
-      changed = false;
     }
-  }
-
-  drop(state);
-
-  if changed {
-    let _ = redraw_tx.send(());
   }
 
   Ok(())

@@ -1,13 +1,13 @@
-use crate::app_state::SharedAppState;
+use crate::app_state::AppHandle;
 
-pub fn create_notification_thread(shared: SharedAppState, redraw_tx: flume::Sender<()>) {
+pub fn create_notification_thread(app: AppHandle) {
   std::thread::spawn(move || {
     loop {
       std::thread::sleep(std::time::Duration::from_secs(1));
 
       let current_timestamp = chrono::Utc::now().timestamp();
-      {
-        let mut state = shared.write().unwrap();
+
+      app.update_if_changed(|state| {
         let before = state.messages.len();
 
         state.messages.retain(|message| {
@@ -17,12 +17,8 @@ pub fn create_notification_thread(shared: SharedAppState, redraw_tx: flume::Send
           true
         });
 
-        let after = state.messages.len();
-
-        if before != after {
-          let _ = redraw_tx.send(());
-        }
-      }
+        before != state.messages.len()
+      });
     }
   });
 }

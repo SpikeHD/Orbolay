@@ -10,12 +10,10 @@ use std::sync::Arc;
 use freya::prelude::*;
 use gumdrop::Options;
 use native_dialog::{MessageDialogBuilder, MessageLevel};
-#[cfg(target_os = "windows")]
-use winit::platform::windows::WindowAttributesExtWindows;
 use winit::{dpi::PhysicalPosition, window::WindowLevel};
 
 use crate::{
-  app_state::{AppState, SharedAppState},
+  app_state::{AppHandle, AppState, SharedAppState},
   components::{MessagesSection, Soundboard, VoiceControls, VoiceSection},
   config::{is_first_run, load_config, save_config},
   config_watcher::start_config_watcher,
@@ -169,6 +167,8 @@ fn main() {
 
             #[cfg(target_os = "windows")]
             {
+              use winit::platform::windows::WindowAttributesExtWindows;
+
               w = w.with_skip_taskbar(true);
             }
 
@@ -211,6 +211,7 @@ fn app() -> impl IntoElement {
     }
 
     let shared: SharedAppState = std::sync::Arc::new(std::sync::RwLock::new(initial));
+    let app = AppHandle::new(shared.clone(), redraw_tx.clone());
 
     if !args.debug {
       window::set_clickable(false);
@@ -219,10 +220,10 @@ fn app() -> impl IntoElement {
     #[cfg(not(target_os = "macos"))]
     keys::watch_keybinds(shared.clone(), keybind_tx);
 
-    create_transport_thread(shared.clone(), redraw_tx.clone(), args, ws_receiver);
-    create_notification_thread(shared.clone(), redraw_tx.clone());
+    create_transport_thread(app.clone(), args, ws_receiver);
+    create_notification_thread(app.clone());
 
-    shared.write().unwrap().notify(Notification {
+    app.notify(Notification {
       title: format!(
         "Orbolay v{} (rev {})",
         APP_VERSION.unwrap_or("0.0.0"),
@@ -261,20 +262,19 @@ fn app() -> impl IntoElement {
       }
     });
 
-    // Both of these must happen before shared/redraw_tx are moved into the keybind handler
     if is_first_run() {
-      open_configurator(shared.clone(), redraw_tx.clone());
-      redraw_tx.send(()).ok();
+      open_configurator(app.clone());
+      app.redraw();
 
       // Write the config regardless so we don't trigger this in the future
       {
-        let state = shared.read().unwrap();
-        save_config(&state.config);
+        let state = app.read(|state| state.config.clone());
+        save_config(&state);
       }
     }
 
-    start_config_watcher(shared.clone(), redraw_tx.clone());
-    maybe_notify_update(shared.clone());
+    start_config_watcher(app.clone());
+    maybe_notify_update(app.clone());
 
     #[cfg(not(target_os = "macos"))]
     spawn_forever(async move {
@@ -285,7 +285,7 @@ fn app() -> impl IntoElement {
             state.is_open = !state.is_open;
           }
           keys::KeyEvent::OpenConfigurator if app_state.read().is_open => {
-            open_configurator(shared.clone(), redraw_tx.clone());
+            open_configurator(app.clone());
             app_state.write().is_open = false;
           }
           keys::KeyEvent::OpenConfigurator => {}

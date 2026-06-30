@@ -3,12 +3,12 @@ use std::sync::Arc;
 use serde_json::Value;
 
 use crate::{
-  app_state::SharedAppState,
+  app_state::AppHandle,
   payloads::{Notification, NotificationAction, NotificationKind},
   warn,
 };
 
-pub fn maybe_notify_update(shared: SharedAppState) {
+pub fn maybe_notify_update(app: AppHandle) {
   std::thread::spawn(move || {
     let Ok(mut resp) =
       ureq::get("https://api.github.com/repos/SpikeHD/orbolay/releases/latest").call()
@@ -28,7 +28,7 @@ pub fn maybe_notify_update(shared: SharedAppState) {
     if let Some(latest_version) = json.get("tag_name").and_then(|v| v.as_str()) {
       let current_version = format!("v{}", env!("CARGO_PKG_VERSION"));
       if latest_version != current_version {
-        shared.write().unwrap().notify(Notification {
+        app.notify(Notification {
           title: "Update Available!".into(),
           body:
             "An new update of Orbolay is available and can be downloaded via the GitHub releases"

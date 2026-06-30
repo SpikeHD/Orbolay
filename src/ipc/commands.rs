@@ -7,7 +7,7 @@ use interprocess::local_socket::{GenericFilePath, ToFsName, prelude::*};
 #[cfg(windows)]
 use interprocess::local_socket::{GenericNamespaced, ToNsName, prelude::*};
 
-use crate::app_state::SharedAppState;
+use crate::app_state::AppHandle;
 use crate::ipc::{
   OP_CLOSE, OP_FRAME, OP_HANDSHAKE, handle_ipc_message, handle_ui_message, ipc_read, ipc_write,
   setters::{get_channel, get_guild},
@@ -67,19 +67,17 @@ fn try_create_stream() -> Result<LocalSocketStream, Box<dyn std::error::Error>> 
 fn drain_ui_messages(
   stream: &mut LocalSocketStream,
   receiver: &flume::Receiver<BridgeMessage>,
-  shared: SharedAppState,
-  redraw_tx: &flume::Sender<()>,
+  app: AppHandle,
 ) -> Result<(), Box<dyn std::error::Error>> {
   while let Ok(msg) = receiver.try_recv() {
-    handle_ui_message(stream, &msg, shared.clone(), redraw_tx)?;
+    handle_ui_message(stream, &msg, app.clone())?;
   }
 
   Ok(())
 }
 
 pub fn create_ipc_connection(
-  shared: SharedAppState,
-  redraw_tx: flume::Sender<()>,
+  app: AppHandle,
   receiver: flume::Receiver<BridgeMessage>,
 ) -> Result<(), Box<dyn std::error::Error>> {
   let handshake = serde_json::json!({
@@ -102,14 +100,11 @@ pub fn create_ipc_connection(
     let ui_receiver = receiver.clone();
     let mut ui_stream = stream.try_clone()?;
     let (tx, rx) = flume::unbounded();
-    let ui_shared = shared.clone();
-    let ui_redraw = redraw_tx.clone();
+    let ui_app = app.clone();
 
     std::thread::spawn(move || {
       loop {
-        if let Err(e) =
-          drain_ui_messages(&mut ui_stream, &ui_receiver, ui_shared.clone(), &ui_redraw)
-        {
+        if let Err(e) = drain_ui_messages(&mut ui_stream, &ui_receiver, ui_app.clone()) {
           error!("UI message handler failed: {}", e);
           continue;
         }
@@ -126,21 +121,19 @@ pub fn create_ipc_connection(
       match ipc_read(&mut stream) {
         Ok((OP_FRAME, payload)) => {
           if let Ok(msg) = serde_json::from_str::<BridgeMessage>(&payload)
-            && let Err(e) = handle_command(&mut stream, &msg, shared.clone(), &redraw_tx)
+            && let Err(e) = handle_command(&mut stream, &msg, app.clone())
           {
             error!("Error handling IPC command: {}", e);
           }
         }
         Ok((OP_CLOSE, payload)) => {
           log!("Stream closed: {}", payload);
-          shared.write().unwrap().voice_users = vec![];
-          let _ = redraw_tx.send(());
+          app.update(|state| state.voice_users = vec![]);
           break;
         }
         Err(e) => {
           error!("IPC read error: {}", e);
-          shared.write().unwrap().voice_users = vec![];
-          let _ = redraw_tx.send(());
+          app.update(|state| state.voice_users = vec![]);
           break;
         }
         _ => {}
@@ -149,8 +142,7 @@ pub fn create_ipc_connection(
 
     tx.send(())?;
 
-    {
-      let mut state = shared.write().unwrap();
+    app.update(|state| {
       state.notify(Notification {
         title: "Disconnected".into(),
         body: "The connection to the Discord client has been closed, retrying in 10 seconds..."
@@ -158,8 +150,7 @@ pub fn create_ipc_connection(
         icon: "".into(),
         ..Default::default()
       });
-    }
-    let _ = redraw_tx.send(());
+    });
 
     std::thread::sleep(Duration::from_secs(10));
   }
@@ -168,8 +159,7 @@ pub fn create_ipc_connection(
 pub fn handle_command(
   stream: &mut LocalSocketStream,
   msg: &BridgeMessage,
-  shared: SharedAppState,
-  redraw_tx: &flume::Sender<()>,
+  app: AppHandle,
 ) -> Result<(), Box<dyn std::error::Error>> {
   match msg.cmd.as_str() {
     "AUTHENTICATE" => {
@@ -190,7 +180,7 @@ pub fn handle_command(
       });
       ipc_write(stream, OP_FRAME, &request.to_string())?;
 
-      let user_id = shared.read().unwrap().user_id.clone();
+      let user_id = app.read(|state| state.user_id.clone());
       let request = serde_json::json!({
         "cmd": "GET_USER",
         "args": { "id": user_id },
@@ -231,47 +221,38 @@ pub fn handle_command(
       {
         let channel_id = data.id.unwrap_or_default();
         let guild_id = data.guild_id.unwrap_or_default();
-        let mut state = shared.write().unwrap();
-        state.current_channel = channel_id.clone();
-        state.current_guild_id = guild_id.clone();
-
-        drop(state);
+        app.update(|state| {
+          state.current_channel = channel_id.clone();
+          state.current_guild_id = guild_id.clone();
+        });
 
         subscribe_voice_channel(stream, &channel_id)?;
         get_channel(stream, &channel_id)?;
         if !guild_id.is_empty() {
           get_guild(stream, &guild_id)?;
         }
-        let _ = redraw_tx.send(());
       }
     }
     "GET_GUILD" => {
       let data = msg.data.get("data").cloned().unwrap_or_default();
       if let Ok(payload) = serde_json::from_value::<GetGuildPayload>(data) {
-        shared
-          .write()
-          .unwrap()
-          .guild_names
-          .insert(payload.id, payload.name);
-        let _ = redraw_tx.send(());
+        app.update(|state| {
+          state.guild_names.insert(payload.id, payload.name);
+        });
       }
     }
     "GET_CHANNEL" => {
       let data = msg.data.get("data").cloned().unwrap_or_default();
       if let Ok(payload) = serde_json::from_value::<GetChannelPayload>(data) {
-        shared
-          .write()
-          .unwrap()
-          .channel_names
-          .insert(payload.id, payload.name);
-        let _ = redraw_tx.send(());
+        app.update(|state| {
+          state.channel_names.insert(payload.id, payload.name);
+        });
       }
     }
     "GET_USER" => {
       let data = msg.data.get("data").cloned().unwrap_or_default();
       if let Ok(payload) = serde_json::from_value::<GetUserPayload>(data) {
-        shared.write().unwrap().premium_type = payload.premium_type;
-        let _ = redraw_tx.send(());
+        app.update(|state| state.premium_type = payload.premium_type);
       }
     }
     "GET_SOUNDBOARD_SOUNDS" => {
@@ -284,28 +265,27 @@ pub fn handle_command(
             .or_default()
             .push(sound);
         }
-        let known_guilds: Vec<String> = {
-          let state = shared.read().unwrap();
+        let known_guilds: Vec<String> = app.read(|state| {
           by_guild
             .keys()
             .filter(|id| !id.is_empty() && !state.guild_names.contains_key(*id))
             .cloned()
             .collect()
-        };
+        });
         for guild_id in known_guilds {
           if let Err(e) = get_guild(stream, &guild_id) {
             error!("Failed to fetch guild name for {}: {}", guild_id, e);
           }
         }
-        let mut state = shared.write().unwrap();
-        for (guild_id, sounds) in by_guild {
-          state.soundboard_cache.insert(guild_id, sounds);
-        }
-        let _ = redraw_tx.send(());
+        app.update(|state| {
+          for (guild_id, sounds) in by_guild {
+            state.soundboard_cache.insert(guild_id, sounds);
+          }
+        });
       }
     }
     "DISPATCH" => {
-      handle_ipc_message(stream, msg, shared, redraw_tx)?;
+      handle_ipc_message(stream, msg, app.clone())?;
     }
     _ => {
       log!("Unhandled command: {}", msg.cmd);

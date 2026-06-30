@@ -13,6 +13,59 @@ use crate::{
 /// Thread-safe shared state for background threads.
 pub type SharedAppState = Arc<RwLock<AppState>>;
 
+#[derive(Clone)]
+pub struct AppHandle {
+  shared: SharedAppState,
+  redraw_tx: flume::Sender<()>,
+}
+
+impl AppHandle {
+  pub fn new(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> Self {
+    Self { shared, redraw_tx }
+  }
+
+  pub fn shared(&self) -> &SharedAppState {
+    &self.shared
+  }
+
+  pub fn read<T>(&self, f: impl FnOnce(&AppState) -> T) -> T {
+    let state = self.shared.read().unwrap();
+    f(&state)
+  }
+
+  pub fn update<T>(&self, f: impl FnOnce(&mut AppState) -> T) -> T {
+    let result = {
+      let mut state = self.shared.write().unwrap();
+      f(&mut state)
+    };
+    let _ = self.redraw_tx.send(());
+    result
+  }
+
+  pub fn update_if_changed(&self, f: impl FnOnce(&mut AppState) -> bool) {
+    let changed = {
+      let mut state = self.shared.write().unwrap();
+      f(&mut state)
+    };
+
+    if changed {
+      let _ = self.redraw_tx.send(());
+    }
+  }
+
+  pub fn send(&self, message: BridgeMessage) {
+    self.read(|state| state.send(message));
+  }
+
+  pub fn notify(&self, notification: Notification) {
+    self.update(|state| state.notify(notification));
+  }
+
+  pub fn redraw(&self) {
+    let _ = self.redraw_tx.send(());
+  }
+}
+
 #[derive(Debug, Clone)]
 pub struct AppState {
   pub config: Config,
@@ -68,7 +121,7 @@ impl AppState {
     }
   }
 
-  pub fn send(&mut self, message: BridgeMessage) {
+  pub fn send(&self, message: BridgeMessage) {
     if let Some(sender) = &self.ws_sender {
       sender.send(message).unwrap_or_default();
     }
