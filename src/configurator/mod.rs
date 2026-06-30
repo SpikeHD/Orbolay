@@ -416,7 +416,7 @@ fn configurator(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> impl In
           label()
             .text("Reset to Defaults")
             .color(Color::WHITE)
-            .font_size(14.)
+            .font_size(14.),
         ),
     )
     .child(

@@ -57,9 +57,7 @@ impl Component for ColorPickerControl {
     rect()
       .direction(Direction::Horizontal)
       .cross_align(Alignment::Center)
-      .child(
-        ContextMenuViewer::new()
-      )
+      .child(ContextMenuViewer::new())
       .child(
         rect()
           .border(Border::new().fill(theme::MUTED_GRAY).width(1.))

@@ -44,10 +44,7 @@ pub fn avatar_image(url: &str, border: Option<SkColor>) -> FreyaImage {
   };
 
   if let Some((image, bytes)) = hit {
-    return img_fn(ImageHandle {
-      image,
-      bytes,
-    });
+    return img_fn(ImageHandle { image, bytes });
   }
 
   let raw = fetch_icon(url, true).unwrap_or_default();
