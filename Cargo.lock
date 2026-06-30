@@ -1507,7 +1507,7 @@ dependencies = [
  "freya-components",
  "freya-core",
  "freya-edit",
- "freya-engine 0.4.0-rc.23 (git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position)",
+ "freya-engine",
  "freya-performance-plugin",
  "freya-winit",
  "torin",
@@ -1561,7 +1561,7 @@ dependencies = [
  "freya-animation",
  "freya-core",
  "freya-edit",
- "freya-engine 0.4.0-rc.23 (git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position)",
+ "freya-engine",
  "freya-sdk",
  "paste",
  "thiserror 2.0.18",
@@ -1579,7 +1579,7 @@ dependencies = [
  "bitflags 2.13.0",
  "bytes",
  "cursor-icon",
- "freya-engine 0.4.0-rc.23 (git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position)",
+ "freya-engine",
  "futures-channel",
  "futures-lite",
  "futures-util",
@@ -1614,15 +1614,6 @@ dependencies = [
 [[package]]
 name = "freya-engine"
 version = "0.4.0-rc.23"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "18d8cd3dbea747ff6491315165b3ae49dff70651d01210695f25d51a85314282"
-dependencies = [
- "freya-skia-safe",
-]
-
-[[package]]
-name = "freya-engine"
-version = "0.4.0-rc.23"
 source = "git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position#7261a05430e7fd0ba328aaf0ba2392de0b2a81f3"
 dependencies = [
  "freya-skia-safe",
@@ -1634,7 +1625,7 @@ version = "0.4.0-rc.23"
 source = "git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position#7261a05430e7fd0ba328aaf0ba2392de0b2a81f3"
 dependencies = [
  "freya-core",
- "freya-engine 0.4.0-rc.23 (git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position)",
+ "freya-engine",
  "freya-winit",
 ]
 
@@ -1702,7 +1693,7 @@ dependencies = [
  "freya-clipboard",
  "freya-components",
  "freya-core",
- "freya-engine 0.4.0-rc.23 (git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position)",
+ "freya-engine",
  "futures-channel",
  "futures-lite",
  "futures-util",
@@ -3312,7 +3303,7 @@ dependencies = [
 
 [[package]]
 name = "orbolay"
-version = "3.4.0"
+version = "3.5.0"
 dependencies = [
  "bytes",
  "chrono",
@@ -3321,7 +3312,6 @@ dependencies = [
  "display-info",
  "flume",
  "freya",
- "freya-engine 0.4.0-rc.23 (registry+https://github.com/rust-lang/crates.io-index)",
  "gumdrop",
  "interprocess",
  "native-dialog",
