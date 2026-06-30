@@ -15,7 +15,7 @@
 </div>
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/030885cc-4a62-4524-b537-2cc0c8347cd4" />
+  <img src="https://github.com/user-attachments/assets/4cfaa580-5513-43c0-99d2-22a29dc64b2f" />
 </div>
 
 # Downloads
@@ -95,7 +95,7 @@
 * Custom notifications
 * Mute/deafen/disconnect controls
 * Soundboard
-* Customizable layout
+* Customizable layout, colors, border radius, etc.
 * Works with any official or modded client (including web!)
 
 # Compatibility
