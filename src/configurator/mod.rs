@@ -41,7 +41,9 @@ const VOICE_DISPLAY_OPTIONS: &[&str] =
 
 pub fn open_configurator(app: AppHandle) {
   spawn(async move {
-    let _ = Platform::get().launch_window(configurator_window(app)).await;
+    let _ = Platform::get()
+      .launch_window(configurator_window(app))
+      .await;
   });
 }
 

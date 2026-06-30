@@ -26,16 +26,14 @@ pub fn create_websocket(
 
         let recv = ws_receiver.clone();
         let app_clone = app.clone();
-        std::thread::spawn(
-          move || match ws_stream(stream, app_clone, recv) {
-            Ok(_) => {
-              success!("Websocket stream closed");
-            }
-            Err(e) => {
-              error!("Error in websocket stream: {}", e);
-            }
-          },
-        );
+        std::thread::spawn(move || match ws_stream(stream, app_clone, recv) {
+          Ok(_) => {
+            success!("Websocket stream closed");
+          }
+          Err(e) => {
+            error!("Error in websocket stream: {}", e);
+          }
+        });
       }
       Err(e) => {
         warn!("Failed to accept connection: {}", e);
