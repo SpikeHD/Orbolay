@@ -246,9 +246,9 @@ checksum = "76a2e8124351fda1ef8aaaa3bbd7ebbcb486bbcd4225aca0aa0d84bb2db8fecb"
 
 [[package]]
 name = "arrayvec"
-version = "0.7.7"
+version = "0.7.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f02882884d3e1bc524fb12c79f107f6ad0e1cfd498c536ffb494301740995dfe"
+checksum = "d3fb67a6e08acf24fdeccbac2cb6ac4305825bd1f117462e0e6f2f193345ad56"
 
 [[package]]
 name = "as-raw-xcb-connection"
@@ -722,9 +722,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.65"
+version = "1.2.66"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e228eec9be7c17ccb640b59b36a5cd805ea2a564a4c5e162c2f659fea30d3b96"
+checksum = "f5d6cac793997bd970000024b2934968efe83b382de4fdcf4fcb46b6ee4ad996"
 dependencies = [
  "find-msvc-tools",
  "jobserver",
@@ -988,9 +988,9 @@ dependencies = [
 
 [[package]]
 name = "crossbeam-deque"
-version = "0.8.6"
+version = "0.8.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9dd111b7b7f7d55b72c0a6ae361660ee5853c9af73f70c3c2ef6858b950e2e51"
+checksum = "5181e0de7b61eb03a81e347d6dd8797bae9da5146707b51077e2d71a54ec0ceb"
 dependencies = [
  "crossbeam-epoch",
  "crossbeam-utils",
@@ -998,18 +998,18 @@ dependencies = [
 
 [[package]]
 name = "crossbeam-epoch"
-version = "0.9.18"
+version = "0.9.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b82ac4a3c2ca9c3460964f020e1402edd5753411d7737aa39c3714ad1b5420e"
+checksum = "2d6914041f254d6e9176c01941b21115dcfb7089e55135a35411081bd106ef3f"
 dependencies = [
  "crossbeam-utils",
 ]
 
 [[package]]
 name = "crossbeam-utils"
-version = "0.8.21"
+version = "0.8.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d0a5c400df2834b80a4c3327b3aad3a4c4cd4de0629063962b03235697506a28"
+checksum = "61803da095bee82a81bb1a452ecc25d3b2f1416d1897eb86430c6159ef717c17"
 
 [[package]]
 name = "crunchy"
@@ -1497,8 +1497,9 @@ checksum = "d8866fac38f53fc87fa3ae1b09ddd723e0482f8fa74323518b4c59df2c55a00a"
 
 [[package]]
 name = "freya"
-version = "0.4.0-rc.23"
-source = "git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position#7261a05430e7fd0ba328aaf0ba2392de0b2a81f3"
+version = "0.4.0-rc.24"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "feb9aa93c344d151e4a2628626842a4c2223b5548a8f0f461a58184471b2c42b"
 dependencies = [
  "cfg-if",
  "freya-android",
@@ -1515,8 +1516,9 @@ dependencies = [
 
 [[package]]
 name = "freya-android"
-version = "0.4.0-rc.23"
-source = "git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position#7261a05430e7fd0ba328aaf0ba2392de0b2a81f3"
+version = "0.4.0-rc.24"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "143d600f11332191d6a74522ba72ba94fe23fba69ca0713c7ddc6fe39c630e7c"
 dependencies = [
  "freya-components",
  "freya-core",
@@ -1528,8 +1530,9 @@ dependencies = [
 
 [[package]]
 name = "freya-animation"
-version = "0.4.0-rc.23"
-source = "git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position#7261a05430e7fd0ba328aaf0ba2392de0b2a81f3"
+version = "0.4.0-rc.24"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2477fce452a2c505151d6bd8aa3c364ca8c5ba76193b4bdae68493952487d0e3"
 dependencies = [
  "async-io",
  "easer",
@@ -1538,8 +1541,9 @@ dependencies = [
 
 [[package]]
 name = "freya-clipboard"
-version = "0.4.0-rc.23"
-source = "git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position#7261a05430e7fd0ba328aaf0ba2392de0b2a81f3"
+version = "0.4.0-rc.24"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0f8c27e844af34510740fed14abf36a3e6c62e3b5a4bf39d662796de8a0a09a3"
 dependencies = [
  "copypasta",
  "freya-core",
@@ -1547,8 +1551,9 @@ dependencies = [
 
 [[package]]
 name = "freya-components"
-version = "0.4.0-rc.23"
-source = "git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position#7261a05430e7fd0ba328aaf0ba2392de0b2a81f3"
+version = "0.4.0-rc.24"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5852ade67fab9dd944d25f0e589fdcd8a1431a8b200fcaba957513b354392da9"
 dependencies = [
  "accesskit",
  "anyhow",
@@ -1564,6 +1569,7 @@ dependencies = [
  "freya-engine",
  "freya-sdk",
  "paste",
+ "rustc-hash",
  "thiserror 2.0.18",
  "torin",
  "tracing",
@@ -1571,8 +1577,9 @@ dependencies = [
 
 [[package]]
 name = "freya-core"
-version = "0.4.0-rc.23"
-source = "git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position#7261a05430e7fd0ba328aaf0ba2392de0b2a81f3"
+version = "0.4.0-rc.24"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "88c3abc60214ca66a1ab799dbdf4763e7ca14d868a2b4ed89c091dbe935ffda4"
 dependencies = [
  "accesskit",
  "async-broadcast",
@@ -1599,8 +1606,9 @@ dependencies = [
 
 [[package]]
 name = "freya-edit"
-version = "0.4.0-rc.23"
-source = "git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position#7261a05430e7fd0ba328aaf0ba2392de0b2a81f3"
+version = "0.4.0-rc.24"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7554d7f31ef37898899e16ca26bcee37096b07d94fc472318f5090290ba79dbd"
 dependencies = [
  "bitflags 2.13.0",
  "freya-clipboard",
@@ -1613,16 +1621,18 @@ dependencies = [
 
 [[package]]
 name = "freya-engine"
-version = "0.4.0-rc.23"
-source = "git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position#7261a05430e7fd0ba328aaf0ba2392de0b2a81f3"
+version = "0.4.0-rc.24"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e27629d0659c71042d167f9df9a35cb9ab54706509e215108172db39a0d93b4b"
 dependencies = [
  "freya-skia-safe",
 ]
 
 [[package]]
 name = "freya-performance-plugin"
-version = "0.4.0-rc.23"
-source = "git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position#7261a05430e7fd0ba328aaf0ba2392de0b2a81f3"
+version = "0.4.0-rc.24"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e61fbd0bcad5ed31e1abde2124b9194762fa1cdd3df7d477a6e458893ccc2372"
 dependencies = [
  "freya-core",
  "freya-engine",
@@ -1631,8 +1641,9 @@ dependencies = [
 
 [[package]]
 name = "freya-sdk"
-version = "0.4.0-rc.23"
-source = "git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position#7261a05430e7fd0ba328aaf0ba2392de0b2a81f3"
+version = "0.4.0-rc.24"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7658af9ef565f69f01e450ffdf65cfd8828ca9156f3c84774407647b7d28549e"
 dependencies = [
  "async-io",
  "freya-core",
@@ -1682,8 +1693,9 @@ dependencies = [
 
 [[package]]
 name = "freya-winit"
-version = "0.4.0-rc.23"
-source = "git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position#7261a05430e7fd0ba328aaf0ba2392de0b2a81f3"
+version = "0.4.0-rc.24"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fa57a542649f7ea80ea0adb632a370d2ac78487299533c5742bfaece22f80144"
 dependencies = [
  "accesskit",
  "accesskit_winit",
@@ -2260,9 +2272,9 @@ dependencies = [
 
 [[package]]
 name = "inotify"
-version = "0.11.2"
+version = "0.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "533e68a5842e734946fe159fb03fc9bbbb254f590dd0d8ad321ae5ff7beca2c1"
+checksum = "dd854a95a4ac672fed8c054136039fd32c22cf039ff09ead7280afe920486483"
 dependencies = [
  "bitflags 2.13.0",
  "inotify-sys",
@@ -2271,9 +2283,9 @@ dependencies = [
 
 [[package]]
 name = "inotify-sys"
-version = "0.1.5"
+version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e05c02b5e89bff3b946cedeca278abc628fe811e604f027c45a8aa3cf793d0eb"
+checksum = "c033f80b2c113cdf91ab7a33faa9cbc014726dcad99880c8609af2a370edf37d"
 dependencies = [
  "libc",
 ]
@@ -2405,11 +2417,11 @@ dependencies = [
 
 [[package]]
 name = "jobserver"
-version = "0.1.34"
+version = "0.1.35"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9afb3de4395d6b3e67a780b6de64b51c978ecf11cb9a462c66be7d4ca9039d33"
+checksum = "1c00acbd29eabad4a2392fa0e921c874934dbbf4194312ad20f04a0ed67a3cb3"
 dependencies = [
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "libc",
 ]
 
@@ -2500,14 +2512,14 @@ dependencies = [
 
 [[package]]
 name = "libredox"
-version = "0.1.17"
+version = "0.1.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f02ab6bace2054fb888a3c16f990117b579d14a3088e472d63c6011fa185c9d3"
+checksum = "c943259e342f1e06ff2da7a83eabdfe7f92ce10262688dbf1895ff0b3e6e4652"
 dependencies = [
  "bitflags 2.13.0",
  "libc",
  "plain",
- "redox_syscall 0.8.1",
+ "redox_syscall 0.9.0",
 ]
 
 [[package]]
@@ -2765,7 +2777,7 @@ checksum = "4d3d07927151ff8575b7087f245456e549fea62edf0ec4e565a5ee50c8402bc3"
 dependencies = [
  "bitflags 2.13.0",
  "fsevent-sys",
- "inotify 0.11.2",
+ "inotify 0.11.3",
  "kqueue",
  "libc",
  "log",
@@ -2795,9 +2807,9 @@ dependencies = [
 
 [[package]]
 name = "num-bigint"
-version = "0.4.6"
+version = "0.4.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a5e44f723f1133c9deac646763579fdb3ac745e418f2a7af9cd0c431da1f20b9"
+checksum = "c89e69e7e0f03bea5ef08013795c25018e101932225a656383bd384495ecc367"
 dependencies = [
  "num-integer",
  "num-traits",
@@ -3391,8 +3403,9 @@ checksum = "35fb2e5f958ec131621fdd531e9fc186ed768cbe395337403ae56c17a74c68ec"
 
 [[package]]
 name = "pathgraph"
-version = "0.4.0-rc.23"
-source = "git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position#7261a05430e7fd0ba328aaf0ba2392de0b2a81f3"
+version = "0.4.0-rc.24"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0c89e92483030670cd1e90e8a296fe164c0a17807a57803323e24e6c206d49ff"
 
 [[package]]
 name = "percent-encoding"
@@ -3592,9 +3605,9 @@ dependencies = [
 
 [[package]]
 name = "pxfm"
-version = "0.1.29"
+version = "0.1.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e0c5ccf5294c6ccd63a74f1565028353830a9c2f5eb0c682c355c471726a6e3f"
+checksum = "d55d956fa96f5ec02be2e13af0e20391a5aa83d6a074e3ad368959d0fab299ea"
 
 [[package]]
 name = "qoi"
@@ -3627,7 +3640,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cdcc8dd4e2f670d309a5f0e83fe36dfdc05af317008fea29144da1a2ac858e5e"
 dependencies = [
  "memchr",
- "serde",
 ]
 
 [[package]]
@@ -3653,8 +3665,9 @@ checksum = "f8dcc9c7d52a811697d2151c701e0d08956f92b0e24136cf4cf27b57a6a0d9bf"
 
 [[package]]
 name = "ragnarok"
-version = "0.4.0-rc.23"
-source = "git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position#7261a05430e7fd0ba328aaf0ba2392de0b2a81f3"
+version = "0.4.0-rc.24"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8482b523d2a6cba56914fa3fee190242139e1a20f3a7bc0cc9c39e76081f69b0"
 dependencies = [
  "euclid",
  "hotpath",
@@ -3826,9 +3839,9 @@ dependencies = [
 
 [[package]]
 name = "redox_syscall"
-version = "0.8.1"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b44b894f2a6e36457d665d1e08c3866add6ed5e70050c1b4ba8a8ddedb02ce7"
+checksum = "c5102a6aaa05aa011a238e178e6bca86d2cb56fc9f586d37cb80f5bca6e07759"
 dependencies = [
  "bitflags 2.13.0",
 ]
@@ -3932,9 +3945,9 @@ dependencies = [
 
 [[package]]
 name = "rustc-hash"
-version = "2.1.2"
+version = "2.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "94300abf3f1ae2e2b8ffb7b58043de3d399c73fa6f4b73826402a5c457614dbe"
+checksum = "6b1e7f9a428571be2dc5bc0505c13fb6bf936822b894ec87abf8a08a4e51742d"
 
 [[package]]
 name = "rustc_version"
@@ -4008,9 +4021,9 @@ dependencies = [
 
 [[package]]
 name = "rustversion"
-version = "1.0.22"
+version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b39cdef0fa800fc44525c84ccb54a029961a8215f9619753635a9c0d2538d46d"
+checksum = "cf54715a573b99ac80df0bc206da022bcd442c974952c7b9720069370852e21f"
 
 [[package]]
 name = "same-file"
@@ -4576,8 +4589,9 @@ checksum = "756daf9b1013ebe47a8776667b466417e2d4c5679d441c26230efd9ef78692db"
 
 [[package]]
 name = "torin"
-version = "0.4.0-rc.23"
-source = "git+https://github.com/marc2332/freya?branch=chore%2Fcolor-picker-smart-position#7261a05430e7fd0ba328aaf0ba2392de0b2a81f3"
+version = "0.4.0-rc.24"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6159f17b7fdef59fb17e97f94f961e57eb7fb28b9c244fee79a3d6ea04d5f758"
 dependencies = [
  "euclid",
  "itertools 0.14.0",
@@ -5564,9 +5578,9 @@ dependencies = [
 
 [[package]]
 name = "zbus"
-version = "5.16.0"
+version = "5.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eee682d202a77e4a9f3b2c2bdf48a7b28af5c08c34ddf66f98c93e5e39464285"
+checksum = "a28b97f866896a4be7aefd2b5a8e01bb6773d19a775d54ab28b4d094b9a4480e"
 dependencies = [
  "async-broadcast",
  "async-executor",
@@ -5623,9 +5637,9 @@ dependencies = [
 
 [[package]]
 name = "zbus_macros"
-version = "5.16.0"
+version = "5.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "adf1bd45a81a103745b1757754762a26e8cd01e4532e4d6c8ec431624b80d1d6"
+checksum = "5e05ad887425eecf5e8384dc2406a4a9313eb73468712fc1cdea362eb4fe0469"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",
@@ -5638,9 +5652,9 @@ dependencies = [
 
 [[package]]
 name = "zbus_names"
-version = "4.3.2"
+version = "4.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7074f3e50b894eac91750142016d30d0a89be8e67dbfd9704fb875825760e52d"
+checksum = "1039ca249fee9559680f3a9f05b55e0761fee51af4f6c1e7d8c1f31e549721d2"
 dependencies = [
  "serde",
  "winnow",
@@ -5649,30 +5663,30 @@ dependencies = [
 
 [[package]]
 name = "zbus_xml"
-version = "5.1.1"
+version = "5.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a8067892e940ed1727dea64690378601603b31d62dfde019a5335fbb7c0e0ed9"
+checksum = "59ab0513c0a66a60a8718d5ad712a5094845a20d95b5c1c81e2bd8e904a52b4f"
 dependencies = [
- "quick-xml 0.39.4",
  "serde",
+ "winnow",
  "zbus_names",
  "zvariant",
 ]
 
 [[package]]
 name = "zerocopy"
-version = "0.8.52"
+version = "0.8.53"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ce1022995ff5ff5d841ad7d994facc23098cd40152f2c1d11cd607c6f530653f"
+checksum = "75726053136156d419e285b9b7eddaaea9e3fea6ce32eed44a89901f0bd98de1"
 dependencies = [
  "zerocopy-derive",
 ]
 
 [[package]]
 name = "zerocopy-derive"
-version = "0.8.52"
+version = "0.8.53"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1ae7f38b72ec2a254e2b87ef277cf2cd4fb97cbebf944faa6f33354da0867930"
+checksum = "4714fd92cf900833d49538023a9b3915155210801d1c1169eba513b2addefd71"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -5771,9 +5785,9 @@ dependencies = [
 
 [[package]]
 name = "zvariant"
-version = "5.12.0"
+version = "5.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a192a0bde63360d77a7523c833d4b4ce6070a927e2c53246e4c540b1a3e27be0"
+checksum = "7cf057bb00bf5c9ad77abb6147b0ca4818236a1858416e9d988e40d6322fefa7"
 dependencies = [
  "endi",
  "enumflags2",
@@ -5785,9 +5799,9 @@ dependencies = [
 
 [[package]]
 name = "zvariant_derive"
-version = "5.12.0"
+version = "5.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "90bc6cde9c01c511074be97f7ccb6c19d0da89e3f8662e812e999dcfd4638737"
+checksum = "8118ca6bda77bfc0ab51d660db0c955f2505eef854c9a449435bccb616933b31"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",
@@ -5798,9 +5812,9 @@ dependencies = [
 
 [[package]]
 name = "zvariant_utils"
-version = "3.4.0"
+version = "3.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e8535915cfa75547e559d8c68e8139909a4aeee076831e4ef7fc59d8172c4d6"
+checksum = "90cb9383f9b45290407a1258b202d3f8f01db719eb60b4e4055c6375af4fc7c7"
 dependencies = [
  "proc-macro2",
  "quote",

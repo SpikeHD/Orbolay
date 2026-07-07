@@ -60,7 +60,7 @@ impl Component for UserLabel {
       )
       .maybe(is_muted, |el| {
         el.child(
-          svg(MUTED_SVG)
+          SvgViewer::new(MUTED_SVG)
             .width(Size::px(16.))
             .height(Size::px(16.))
             .margin(Gaps::new(0., 6., 0., 0.)),
@@ -68,7 +68,7 @@ impl Component for UserLabel {
       })
       .maybe(is_deafened, |el| {
         el.child(
-          svg(DEAFENED_SVG)
+          SvgViewer::new(DEAFENED_SVG)
             .width(Size::px(16.))
             .height(Size::px(16.))
             .margin(Gaps::new(0., 6., 0., 0.)),
@@ -76,7 +76,7 @@ impl Component for UserLabel {
       })
       .maybe(user.streaming, |el| {
         el.child(
-          svg(STREAMING_SVG)
+          SvgViewer::new(STREAMING_SVG)
             .width(Size::px(16.))
             .height(Size::px(16.))
             .margin(Gaps::new(0., 6., 0., 0.)),
