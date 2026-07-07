@@ -3,7 +3,7 @@ use interprocess::local_socket::prelude::*;
 use crate::app_state::AppHandle;
 use crate::ipc::setters::{
   deep_link_channel, disconnect, play_soundboard_sound, select_voice_channel, set_deafened,
-  set_muted, stop_streaming,
+  set_muted, set_user_volume, stop_streaming,
 };
 use crate::log;
 use crate::user::UserVoiceState;
@@ -97,6 +97,20 @@ pub fn handle_ui_message(
         .map(|s| s.to_string());
       play_soundboard_sound(stream, &sound_id, source_guild_id.as_deref())?;
       return Ok(());
+    }
+    "SET_USER_VOLUME" => {
+      let user_id = msg
+        .data
+        .get("user_id")
+        .and_then(|v| v.as_str())
+        .unwrap_or_default()
+        .to_string();
+      let volume = msg
+        .data
+        .get("volume")
+        .and_then(|v| v.as_f64())
+        .unwrap_or(100.);
+      set_user_volume(stream, &user_id, volume)?;
     }
     _ => {
       log!("Unknown UI command: {}", msg.cmd);

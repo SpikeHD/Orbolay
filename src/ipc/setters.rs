@@ -72,6 +72,24 @@ pub fn play_soundboard_sound(
   Ok(())
 }
 
+pub fn set_user_volume(
+  stream: &mut LocalSocketStream,
+  user_id: &str,
+  volume: f64,
+) -> Result<(), Box<dyn std::error::Error>> {
+  let data = serde_json::json!({ "user_id": user_id, "volume": volume });
+  ipc_write(
+    stream,
+    OP_FRAME,
+    &serde_json::to_string(&serde_json::json!({
+      "cmd": "SET_USER_VOICE_SETTINGS",
+      "args": data,
+      "nonce": "SET_USER_VOICE_SETTINGS"
+    }))?,
+  )?;
+  Ok(())
+}
+
 pub fn get_guild(
   stream: &mut LocalSocketStream,
   guild_id: &str,

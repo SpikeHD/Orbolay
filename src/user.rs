@@ -42,6 +42,7 @@ pub struct User {
   pub avatar: String,
   pub voice_state: UserVoiceState,
   pub streaming: bool,
+  pub volume: f32,
 }
 
 use crate::payloads::WsVoiceState;
@@ -57,6 +58,7 @@ impl From<WsVoiceState> for User {
       avatar: val.avatar_url.unwrap_or_default(),
       voice_state,
       streaming: val.streaming.unwrap_or_default(),
+      volume: 100.,
     }
   }
 }
@@ -96,6 +98,7 @@ impl From<RpcVoiceState> for User {
       avatar: val.user.avatar.unwrap_or_default(),
       voice_state,
       streaming: false,
+      volume: val.volume,
     }
   }
 }

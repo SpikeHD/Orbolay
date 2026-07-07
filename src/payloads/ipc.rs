@@ -26,6 +26,8 @@ pub struct VoiceChannelSelectPayload {
 pub struct SelectedVoiceChannelPayload {
   pub id: Option<String>,
   pub guild_id: Option<String>,
+  #[serde(default)]
+  pub voice_states: Vec<RpcVoiceState>,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]

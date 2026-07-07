@@ -108,6 +108,7 @@ pub fn handle_ipc_message(
         user.avatar = data.user.avatar.clone().unwrap_or_default();
         user.voice_state = UserVoiceState::from(&data);
         user.streaming = false;
+        user.volume = data.volume;
       } else {
         state.voice_users.push(data.into());
       }

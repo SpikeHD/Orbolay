@@ -219,11 +219,13 @@ pub fn handle_command(
         .ok()
         .filter(|d| d.id.is_some())
       {
-        let channel_id = data.id.unwrap_or_default();
-        let guild_id = data.guild_id.unwrap_or_default();
+        let channel_id = data.id.clone().unwrap_or_default();
+        let guild_id = data.guild_id.clone().unwrap_or_default();
+        let voice_users = data.voice_states.into_iter().map(Into::into).collect();
         app.update(|state| {
           state.current_channel = channel_id.clone();
           state.current_guild_id = guild_id.clone();
+          state.voice_users = voice_users;
         });
 
         subscribe_voice_channel(stream, &channel_id)?;
