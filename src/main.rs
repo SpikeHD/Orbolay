@@ -11,41 +11,33 @@ use freya::prelude::*;
 use gumdrop::Options;
 use native_dialog::{MessageDialogBuilder, MessageLevel};
 use winit::{dpi::PhysicalPosition, window::WindowLevel};
+use orbolay_logging::{log, warn};
+use orbolay_core::{
+  app_state::{AppHandle, AppState, SharedAppState},
+  config::{TransportMode, is_first_run, load_config, save_config},
+  payloads::{Notification, NotificationAction, NotificationKind},
+  util::bridge::BridgeMessage,
+};
+use orbolay_transport::{create_transport_thread, maybe_notify_update, start_config_watcher};
+use orbolay_ui::{
+  components::{MessagesSection, Soundboard, VoiceControls, VoiceSection},
+  open_configurator, open_configurator_standalone,
+  util::theme,
+};
 
 use crate::{
-  app_state::{AppHandle, AppState, SharedAppState},
-  components::{MessagesSection, Soundboard, VoiceControls, VoiceSection},
-  config::{is_first_run, load_config, save_config},
-  config_watcher::start_config_watcher,
-  configurator::{open_configurator, open_configurator_standalone},
   display::{specific_monitor_or_primary, update_monitor, window_size_for_display},
   manager::OverlayManager,
   notifications::create_notification_thread,
-  payloads::{Notification, NotificationAction, NotificationKind},
-  transport::create_transport_thread,
-  updates::maybe_notify_update,
-  util::{bridge::BridgeMessage, theme},
 };
 
-mod app_state;
-mod components;
-mod config;
-mod config_watcher;
-mod configurator;
 mod display;
-mod ipc;
 #[cfg(not(target_os = "macos"))]
 mod keys;
-mod logger;
 mod manager;
 mod notifications;
-mod payloads;
 mod target;
-mod transport;
-mod updates;
-mod user;
 mod util;
-mod websocket;
 mod window;
 
 static TWEMOJI_FONT: &[u8] = include_bytes!("../assets/fonts/Twemoji.ttf");
@@ -53,7 +45,6 @@ static TWEMOJI_FONT: &[u8] = include_bytes!("../assets/fonts/Twemoji.ttf");
 const GIT_HASH: Option<&str> = option_env!("GIT_HASH");
 const APP_NAME: Option<&str> = option_env!("CARGO_PKG_NAME");
 const APP_VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
-const CLIENT_ID: &str = "207646673902501888";
 
 #[derive(Debug, Clone, Options)]
 pub struct Args {
@@ -195,16 +186,16 @@ fn app() -> impl IntoElement {
   let mut soundboard_open = use_state(|| false);
 
   use_hook(move || {
-    let (ws_sender, ws_receiver) = flume::unbounded::<BridgeMessage>();
+    let (transport_sender, transport_recv) = flume::unbounded::<BridgeMessage>();
     let (redraw_tx, redraw_rx) = flume::unbounded::<()>();
     #[cfg(not(target_os = "macos"))]
     let (keybind_tx, keybind_rx) = flume::unbounded::<keys::KeyEvent>();
 
-    app_state.write().ws_sender = Some(ws_sender.clone());
+    app_state.write().transport_sender = Some(transport_sender.clone());
 
     // Shared state for background threads
     let mut initial = AppState::new();
-    initial.ws_sender = Some(ws_sender);
+    initial.transport_sender = Some(transport_sender);
 
     if let Some(saved) = load_config() {
       initial.config = saved;
@@ -220,7 +211,15 @@ fn app() -> impl IntoElement {
     #[cfg(not(target_os = "macos"))]
     keys::watch_keybinds(shared.clone(), keybind_tx);
 
-    create_transport_thread(app.clone(), args, ws_receiver);
+    let force_transport = if args.websocket {
+      Some(TransportMode::Websocket)
+    } else if args.ipc {
+      Some(TransportMode::Ipc)
+    } else {
+      None
+    };
+
+    create_transport_thread(app.clone(), args.port, force_transport, transport_recv);
     create_notification_thread(app.clone());
 
     app.notify(Notification {
@@ -250,10 +249,10 @@ fn app() -> impl IntoElement {
     spawn_forever(async move {
       while let Ok(()) = redraw_rx.recv_async().await {
         let synced = shared_sync.read().unwrap().clone();
-        let ws_sender = app_state.read().ws_sender.clone();
+        let transport_sender = app_state.read().transport_sender.clone();
         let is_open = app_state.read().is_open;
         *app_state.write() = AppState {
-          ws_sender,
+          transport_sender,
           is_open,
           ..synced
         };

@@ -1,3 +1,31 @@
+[workspace]
+members = [".", "crates/orbolay-core", "crates/orbolay-keys", "crates/orbolay-logging", "crates/orbolay-transport", "crates/orbolay-ui"]
+resolver = "3"
+
+[workspace.dependencies]
+bytes = "1"
+chrono = "0.4.41"
+colored = "3.0.0"
+display-info = "0.5.6"
+dirs = "6.0.0"
+flume = "0.12"
+freya = { version = "0.4.0-rc.24", features = ["engine"] }
+gumdrop = "0.8.1"
+interprocess = "2.4.2"
+native-dialog = { version = "0.9.0", features = ["windows_dpi_awareness", "windows_visual_styles"] }
+notify = "8.2.0"
+open = "5.3.5"
+rdev = { version = "0.5", features = ["unstable_grab", "serialize"] }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.150"
+sysinfo = { version = "0.39.2", default-features = false, features = ["user", "system"] }
+tungstenite = { version = "0.29", features = ["url"] }
+ureq = "3.0.12"
+url = "2.5.8"
+winit = { version = "0.30", features = ["wayland", "x11", "rwh_06"] }
+x11rb = { version = "0.13", features = ["as-raw-xcb-connection", "shape"] }
+windows = "0.62.2"
+
 [package]
 name = "orbolay"
 version = "3.5.0"
@@ -18,31 +46,26 @@ identifier = "dev.spikehd.orbolay"
 package-types = ["deb"]
 
 [dependencies]
-bytes = "1"
-chrono = "0.4.41"
-colored = "3.0.0"
-dirs = "6.0.0"
-display-info = "0.5.6"
-flume = "0.12"
-freya = { version = "0.4.0-rc.24", features = ["engine"] }
-gumdrop = "0.8.1"
-interprocess = "2.4.2"
-native-dialog = { version = "0.9.0", features = ["windows_dpi_awareness", "windows_visual_styles"] }
-notify = "8.2.0"
-open = "5.3.5"
-serde = { version = "1.0.219", features = ["derive"] }
-serde_json = "1.0.150"
-sysinfo = { version = "0.39.2", default-features = false, features = ["user", "system"] }
-tungstenite = { version = "0.29", features = ["url"] }
-ureq = "3.0.12"
-url = "2.5.8"
-winit = { version = "0.30", features = ["wayland", "x11", "rwh_06"] }
+chrono = { workspace = true }
+display-info = { workspace = true }
+flume = { workspace = true }
+freya = { workspace = true }
+gumdrop = { workspace = true }
+native-dialog = { workspace = true }
+open = { workspace = true }
+orbolay-core = { path = "crates/orbolay-core" }
+orbolay-keys = { path = "crates/orbolay-keys" }
+orbolay-logging = { path = "crates/orbolay-logging" }
+orbolay-transport = { path = "crates/orbolay-transport" }
+orbolay-ui = { path = "crates/orbolay-ui" }
+sysinfo = { workspace = true }
+winit = { workspace = true }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-x11rb = { version = "0.13", features = ["as-raw-xcb-connection", "shape"] }
+x11rb = { workspace = true }
 
 [target.'cfg(not(target_os = "macos"))'.dependencies]
-rdev = { version = "0.5", features = ["unstable_grab", "serialize"] }
+rdev = { workspace = true }
 
 [target.'cfg(target_os = "windows")'.dependencies]
-windows = "0.62.2"
+windows = { workspace = true }

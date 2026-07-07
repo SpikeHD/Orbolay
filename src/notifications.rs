@@ -1,4 +1,4 @@
-use crate::app_state::AppHandle;
+use orbolay_core::app_state::AppHandle;
 
 pub fn create_notification_thread(app: AppHandle) {
   std::thread::spawn(move || {

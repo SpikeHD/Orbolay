@@ -1,7 +1,6 @@
 mod state;
 
 pub mod bind;
-pub mod convert;
 pub mod event;
 
 pub use event::KeyEvent;
@@ -16,9 +15,10 @@ use std::time::Duration;
 
 use rdev::{Event, grab, listen};
 
-use crate::{app_state::SharedAppState, warn};
+use orbolay_core::app_state::SharedAppState;
+use orbolay_logging::warn;
 
-use bind::{DEFAULT_OVERLAY_TOGGLE, strings_to_keys};
+use orbolay_keys::{DEFAULT_OVERLAY_TOGGLE, strings_to_keys};
 use bind::{Keybind, default_keybinds};
 use state::{KeyState, process};
 

@@ -1,6 +1,6 @@
 use freya::prelude::State;
 
-use crate::app_state::AppState;
+use orbolay_core::app_state::AppState;
 
 pub struct OverlayManager;
 

@@ -3317,28 +3317,84 @@ dependencies = [
 name = "orbolay"
 version = "3.5.0"
 dependencies = [
- "bytes",
  "chrono",
- "colored",
- "dirs",
  "display-info",
  "flume",
  "freya",
  "gumdrop",
- "interprocess",
  "native-dialog",
- "notify",
  "open",
+ "orbolay-core",
+ "orbolay-keys",
+ "orbolay-logging",
+ "orbolay-transport",
+ "orbolay-ui",
  "rdev",
- "serde",
- "serde_json",
  "sysinfo",
- "tungstenite",
- "ureq",
- "url",
  "windows",
  "winit",
  "x11rb",
+]
+
+[[package]]
+name = "orbolay-core"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "dirs",
+ "flume",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "orbolay-keys"
+version = "0.1.0"
+dependencies = [
+ "rdev",
+ "serde_json",
+]
+
+[[package]]
+name = "orbolay-logging"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "colored",
+]
+
+[[package]]
+name = "orbolay-transport"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "flume",
+ "interprocess",
+ "notify",
+ "open",
+ "orbolay-core",
+ "orbolay-logging",
+ "serde_json",
+ "tungstenite",
+ "ureq",
+ "url",
+]
+
+[[package]]
+name = "orbolay-ui"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "display-info",
+ "flume",
+ "freya",
+ "orbolay-core",
+ "orbolay-keys",
+ "orbolay-logging",
+ "rdev",
+ "serde",
+ "serde_json",
+ "ureq",
 ]
 
 [[package]]

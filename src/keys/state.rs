@@ -1,4 +1,4 @@
-use crate::log;
+use orbolay_logging::log;
 use std::time::{Duration, Instant};
 
 use rdev::{EventType, Key};

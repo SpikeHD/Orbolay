@@ -1,0 +1,18 @@
+[package]
+name = "orbolay-transport"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.95"
+
+[dependencies]
+chrono = { workspace = true }
+flume = { workspace = true }
+interprocess = { workspace = true }
+notify = { workspace = true }
+open = { workspace = true }
+orbolay-core = { path = "../orbolay-core" }
+orbolay-logging = { path = "../orbolay-logging" }
+serde_json = { workspace = true }
+tungstenite = { workspace = true }
+ureq = { workspace = true }
+url = { workspace = true }

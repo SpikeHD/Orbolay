@@ -1,14 +1,9 @@
-use std::{
-  cell::LazyCell,
-  sync::atomic::{AtomicBool, Ordering},
-};
+use std::sync::atomic::{AtomicBool, Ordering};
 
+use orbolay_keys::{DEFAULT_OVERLAY_TOGGLE, strings_to_keys};
 use rdev::Key;
 
 use super::event::KeyEvent;
-
-pub const DEFAULT_OVERLAY_TOGGLE: LazyCell<Vec<String>> =
-  LazyCell::new(|| vec!["ControlLeft".into(), "BackQuote".into()]);
 
 pub struct Keybind {
   pub keys: Vec<Key>,
@@ -42,27 +37,7 @@ impl Keybind {
   }
 }
 
-pub fn string_to_key(string: impl AsRef<str>) -> Option<Key> {
-  let s = string.as_ref();
-  serde_json::from_str::<Key>(s)
-    .or_else(|_| serde_json::from_str::<Key>(&format!("\"{}\"", s)))
-    .ok()
-}
 
-pub fn strings_to_keys(strings: Vec<impl AsRef<str>>) -> Vec<Key> {
-  strings.iter().filter_map(string_to_key).collect()
-}
-
-pub fn key_to_string(key: &Key) -> String {
-  serde_json::to_string(key)
-    .unwrap_or_default()
-    .trim_matches('"')
-    .to_owned()
-}
-
-pub fn keys_to_strings(keys: Vec<Key>) -> Vec<String> {
-  keys.iter().map(key_to_string).collect()
-}
 
 pub fn default_keybinds() -> Vec<Keybind> {
   vec![

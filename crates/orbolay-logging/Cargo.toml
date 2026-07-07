@@ -1,0 +1,9 @@
+[package]
+name = "orbolay-logging"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.95"
+
+[dependencies]
+chrono = { workspace = true }
+colored = { workspace = true }

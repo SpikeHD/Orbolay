@@ -2,7 +2,8 @@ use display_info::DisplayInfo;
 use freya::prelude::{Platform, WinitPlatformExt};
 use winit::dpi::{PhysicalPosition, PhysicalSize};
 
-use crate::{config::load_config, warn};
+use orbolay_core::config::load_config;
+use orbolay_logging::warn;
 
 pub fn specific_monitor_or_primary() -> DisplayInfo {
   let config = load_config().unwrap_or_default();
