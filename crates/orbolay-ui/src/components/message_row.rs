@@ -83,6 +83,7 @@ impl Component for MessageRow {
           .child(
             label()
               .font_size(14.)
+              .width(Size::Fill)
               .color(self.theme.text_color)
               .max_lines(2)
               .text(strip(&self.message.body))

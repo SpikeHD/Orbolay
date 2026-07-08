@@ -4,9 +4,10 @@ use freya::prelude::*;
 use orbolay_core::{
   app_state::{AppHandle, SharedAppState},
   config::{Config, TransportMode, load_config, save_config},
+  payloads::Notification,
 };
 
-use crate::util::theme::{GRAY, MUTED_GRAY, RED, TRANSPARENT, from_tuple, to_tuple};
+use crate::util::theme::{GRAY, LIGHT_GRAY, MUTED_GRAY, RED, TRANSPARENT, from_tuple, to_tuple};
 
 #[cfg(not(target_os = "macos"))]
 use orbolay_keys::{DEFAULT_OVERLAY_TOGGLE, keys_to_strings, strings_to_keys};
@@ -43,7 +44,7 @@ const VOICE_DISPLAY_OPTIONS: &[&str] =
 pub fn open_configurator(app: AppHandle) {
   spawn(async move {
     let _ = Platform::get()
-      .launch_window(configurator_window(app))
+      .launch_window(configurator_window(app, false))
       .await;
   });
 }
@@ -58,11 +59,11 @@ pub fn open_configurator_standalone() {
     app.update(|state| state.config = saved);
   }
 
-  launch(LaunchConfig::new().with_window(configurator_window(app)));
+  launch(LaunchConfig::new().with_window(configurator_window(app, true)));
 }
 
-fn configurator_window(app: AppHandle) -> WindowConfig {
-  WindowConfig::new(move || configurator(app.clone()))
+fn configurator_window(app: AppHandle, standalone: bool) -> WindowConfig {
+  WindowConfig::new(move || configurator(app.clone(), standalone))
     .with_background(GRAY)
     .with_size(WIDTH as f64, HEIGHT as f64)
     .with_title("Orbolay Configurator")
@@ -138,7 +139,24 @@ fn make_keybind_updater(
   })
 }
 
-fn configurator(app: AppHandle) -> impl IntoElement {
+fn wide_button(
+  text: impl Into<String>,
+  color: Color,
+  on_press: impl Into<EventHandler<Event<PressEventData>>>,
+) -> impl IntoElement {
+  rect()
+    .width(Size::fill())
+    .height(Size::px(32.))
+    .main_align(Alignment::Center)
+    .cross_align(Alignment::Center)
+    .margin(Gaps::new_symmetric(4., 12.))
+    .corner_radius(10.)
+    .background(color)
+    .on_press(on_press)
+    .child(label().text(text.into()).color(Color::WHITE).font_size(14.))
+}
+
+fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
   use_init_theme(dark_theme);
 
   // Make the recording flag available to KeybindControl
@@ -396,31 +414,37 @@ fn configurator(app: AppHandle) -> impl IntoElement {
       }),
       disabled: false,
     })
-    .child(
-      rect()
-        .width(Size::fill())
-        .height(Size::px(32.))
-        .main_align(Alignment::Center)
-        .cross_align(Alignment::Center)
-        .margin(Gaps::new_symmetric(0., 12.))
-        .corner_radius(10.)
-        .background(RED)
-        .on_press(move |_| {
-          let updated = app.update(|state| {
-            state.config = Config::default();
-            state.config.clone()
-          });
-          save_config(&updated);
-          local_config.set(updated);
-          reset_version.set(reset_version() + 1);
-        })
-        .child(
-          label()
-            .text("Reset to Defaults")
-            .color(Color::WHITE)
-            .font_size(14.),
-        ),
-    )
+    .maybe(!standalone, {
+      let app = app.clone();
+      move |el| {
+        el.child(wide_button(
+          "Send Test Notification",
+          LIGHT_GRAY,
+          move |_| {
+            app.notify(Notification {
+              title: "Test Notification".into(),
+              body:
+                "This is a test notification, triggered manually from the configuration window!"
+                  .into(),
+              icon: "https://avatars.githubusercontent.com/u/25207995?v=4".into(),
+              ..Default::default()
+            });
+          },
+        ))
+      }
+    })
+    .child(wide_button("Reset to Defaults", RED, {
+      let app = app.clone();
+      move |_| {
+        let updated = app.update(|state| {
+          state.config = Config::default();
+          state.config.clone()
+        });
+        save_config(&updated);
+        local_config.set(updated);
+        reset_version.set(reset_version() + 1);
+      }
+    }))
     .child(
       label()
         .text("Press \"C\" with the overlay open to open this window again!")
