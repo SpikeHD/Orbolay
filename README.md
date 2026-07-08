@@ -94,6 +94,7 @@
 * Voice channel member list and status (who is speaking/muted/deafened/etc)
 * Custom notifications
 * Mute/deafen/disconnect controls
+* User volume control
 * Soundboard
 * Customizable layout, colors, border radius, etc.
 * Works with any official or modded client (including web!)
