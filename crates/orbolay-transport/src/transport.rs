@@ -11,7 +11,8 @@ pub fn create_transport_thread(
 ) {
   std::thread::spawn(move || {
     let ws_port = port;
-    let transport_mode = force.unwrap_or_else(|| app.read(|state| state.config.transport_mode.clone()));
+    let transport_mode =
+      force.unwrap_or_else(|| app.read(|state| state.config.transport_mode.clone()));
 
     match transport_mode {
       TransportMode::Websocket => {

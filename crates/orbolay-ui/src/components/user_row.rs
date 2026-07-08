@@ -1,9 +1,15 @@
 use freya::engine::prelude::SkColor;
 use freya::prelude::*;
 
-use orbolay_core::user::{User, UserVoiceState};
+use orbolay_core::{
+  app_state::AppState,
+  user::{User, UserVoiceState},
+};
 
-use crate::util::{image::avatar_image, theme::Theme};
+use crate::{
+  components::user_context_menu_item::UserContextMenuItem,
+  util::{image::avatar_image, theme::Theme},
+};
 
 static DEAFENED_SVG: &[u8] = include_bytes!("../../../../assets/deafened.svg");
 static MUTED_SVG: &[u8] = include_bytes!("../../../../assets/muted.svg");
@@ -86,10 +92,12 @@ impl Component for UserLabel {
 
 #[derive(PartialEq)]
 pub struct UserRow {
+  pub app_state: State<AppState>,
   pub user: User,
   pub is_right_aligned: bool,
   pub is_open: bool,
   pub is_voice_semitransparent: bool,
+  pub can_context_menu: bool,
   pub theme: Theme,
 }
 
@@ -97,7 +105,6 @@ impl Component for UserRow {
   fn render(&self) -> impl IntoElement {
     let is_right_aligned = self.is_right_aligned;
     let is_speaking = self.user.voice_state == UserVoiceState::Speaking;
-
     let opacity = if !is_speaking && (self.is_voice_semitransparent && !self.is_open) {
       0.5
     } else {
@@ -118,7 +125,34 @@ impl Component for UserRow {
       .cross_align(Alignment::Center)
       .height(Size::px(50.))
       .margin(Gaps::new_all(6.))
-      .opacity(opacity);
+      .opacity(opacity)
+      .maybe(self.can_context_menu, |el| {
+        el.on_secondary_down({
+          let user = self.user.clone();
+          let theme = self.theme;
+          let app_state = self.app_state;
+          move |e: Event<PressEventData>| {
+            ContextMenu::open_from_event(
+              &e,
+              Menu::new()
+                .theme(MenuContainerThemePartial {
+                  background: Some(Preference::Specific(theme.darkish_gray)),
+                  padding: Some(Preference::Specific(Gaps::new_all(6.))),
+                  shadow: Some(Preference::Specific(theme.transparent_gray)),
+                  border_fill: Some(Preference::Specific(theme.muted_gray)),
+                  corner_radius: Some(Preference::Specific(CornerRadius::new_all(
+                    theme.border_radius,
+                  ))),
+                })
+                .child(UserContextMenuItem {
+                  user: user.clone(),
+                  theme,
+                  app_state,
+                }),
+            );
+          }
+        })
+      });
 
     if is_right_aligned {
       row.child(label).child(icon)

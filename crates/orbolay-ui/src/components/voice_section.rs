@@ -1,11 +1,21 @@
 use freya::prelude::*;
 
-use orbolay_core::{config::DisplayVoiceMembers, user::{User, UserVoiceState}, util::text::censor};
+use orbolay_core::{
+  app_state::AppState,
+  config::{DisplayVoiceMembers, TransportMode},
+  user::{User, UserVoiceState},
+  util::text::censor,
+};
 
-use crate::{components::UserRow, config::{AxisAlignment, CornerAlignment}, util::theme::Theme};
+use crate::{
+  components::UserRow,
+  config::{AxisAlignment, CornerAlignment},
+  util::theme::Theme,
+};
 
 #[derive(PartialEq)]
 pub struct VoiceSection {
+  pub app_state: State<AppState>,
   pub voice_users: Vec<User>,
   pub is_open: bool,
   pub is_censor: bool,
@@ -37,32 +47,40 @@ impl Component for VoiceSection {
       })
       .collect();
 
-    filtered_users.iter().fold(
-      rect()
-        .direction(Direction::Vertical)
-        .cross_align(alignment.x.to_freya())
-        .main_align(alignment.y.to_freya())
-        .position(Position::new_absolute().top(0.).left(0.))
-        .background(Color::TRANSPARENT)
-        .height(Size::fill())
-        .width(Size::fill())
-        .padding(gaps),
-      |el, user| {
-        let mut u = user.clone();
-        if self.is_censor {
-          u.name = censor(&u.name);
-        }
-        el.child(UserRow {
-          user: u,
-          is_open: self.is_open,
-          is_right_aligned,
-          is_voice_semitransparent: matches!(
-            self.display_voice_members,
-            DisplayVoiceMembers::AlwaysSemiTransparent
-          ),
-          theme: self.theme,
-        })
-      },
+    rect().child(ContextMenuViewer::new()).child(
+      filtered_users.iter().fold(
+        rect()
+          .direction(Direction::Vertical)
+          .cross_align(alignment.x.to_freya())
+          .main_align(alignment.y.to_freya())
+          .position(Position::new_absolute().top(0.).left(0.))
+          .background(Color::TRANSPARENT)
+          .height(Size::fill())
+          .width(Size::fill())
+          .padding(gaps),
+        |el, user| {
+          let mut u = user.clone();
+
+          if self.is_censor {
+            u.name = censor(&u.name);
+          }
+
+          el.child(UserRow {
+            app_state: self.app_state,
+            // TODO websocket cannot change user volume yet
+            can_context_menu: self.app_state.read().user_id != u.id.clone()
+              && self.app_state.read().config.transport_mode == TransportMode::Ipc,
+            user: u,
+            is_open: self.is_open,
+            is_right_aligned,
+            is_voice_semitransparent: matches!(
+              self.display_voice_members,
+              DisplayVoiceMembers::AlwaysSemiTransparent
+            ),
+            theme: self.theme,
+          })
+        },
+      ),
     )
   }
 }

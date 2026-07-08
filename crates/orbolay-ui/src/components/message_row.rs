@@ -1,8 +1,15 @@
 use freya::prelude::*;
 
-use orbolay_core::{app_state::AppState, payloads::Notification, util::{bridge::BridgeMessage, text::strip}};
+use orbolay_core::{
+  app_state::AppState,
+  payloads::Notification,
+  util::{bridge::BridgeMessage, text::strip},
+};
 
-use crate::{components::ActionButton, util::{image::avatar_image, theme::Theme}};
+use crate::{
+  components::ActionButton,
+  util::{image::avatar_image, theme::Theme},
+};
 
 #[derive(PartialEq)]
 pub struct MessageRow {

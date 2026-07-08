@@ -2,6 +2,7 @@ mod action_button;
 mod message_row;
 mod messages_section;
 mod soundboard;
+mod user_context_menu_item;
 mod user_row;
 mod voice_controls;
 mod voice_section;

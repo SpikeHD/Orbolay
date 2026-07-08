@@ -66,7 +66,11 @@ impl Component for ControlButton {
         *hovered.write() = false;
         Cursor::set(CursorIcon::default());
       })
-      .child(SvgViewer::new(icon).width(Size::px(24.)).height(Size::px(24.)))
+      .child(
+        SvgViewer::new(icon)
+          .width(Size::px(24.))
+          .height(Size::px(24.)),
+      )
   }
 }
 

@@ -37,8 +37,6 @@ impl Keybind {
   }
 }
 
-
-
 pub fn default_keybinds() -> Vec<Keybind> {
   vec![
     Keybind::new(

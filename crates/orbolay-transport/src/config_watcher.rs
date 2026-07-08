@@ -3,7 +3,10 @@ use std::sync::mpsc;
 use notify::{Event, Result, Watcher};
 use orbolay_logging::{error, log, warn};
 
-use orbolay_core::{app_state::AppHandle, config::{config_dir, load_config}};
+use orbolay_core::{
+  app_state::AppHandle,
+  config::{config_dir, load_config},
+};
 
 pub fn start_config_watcher(app: AppHandle) {
   log!("Starting config file notification thread");

@@ -2,9 +2,7 @@ use freya::prelude::*;
 use serde_json::json;
 
 use orbolay_core::{
-  app_state::AppState,
-  payloads::SoundboardSoundPayload,
-  util::bridge::BridgeMessage,
+  app_state::AppState, payloads::SoundboardSoundPayload, util::bridge::BridgeMessage,
 };
 
 use crate::util::theme::Theme;

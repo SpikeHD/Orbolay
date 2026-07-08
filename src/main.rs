@@ -10,20 +10,20 @@ use std::sync::Arc;
 use freya::prelude::*;
 use gumdrop::Options;
 use native_dialog::{MessageDialogBuilder, MessageLevel};
-use winit::{dpi::PhysicalPosition, window::WindowLevel};
-use orbolay_logging::{log, warn};
 use orbolay_core::{
   app_state::{AppHandle, AppState, SharedAppState},
   config::{TransportMode, is_first_run, load_config, save_config},
   payloads::{Notification, NotificationAction, NotificationKind},
   util::bridge::BridgeMessage,
 };
+use orbolay_logging::{log, warn};
 use orbolay_transport::{create_transport_thread, maybe_notify_update, start_config_watcher};
 use orbolay_ui::{
   components::{MessagesSection, Soundboard, VoiceControls, VoiceSection},
   open_configurator, open_configurator_standalone,
   util::theme,
 };
+use winit::{dpi::PhysicalPosition, window::WindowLevel};
 
 use crate::{
   display::{specific_monitor_or_primary, update_monitor, window_size_for_display},
@@ -341,6 +341,7 @@ fn app() -> impl IntoElement {
     // Voice users
     .child(VoiceSection {
       voice_users,
+      app_state,
       is_open,
       is_censor,
       user_alignment: config

@@ -23,8 +23,8 @@ use crate::ipc::{
 };
 use orbolay_logging::{error, log, success};
 
-use crate::util::discord_auth::{build_rpc_authenticate_request, extract_auth_code};
 use crate::CLIENT_ID;
+use crate::util::discord_auth::{build_rpc_authenticate_request, extract_auth_code};
 
 fn try_create_stream() -> Result<LocalSocketStream, Box<dyn std::error::Error>> {
   #[cfg(unix)]

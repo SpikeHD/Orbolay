@@ -18,8 +18,8 @@ use rdev::{Event, grab, listen};
 use orbolay_core::app_state::SharedAppState;
 use orbolay_logging::warn;
 
-use orbolay_keys::{DEFAULT_OVERLAY_TOGGLE, strings_to_keys};
 use bind::{Keybind, default_keybinds};
+use orbolay_keys::{DEFAULT_OVERLAY_TOGGLE, strings_to_keys};
 use state::{KeyState, process};
 
 pub fn watch_keybinds(shared: SharedAppState, keybind_tx: flume::Sender<KeyEvent>) {
