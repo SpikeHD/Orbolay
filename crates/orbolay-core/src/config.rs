@@ -75,6 +75,10 @@ fn default_border_radius() -> f32 {
   10.
 }
 
+fn default_true() -> bool {
+  true
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Config {
@@ -107,6 +111,8 @@ pub struct Config {
   pub transport_mode: TransportMode,
   #[serde(default)]
   pub software_rendering: Option<bool>,
+  #[serde(default = "default_true")]
+  pub xwayland: bool,
   #[serde(default = "default_accent")]
   pub accent: (u8, u8, u8),
   #[serde(default = "default_text")]
@@ -133,6 +139,7 @@ impl Default for Config {
       is_keybind_enabled: None,
       transport_mode: TransportMode::Ipc,
       software_rendering: None,
+      xwayland: true,
       accent: default_accent(),
       text_color: default_text(),
       border_radius: 10.,

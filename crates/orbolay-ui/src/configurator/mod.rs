@@ -197,7 +197,7 @@ fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
     .child(divider())
     .child(SettingRow {
       name: "Websocket Port".into(),
-      description: Some("Port the websocket server listens on (websocket mode only). REQUIRES RESTART.".into()),
+      description: Some("Port the websocket server listens on (websocket mode only). Requires Restart.".into()),
       kind: SettingKind::Input(Some(config.port.unwrap_or(6888).to_string())),
       on_change: make_updater(app.clone(), local_config, |cfg, v| {
         if let Ok(n) = v.trim().parse::<u16>() {
@@ -239,7 +239,7 @@ fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
     })
     .child(divider());
 
-  let inner = inner
+  let mut inner = inner
     .child(SettingRow {
       name: "Display".into(),
       description: Some("The display to show the overlay on".into()),
@@ -299,7 +299,20 @@ fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
         cfg.software_rendering = Some(value);
       }),
       disabled: false,
-    })
+    });
+
+  #[cfg(target_os = "linux")]
+  let inner = inner.child(divider()).child(SettingRow {
+    name: "Run with XWayland".into(),
+    description: Some("Create the window under XWayland. Requires restart.".into()),
+    kind: SettingKind::Toggle(config.xwayland),
+    on_change: make_bool_updater(app.clone(), local_config, |cfg, value| {
+      cfg.xwayland = value;
+    }),
+    disabled: false,
+  });
+
+  let inner = inner
     .child(divider())
     .child(SettingRow {
       name: "Display Voice Members".into(),

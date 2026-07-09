@@ -115,6 +115,10 @@ fn main() {
     unsafe { std::env::set_var("FREYA_RENDERER", "software") };
   }
 
+  if config.xwayland {
+    unsafe { std::env::set_var("WAYLAND_DISPLAY", "") };
+  }
+
   let display = specific_monitor_or_primary();
   let monitor_position = (display.x, display.y);
 
