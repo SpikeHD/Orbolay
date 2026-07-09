@@ -239,7 +239,7 @@ fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
     })
     .child(divider());
 
-  let mut inner = inner
+  let inner = inner
     .child(SettingRow {
       name: "Display".into(),
       description: Some("The display to show the overlay on".into()),
