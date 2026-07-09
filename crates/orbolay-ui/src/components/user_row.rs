@@ -56,7 +56,7 @@ impl Component for UserLabel {
       .corner_radius(CornerRadius::new_all(self.theme.border_radius))
       .margin(Gaps::new(0., 6., 0., 6.))
       .child(
-        rect().padding(Gaps::new(2., 6., 2., 6.)).child(
+        rect().padding(Gaps::new(0., 6., 0., 6.)).child(
           label()
             .font_size(14.)
             .color(self.theme.text_color)
