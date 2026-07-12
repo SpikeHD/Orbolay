@@ -26,3 +26,39 @@ git clone https://github.com/SpikeHD/Orbolay.git
 cd Orbolay
 cargo run
 ```
+
+# High-level Architecture
+
+Orbolay is a 2-part system. There is the UI "layer" and the transport "layer". A global `AppState` is used to bridge these two concepts together.
+
+## The UI Layer
+
+Unlike other overlay programs like the official overlay or mangohud (which inject into the rendering pipeline of a running application), Orbolay works by running a fullscreen,
+transparent window on top of everything else. The key benefit here being that Orbolay does not depend on supporting a bunch of different graphics APIs, and can even run
+without any other program running at all! On Windows and MacOS this kinda just works, but on Linux it requires running via `xwayland` if using Wayland.
+This will likely change when `winit` supports `layer-shell`.
+
+The UI, located in `crates/orbolay-ui`, is nothing special. Freya is used to create some custom elements that we display in the window. Like something akin to React, when the
+global `AppState` changes, the UI will update along with it. Reading the code for these is probably the easiest way to get aquainted with them.
+
+## The Transport Layer
+
+Orbolay contains two transport methods, IPC and websocket. Both can be found in `crates/orbolay-transport`.
+
+### IPC
+
+IPC is used to interface with official clients, as Discord exposes a socket on the filesystem for us to query and send commands to. Orbolay pretends to be StreamKit in order to get access to most
+commands and events.
+
+IPC works by subscribing to events and sending commands. For example, we subscribe to `VOICE_STATE_UPDATE` to see the changes in a user in the voice channel (such as, if they mute themselves),
+or we can send the command `SET_VOICE_SETTINGS` with `{ mute: true }` to mute ourselves.
+
+All available commands and events can be found on [docs.discord.food](https://docs.discord.food/topics/rpc).
+
+### Websocket
+
+Websocket is used to communicate with 3rd party clients running Orbolay bridge plugins, like the [shelter plugin](https://github.com/SpikeHD/shelter-plugins#orbolay-bridge)
+or the [Vencord](https://github.com/SpikeHD/vc-orbolay-bridge)/[Equicord](https://github.com/equicord/equicord) plugins.
+
+Because we have full control over these, there is no need to subscribe to events, the plugins are just written to send them by listening to Flux events on the client. We also have access to
+more client data than RPC, since we have full control over the client via the bridge plugins.
