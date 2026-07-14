@@ -242,7 +242,7 @@ fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
         config
           .overlay_keybind
           .clone()
-          .unwrap_or_else(|| DEFAULT_OVERLAY_TOGGLE.clone()),
+          .unwrap_or_else(|| DEFAULT_OVERLAY_TOGGLE.get().map(String::from).to_vec()),
       ))),
       on_change: make_keybind_updater(app.clone(), local_config, |cfg, keys| {
         cfg.overlay_keybind = Some(keys_to_strings(keys));

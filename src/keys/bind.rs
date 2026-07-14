@@ -40,7 +40,7 @@ impl Keybind {
 pub fn default_keybinds() -> Vec<Keybind> {
   vec![
     Keybind::new(
-      strings_to_keys(DEFAULT_OVERLAY_TOGGLE.clone()),
+      strings_to_keys(DEFAULT_OVERLAY_TOGGLE.get().map(String::from).to_vec()),
       KeyEvent::ToggleOverlay,
     ),
     Keybind::new(vec![Key::KeyC], KeyEvent::OpenConfigurator),

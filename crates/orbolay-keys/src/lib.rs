@@ -1,7 +1,9 @@
-use std::cell::LazyCell;
+use std::cell::Cell;
 
-pub const DEFAULT_OVERLAY_TOGGLE: LazyCell<Vec<String>> =
-  LazyCell::new(|| vec!["ControlLeft".into(), "BackQuote".into()]);
+thread_local! {
+  pub static DEFAULT_OVERLAY_TOGGLE: Cell<[&str; 2]> =
+    const { Cell::new(["ControlLeft", "BackQuote"]) };
+}
 
 #[cfg(not(target_os = "macos"))]
 use rdev::Key;

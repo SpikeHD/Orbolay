@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use freya::prelude::*;
 
 use orbolay_core::{
@@ -28,7 +30,8 @@ pub struct VoiceSection {
 
 impl Component for VoiceSection {
   fn render(&self) -> impl IntoElement {
-    let alignment = CornerAlignment::from_str(&self.user_alignment);
+    // unwrap: this does not fail
+    let alignment = CornerAlignment::from_str(&self.user_alignment).unwrap();
     let gaps = alignment.to_gaps(self.user_offset_x, self.user_offset_y);
     let is_right_aligned = alignment.x == AxisAlignment::End;
 

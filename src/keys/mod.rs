@@ -44,8 +44,10 @@ pub fn watch_keybinds(shared: SharedAppState, keybind_tx: flume::Sender<KeyEvent
 
         enabled.store(is_enabled, Ordering::Relaxed);
 
-        let overlay_keys =
-          strings_to_keys(overlay_keybind.unwrap_or_else(|| DEFAULT_OVERLAY_TOGGLE.clone()));
+        let overlay_keys = strings_to_keys(
+          overlay_keybind
+            .unwrap_or_else(|| DEFAULT_OVERLAY_TOGGLE.get().map(String::from).to_vec()),
+        );
 
         {
           let mut kbs = keybinds.write().unwrap();

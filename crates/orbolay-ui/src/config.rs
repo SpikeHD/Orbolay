@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{fmt::Display, str::FromStr};
 
 use freya::prelude::{Alignment, Gaps};
 use serde::Deserialize;
@@ -36,9 +36,14 @@ pub struct CornerAlignment {
   pub y: AxisAlignment,
 }
 
-impl CornerAlignment {
-  pub fn from_str(s: impl AsRef<str>) -> Self {
-    match s.as_ref().to_ascii_lowercase().as_str() {
+#[derive(Debug, PartialEq, Eq)]
+pub struct CornerAlignmentParseError;
+
+impl FromStr for CornerAlignment {
+  type Err = CornerAlignmentParseError;
+
+  fn from_str(s: &str) -> Result<Self, Self::Err> {
+    Ok(match s.to_ascii_lowercase().as_str() {
       "topleft" => CornerAlignment {
         x: AxisAlignment::Start,
         y: AxisAlignment::Start,
@@ -75,9 +80,11 @@ impl CornerAlignment {
         x: AxisAlignment::Start,
         y: AxisAlignment::Start,
       },
-    }
+    })
   }
+}
 
+impl CornerAlignment {
   pub fn to_gaps(&self, offset_x: i32, offset_y: i32) -> Gaps {
     let (top, bottom) = match self.y {
       AxisAlignment::Start => (offset_y as f32, 0.),

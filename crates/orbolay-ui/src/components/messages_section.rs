@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use freya::prelude::*;
 
 use orbolay_core::{app_state::AppState, payloads::Notification};
@@ -19,7 +21,8 @@ pub struct MessagesSection {
 
 impl Component for MessagesSection {
   fn render(&self) -> impl IntoElement {
-    let alignment = CornerAlignment::from_str(&self.message_alignment);
+    // unwrap: this does not fail
+    let alignment = CornerAlignment::from_str(&self.message_alignment).unwrap();
     let gaps = alignment.to_gaps(self.message_offset_x, self.message_offset_y);
     let opacity = if self.messages_semitransparent && !self.is_open {
       0.5
