@@ -309,6 +309,7 @@ fn app() -> impl IntoElement {
   let state = app_state.read();
   let voice_users = state.voice_users.clone();
   let messages = state.messages.clone();
+  let messages_enabled = state.config.enable_message_notifications;
   let is_open = state.is_open;
   let is_censor = state.is_censor;
   let config = state.config.clone();
@@ -358,7 +359,7 @@ fn app() -> impl IntoElement {
       theme,
     })
     // Messages
-    .child(MessagesSection {
+    .maybe(messages_enabled, |el| el.child(MessagesSection {
       messages,
       is_open,
       is_censor,
@@ -371,7 +372,7 @@ fn app() -> impl IntoElement {
       messages_semitransparent: config.messages_semitransparent,
       app_state,
       theme,
-    })
+    }))
     // Voice controls + soundboard
     .maybe(is_open, |el| {
       el

@@ -89,6 +89,8 @@ pub struct Config {
   pub display_idx: Option<usize>,
   #[serde(default)]
   pub port: Option<u16>,
+  #[serde(default = "default_true")]
+  pub enable_message_notifications: bool,
   #[serde(default)]
   pub message_alignment: Option<String>,
   #[serde(default)]
@@ -128,6 +130,7 @@ impl Default for Config {
       overlay_keybind: default_overlay_keybind(),
       display_idx: None,
       port: Some(6888),
+      enable_message_notifications: true,
       message_alignment: None,
       user_alignment: None,
       message_offset_x: 0,

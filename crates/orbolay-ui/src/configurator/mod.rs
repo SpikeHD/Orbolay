@@ -206,6 +206,18 @@ fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
       }),
       disabled: config.transport_mode != TransportMode::Websocket,
     })
+    .child(divider())
+    .child(
+      SettingRow {
+        name: "Enable Notifications".into(),
+        description: Some("Show notifications for incoming messages, calls, etc.".into()),
+        kind: SettingKind::Toggle(config.enable_message_notifications),
+        on_change: make_bool_updater(app.clone(), local_config, |cfg, value| {
+          cfg.enable_message_notifications = value;
+        }),
+        disabled: false,
+      }
+    )
     .child(divider());
 
   #[cfg(not(target_os = "macos"))]
