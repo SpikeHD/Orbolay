@@ -393,7 +393,7 @@ fn app() -> impl IntoElement {
             .direction(Direction::Vertical)
             .main_align(Alignment::End)
             .cross_align(Alignment::Center)
-            .height(Size::percent(90.))
+            .height(Size::percent(90.0_f32))
             .width(Size::fill())
             .maybe(*soundboard_open.read(), |el| {
               el.child(Soundboard { app_state, theme })

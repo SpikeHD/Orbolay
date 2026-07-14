@@ -24,8 +24,8 @@ impl Component for AvatarIcon {
   fn render(&self) -> impl IntoElement {
     let (url, border) = avatar_url_and_border(&self.user);
     rect()
-      .width(Size::px(50.))
-      .height(Size::px(50.))
+      .width(Size::px(50.0_f32))
+      .height(Size::px(50.0_f32))
       .corner_radius(CornerRadius::new_all(25.))
       .child(
         avatar_image(&url, border)
@@ -51,7 +51,7 @@ impl Component for UserLabel {
       .direction(Direction::Horizontal)
       .main_align(Alignment::Center)
       .cross_align(Alignment::Center)
-      .height(Size::percent(70.))
+      .height(Size::percent(70.0_f32))
       .background(self.theme.gray)
       .corner_radius(CornerRadius::new_all(self.theme.border_radius))
       .margin(Gaps::new(0., 6., 0., 6.))
@@ -66,24 +66,24 @@ impl Component for UserLabel {
       .maybe(is_muted, |el| {
         el.child(
           SvgViewer::new(MUTED_SVG)
-            .width(Size::px(16.))
-            .height(Size::px(16.))
+            .width(Size::px(16.0_f32))
+            .height(Size::px(16.0_f32))
             .margin(Gaps::new(0., 6., 0., 0.)),
         )
       })
       .maybe(is_deafened, |el| {
         el.child(
           SvgViewer::new(DEAFENED_SVG)
-            .width(Size::px(16.))
-            .height(Size::px(16.))
+            .width(Size::px(16.0_f32))
+            .height(Size::px(16.0_f32))
             .margin(Gaps::new(0., 6., 0., 0.)),
         )
       })
       .maybe(user.streaming, |el| {
         el.child(
           SvgViewer::new(STREAMING_SVG)
-            .width(Size::px(16.))
-            .height(Size::px(16.))
+            .width(Size::px(16.0_f32))
+            .height(Size::px(16.0_f32))
             .margin(Gaps::new(0., 6., 0., 0.)),
         )
       })
@@ -106,9 +106,9 @@ impl Component for UserRow {
     let is_right_aligned = self.is_right_aligned;
     let is_speaking = self.user.voice_state == UserVoiceState::Speaking;
     let opacity = if !is_speaking && (self.is_voice_semitransparent && !self.is_open) {
-      0.5
+      0.5_f32
     } else {
-      1.0
+      1.0_f32
     };
 
     let label = UserLabel {
@@ -123,7 +123,7 @@ impl Component for UserRow {
       .direction(Direction::Horizontal)
       .main_align(Alignment::Start)
       .cross_align(Alignment::Center)
-      .height(Size::px(50.))
+      .height(Size::px(50.0_f32))
       .margin(Gaps::new_all(6.))
       .opacity(opacity)
       .maybe(self.can_context_menu, |el| {

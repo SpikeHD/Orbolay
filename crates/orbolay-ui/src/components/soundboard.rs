@@ -48,11 +48,11 @@ impl Component for SoundButton {
       .direction(Direction::Horizontal)
       .cross_align(Alignment::Center)
       .main_align(Alignment::Center)
-      .width(Size::percent(33.3))
-      .height(Size::px(40.))
+      .width(Size::percent(33.3_f32))
+      .height(Size::px(40.0_f32))
       .margin(Gaps::new_all(2.))
       .corner_radius(CornerRadius::new_all(self.theme.border_radius))
-      .maybe(!available, |el| el.opacity(0.4))
+      .maybe(!available, |el| el.opacity(0.4_f32))
       .background(if *hovered.read() {
         self.theme.light_gray
       } else {
@@ -153,7 +153,7 @@ impl Component for Soundboard {
         .direction(Direction::Vertical)
         .background(self.theme.gray)
         .corner_radius(CornerRadius::new_all(self.theme.border_radius))
-        .max_width(Size::px(400.))
+        .max_width(Size::px(400.0_f32))
         .margin(Gaps::new(0., 0., 8., 0.))
         .padding(Gaps::new_all(16.))
         .main_align(Alignment::Center)
@@ -169,8 +169,8 @@ impl Component for Soundboard {
         .direction(Direction::Vertical)
         .background(self.theme.gray)
         .corner_radius(CornerRadius::new_all(self.theme.border_radius))
-        .max_width(Size::px(400.))
-        .height(Size::px(220.))
+        .max_width(Size::px(400.0_f32))
+        .height(Size::px(220.0_f32))
         .margin(Gaps::new(0., 0., 8., 0.))
         .child(
           ScrollView::new()

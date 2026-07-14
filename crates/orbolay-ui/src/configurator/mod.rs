@@ -146,7 +146,7 @@ fn wide_button(
 ) -> impl IntoElement {
   rect()
     .width(Size::fill())
-    .height(Size::px(32.))
+    .height(Size::px(32.0_f32))
     .main_align(Alignment::Center)
     .cross_align(Alignment::Center)
     .margin(Gaps::new_symmetric(4., 12.))
@@ -497,7 +497,7 @@ fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
 fn divider() -> impl IntoElement {
   rect()
     .width(Size::fill())
-    .height(Size::px(1.))
+    .height(Size::px(1.0_f32))
     .padding(16.)
     .background(TRANSPARENT)
 }

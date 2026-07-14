@@ -25,9 +25,9 @@ impl Component for MessagesSection {
     let alignment = CornerAlignment::from_str(&self.message_alignment).unwrap();
     let gaps = alignment.to_gaps(self.message_offset_x, self.message_offset_y);
     let opacity = if self.messages_semitransparent && !self.is_open {
-      0.5
+      0.5_f32
     } else {
-      1.0
+      1.0_f32
     };
 
     self.messages.iter().fold(

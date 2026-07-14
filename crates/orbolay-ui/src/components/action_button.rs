@@ -33,7 +33,7 @@ impl Component for ActionButton {
       .direction(Direction::Horizontal)
       .main_align(Alignment::Center)
       .cross_align(Alignment::Center)
-      .height(Size::px(30.))
+      .height(Size::px(30.0_f32))
       .corner_radius(CornerRadius::new_all(self.theme.border_radius))
       .margin(Gaps::new(0., 6., 0., 0.))
       .padding(Gaps::new(4., 4., 4., 4.))

@@ -44,9 +44,9 @@ impl Component for ControlButton {
       .main_align(Alignment::Center)
       .cross_align(Alignment::Center)
       .height(Size::fill())
-      .width(Size::percent(20.))
-      .margin(Gaps::new_all(6.))
-      .padding(Gaps::new_all(6.))
+      .width(Size::percent(20.0_f32))
+      .margin(Gaps::new_all(6.0_f32))
+      .padding(Gaps::new_all(6.0_f32))
       .corner_radius(CornerRadius::new_all(self.theme.border_radius))
       .background(if *hovered.read() {
         if is_red {
@@ -68,8 +68,8 @@ impl Component for ControlButton {
       })
       .child(
         SvgViewer::new(icon)
-          .width(Size::px(24.))
-          .height(Size::px(24.)),
+          .width(Size::px(24.0_f32))
+          .height(Size::px(24.0_f32)),
       )
   }
 }
@@ -95,8 +95,8 @@ impl Component for VoiceControls {
       .main_align(Alignment::Center)
       .cross_align(Alignment::Center)
       .height(Size::auto())
-      .max_height(Size::px(60.))
-      .max_width(Size::px(400.))
+      .max_height(Size::px(60.0_f32))
+      .max_width(Size::px(400.0_f32))
       .background(self.theme.gray)
       .corner_radius(CornerRadius::new_all(self.theme.border_radius))
       .child(ControlButton {
