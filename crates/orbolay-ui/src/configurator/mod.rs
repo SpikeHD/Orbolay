@@ -81,74 +81,38 @@ fn configurator_window(app: AppHandle, standalone: bool) -> WindowConfig {
     .with_resizable(false)
 }
 
-fn make_updater(
-  app: AppHandle,
-  mut local_config: State<Config>,
-  update_fn: impl Fn(&mut Config, String) + 'static,
-) -> EventHandler<SettingChange> {
-  EventHandler::new(move |change: SettingChange| {
-    if let SettingChange::Value(value) = change {
-      let updated = app.update(|state| {
-        update_fn(&mut state.config, value);
-        state.config.clone()
-      });
-      save_config(&updated);
-      local_config.set(updated);
+macro_rules! make_updater {
+  (
+    $name:ident,
+    $variant:ident,
+    $ty:ty
+  ) => {
+    fn $name(
+      app: AppHandle,
+      mut local_config: State<Config>,
+      update_fn: impl Fn(&mut Config, $ty) + 'static,
+    ) -> EventHandler<SettingChange> {
+      EventHandler::new(move |change| {
+        if let SettingChange::$variant(value) = change {
+          let updated = app.update(|state| {
+            update_fn(&mut state.config, value);
+            state.config.clone()
+          });
+
+          save_config(&updated);
+          local_config.set(updated);
+        }
+      })
     }
-  })
+  };
 }
 
-fn make_bool_updater(
-  app: AppHandle,
-  mut local_config: State<Config>,
-  update_fn: impl Fn(&mut Config, bool) + 'static,
-) -> EventHandler<SettingChange> {
-  EventHandler::new(move |change: SettingChange| {
-    if let SettingChange::Bool(value) = change {
-      let updated = app.update(|state| {
-        update_fn(&mut state.config, value);
-        state.config.clone()
-      });
-      save_config(&updated);
-      local_config.set(updated);
-    }
-  })
-}
-
-fn make_color_updater(
-  app: AppHandle,
-  mut local_config: State<Config>,
-  update_fn: impl Fn(&mut Config, (u8, u8, u8)) + 'static,
-) -> EventHandler<SettingChange> {
-  EventHandler::new(move |change: SettingChange| {
-    if let SettingChange::Color(color) = change {
-      let updated = app.update(|state| {
-        update_fn(&mut state.config, to_tuple(color));
-        state.config.clone()
-      });
-      save_config(&updated);
-      local_config.set(updated);
-    }
-  })
-}
+make_updater!(make_updater, Value, String);
+make_updater!(make_bool_updater, Bool, bool);
+make_updater!(make_color_updater, Color, Color);
 
 #[cfg(not(target_os = "macos"))]
-fn make_keybind_updater(
-  app: AppHandle,
-  mut local_config: State<Config>,
-  update_fn: impl Fn(&mut Config, Vec<rdev::Key>) + 'static,
-) -> EventHandler<SettingChange> {
-  EventHandler::new(move |change: SettingChange| {
-    if let SettingChange::Keys(keys) = change {
-      let updated = app.update(|state| {
-        update_fn(&mut state.config, keys);
-        state.config.clone()
-      });
-      save_config(&updated);
-      local_config.set(updated);
-    }
-  })
-}
+make_updater!(make_keybind_updater, Keys, Vec<rdev::Key>);
 
 fn wide_button(
   text: impl Into<String>,
@@ -285,7 +249,7 @@ fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
       description: Some("The accent color for the overlay".into()),
       kind: SettingKind::Color(from_tuple(config.accent)),
       on_change: make_color_updater(app.clone(), local_config, |cfg, v| {
-        cfg.accent = v;
+        cfg.accent = to_tuple(v);
       }),
       disabled: false,
     })
@@ -295,7 +259,7 @@ fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
       description: Some("The text color for the overlay".into()),
       kind: SettingKind::Color(from_tuple(config.text_color)),
       on_change: make_color_updater(app.clone(), local_config, |cfg, v| {
-        cfg.text_color = v;
+        cfg.text_color = to_tuple(v);
       }),
       disabled: false,
     })
