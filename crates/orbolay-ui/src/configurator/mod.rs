@@ -41,6 +41,17 @@ const ALIGNMENTS: &[&str] = &[
 const VOICE_DISPLAY_OPTIONS: &[&str] =
   &["always", "always (semi-transparent)", "only when speaking"];
 
+const UI_SCALE_OPTIONS: &[f32] = &[0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
+
+fn ui_scale_label(scale: f32) -> String {
+  format!("{:.0}%", scale * 100.0)
+}
+
+fn parse_ui_scale_label(value: &str) -> Option<f32> {
+  let percent = value.strip_suffix('%')?.trim().parse::<f32>().ok()?;
+  Some(percent / 100.0)
+}
+
 pub fn open_configurator(app: AppHandle) {
   spawn(async move {
     let _ = Platform::get()
@@ -296,6 +307,24 @@ fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
       on_change: make_updater(app.clone(), local_config, |cfg, v| {
         if let Ok(n) = v.trim().parse::<f32>() {
           cfg.border_radius = n.max(0.);
+        }
+      }),
+      disabled: false,
+    })
+    .child(divider())
+    .child(SettingRow {
+      name: "UI Scale".into(),
+      description: Some("Scale of the overlay elements".into()),
+      kind: SettingKind::Dropdown(
+        UI_SCALE_OPTIONS
+          .iter()
+          .map(|scale| ui_scale_label(*scale))
+          .collect(),
+        Some(ui_scale_label(config.ui_scale.clamp(0.5, 2.0))),
+      ),
+      on_change: make_updater(app.clone(), local_config, |cfg, v| {
+        if let Some(scale) = parse_ui_scale_label(&v) {
+          cfg.ui_scale = scale.clamp(0.5, 2.0);
         }
       }),
       disabled: false,

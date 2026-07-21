@@ -3,17 +3,22 @@ use serde_json::json;
 
 use orbolay_core::{app_state::AppState, user::User, util::bridge::BridgeMessage};
 
-use crate::util::theme::Theme;
+use crate::util::{
+  scale::{GapsScaleExt, UiScale},
+  theme::Theme,
+};
 
 #[derive(PartialEq)]
 pub struct UserContextMenuItem {
   pub user: User,
   pub theme: Theme,
   pub app_state: State<AppState>,
+  pub ui_scale: f32,
 }
 
 impl Component for UserContextMenuItem {
   fn render(&self) -> impl IntoElement {
+    let scale = UiScale::new(self.ui_scale);
     let mut app_state = self.app_state;
     let user_id = self.user.id.clone();
     let mut slider_value = use_state(|| f64::from(self.user.volume.clamp(0., 200.) / 2.));
@@ -39,28 +44,28 @@ impl Component for UserContextMenuItem {
 
     MenuItem::new()
       .theme(menu_item_theme)
-      .padding(Gaps::new_all(4.))
+      .padding(Gaps::new_all(4.).scaled(scale.factor()))
       .child(
         rect()
           .direction(Direction::Vertical)
           .cross_align(Alignment::Start)
-          .width(Size::px(160.0_f32))
+          .width(Size::px(scale.px(160.0)))
           .child(
             rect()
               .direction(Direction::Horizontal)
               .main_align(Alignment::SpaceBetween)
               .cross_align(Alignment::Center)
               .width(Size::fill())
-              .margin(Gaps::new(0., 0., 8., 0.))
+              .margin(Gaps::new(0., 0., 8., 0.).scaled(scale.factor()))
               .child(
                 label()
-                  .font_size(12.)
+                  .font_size(scale.px(12.))
                   .color(self.theme.text_color)
                   .text("User Volume"),
               )
               .child(
                 label()
-                  .font_size(12.)
+                  .font_size(scale.px(12.))
                   .color(self.theme.text_color)
                   .text(format!("{}%", slider_value.read().round() as u64 * 2)),
               ),

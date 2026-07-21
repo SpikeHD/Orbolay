@@ -4,7 +4,11 @@ use freya::prelude::*;
 
 use orbolay_core::{app_state::AppState, payloads::Notification};
 
-use crate::{components::MessageRow, config::CornerAlignment, util::theme::Theme};
+use crate::{
+  components::MessageRow,
+  config::CornerAlignment,
+  util::{scale::UiScale, theme::Theme},
+};
 
 #[derive(PartialEq)]
 pub struct MessagesSection {
@@ -17,13 +21,18 @@ pub struct MessagesSection {
   pub messages_semitransparent: bool,
   pub app_state: State<AppState>,
   pub theme: Theme,
+  pub ui_scale: f32,
 }
 
 impl Component for MessagesSection {
   fn render(&self) -> impl IntoElement {
     // unwrap: this does not fail
     let alignment = CornerAlignment::from_str(&self.message_alignment).unwrap();
-    let gaps = alignment.to_gaps(self.message_offset_x, self.message_offset_y);
+    let scale = UiScale::new(self.ui_scale);
+    let gaps = alignment.to_gaps(
+      scale.int(self.message_offset_x),
+      scale.int(self.message_offset_y),
+    );
     let opacity = if self.messages_semitransparent && !self.is_open {
       0.5_f32
     } else {
@@ -49,6 +58,7 @@ impl Component for MessagesSection {
             app_state: self.app_state,
             message: message.clone(),
             theme: self.theme,
+            ui_scale: scale.factor(),
           })
         }
       },

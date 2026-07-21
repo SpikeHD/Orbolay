@@ -5,7 +5,10 @@ use orbolay_core::{
   app_state::AppState, payloads::SoundboardSoundPayload, util::bridge::BridgeMessage,
 };
 
-use crate::util::theme::Theme;
+use crate::util::{
+  scale::{GapsScaleExt, UiScale},
+  theme::Theme,
+};
 
 fn guild_order(guild_id: &str, current: &str) -> u8 {
   if !current.is_empty() && guild_id == current {
@@ -22,10 +25,12 @@ struct SoundButton {
   sound: SoundboardSoundPayload,
   app_state: State<AppState>,
   theme: Theme,
+  ui_scale: f32,
 }
 
 impl Component for SoundButton {
   fn render(&self) -> impl IntoElement {
+    let scale = UiScale::new(self.ui_scale);
     let mut app_state = self.app_state;
     let mut hovered = use_state(|| false);
 
@@ -49,8 +54,8 @@ impl Component for SoundButton {
       .cross_align(Alignment::Center)
       .main_align(Alignment::Center)
       .width(Size::percent(33.3_f32))
-      .height(Size::px(40.0_f32))
-      .margin(Gaps::new_all(2.))
+      .height(Size::px(scale.px(40.0)))
+      .margin(Gaps::new_all(2.).scaled(scale.factor()))
       .corner_radius(CornerRadius::new_all(self.theme.border_radius))
       .maybe(!available, |el| el.opacity(0.4_f32))
       .background(if *hovered.read() {
@@ -85,18 +90,20 @@ impl Component for SoundButton {
           .main_align(Alignment::Center)
           .cross_align(Alignment::Center)
           .content(Content::wrap())
-          .padding(Gaps::new_symmetric(4., 2.))
+          .padding(Gaps::new_symmetric(4., 2.).scaled(scale.factor()))
           .child(
-            rect().padding(Gaps::new(0., 4., 0., 0.)).child(
-              label()
-                .color(self.theme.text_color)
-                .font_size(14.)
-                .text(text),
-            ),
+            rect()
+              .padding(Gaps::new(0., 4., 0., 0.).scaled(scale.factor()))
+              .child(
+                label()
+                  .color(self.theme.text_color)
+                  .font_size(scale.px(14.))
+                  .text(text),
+              ),
           )
           .child(
             label()
-              .font_size(11.)
+              .font_size(scale.px(11.))
               .color(self.theme.text_color)
               .max_width(Size::fill())
               .max_lines(1)
@@ -111,12 +118,14 @@ impl Component for SoundButton {
 struct GuildLabel {
   name: String,
   theme: Theme,
+  ui_scale: f32,
 }
 
 impl Component for GuildLabel {
   fn render(&self) -> impl IntoElement {
+    let scale = UiScale::new(self.ui_scale);
     label()
-      .font_size(11.)
+      .font_size(scale.px(11.))
       .width(Size::fill())
       .color(self.theme.text_color)
       .text(self.name.clone())
@@ -127,10 +136,12 @@ impl Component for GuildLabel {
 pub struct Soundboard {
   pub app_state: State<AppState>,
   pub theme: Theme,
+  pub ui_scale: f32,
 }
 
 impl Component for Soundboard {
   fn render(&self) -> impl IntoElement {
+    let scale = UiScale::new(self.ui_scale);
     let app_state = self.app_state;
     let (current_guild_id, cache, guild_names) = {
       let state = app_state.read();
@@ -153,14 +164,14 @@ impl Component for Soundboard {
         .direction(Direction::Vertical)
         .background(self.theme.gray)
         .corner_radius(CornerRadius::new_all(self.theme.border_radius))
-        .max_width(Size::px(400.0_f32))
-        .margin(Gaps::new(0., 0., 8., 0.))
-        .padding(Gaps::new_all(16.))
+        .max_width(Size::px(scale.px(400.0)))
+        .margin(Gaps::new(0., 0., 8., 0.).scaled(scale.factor()))
+        .padding(Gaps::new_all(16.).scaled(scale.factor()))
         .main_align(Alignment::Center)
         .cross_align(Alignment::Center)
         .child(
           label()
-            .font_size(13.)
+            .font_size(scale.px(13.))
             .color(self.theme.text_color)
             .text("No sounds available"),
         )
@@ -169,9 +180,9 @@ impl Component for Soundboard {
         .direction(Direction::Vertical)
         .background(self.theme.gray)
         .corner_radius(CornerRadius::new_all(self.theme.border_radius))
-        .max_width(Size::px(400.0_f32))
-        .height(Size::px(220.0_f32))
-        .margin(Gaps::new(0., 0., 8., 0.))
+        .max_width(Size::px(scale.px(400.0)))
+        .height(Size::px(scale.px(220.0)))
+        .margin(Gaps::new(0., 0., 8., 0.).scaled(scale.factor()))
         .child(
           ScrollView::new()
             .width(Size::fill())
@@ -181,7 +192,7 @@ impl Component for Soundboard {
                 rect()
                   .direction(Direction::Vertical)
                   .width(Size::fill())
-                  .padding(Gaps::new_all(16.)),
+                  .padding(Gaps::new_all(16.).scaled(scale.factor())),
                 |col, (guild_name, guild_sounds)| {
                   let label = if guild_name.is_empty() {
                     "Default".to_string()
@@ -192,6 +203,7 @@ impl Component for Soundboard {
                     .child(GuildLabel {
                       name: label,
                       theme: self.theme,
+                      ui_scale: scale.factor(),
                     })
                     .child(
                       guild_sounds.into_iter().fold(
@@ -199,7 +211,7 @@ impl Component for Soundboard {
                           .direction(Direction::Horizontal)
                           .content(Content::wrap())
                           .width(Size::fill())
-                          .padding(Gaps::new(2., 0., 6., 0.)),
+                          .padding(Gaps::new(2., 0., 6., 0.).scaled(scale.factor())),
                         |row, mut sound| {
                           if let Some(guild_id) = &sound.guild_id
                             && !app_state.read().premium_type.has_nitro()
@@ -213,6 +225,7 @@ impl Component for Soundboard {
                             sound,
                             app_state,
                             theme: self.theme,
+                            ui_scale: scale.factor(),
                           })
                         },
                       ),

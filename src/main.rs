@@ -21,7 +21,7 @@ use orbolay_transport::{create_transport_thread, maybe_notify_update, start_conf
 use orbolay_ui::{
   components::{MessagesSection, Soundboard, VoiceControls, VoiceSection},
   open_configurator, open_configurator_standalone,
-  util::theme,
+  util::{scale::UiScale, theme},
 };
 use winit::{dpi::PhysicalPosition, window::WindowLevel};
 
@@ -313,6 +313,7 @@ fn app() -> impl IntoElement {
   let is_open = state.is_open;
   let is_censor = state.is_censor;
   let config = state.config.clone();
+  let ui_scale = UiScale::new(config.ui_scale).factor();
   let theme = theme::Theme::from_values(
     theme::from_tuple(config.accent),
     theme::from_tuple(config.text_color),
@@ -357,6 +358,7 @@ fn app() -> impl IntoElement {
       user_offset_y: config.user_offset_y,
       display_voice_members: config.display_voice_members.clone().unwrap_or_default(),
       theme,
+      ui_scale,
     })
     // Messages
     .maybe(messages_enabled, |el| el.child(MessagesSection {
@@ -372,6 +374,7 @@ fn app() -> impl IntoElement {
       messages_semitransparent: config.messages_semitransparent,
       app_state,
       theme,
+      ui_scale,
     }))
     // Voice controls + soundboard
     .maybe(is_open, |el| {
@@ -396,13 +399,18 @@ fn app() -> impl IntoElement {
             .height(Size::percent(90.0_f32))
             .width(Size::fill())
             .maybe(*soundboard_open.read(), |el| {
-              el.child(Soundboard { app_state, theme })
+              el.child(Soundboard {
+                app_state,
+                theme,
+                ui_scale,
+              })
             })
             .child(VoiceControls {
               user,
               app_state,
               soundboard_open,
               theme,
+              ui_scale,
             })
         }))
     })

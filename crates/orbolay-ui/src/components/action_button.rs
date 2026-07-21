@@ -2,7 +2,10 @@ use freya::prelude::*;
 
 use orbolay_core::payloads::NotificationKind;
 
-use crate::util::theme::{self, Theme};
+use crate::util::{
+  scale::{GapsScaleExt, UiScale},
+  theme::{self, Theme},
+};
 
 #[derive(PartialEq)]
 pub struct ActionButton {
@@ -10,10 +13,12 @@ pub struct ActionButton {
   pub label: String,
   pub kind: NotificationKind,
   pub theme: Theme,
+  pub ui_scale: f32,
 }
 
 impl Component for ActionButton {
   fn render(&self) -> impl IntoElement {
+    let scale = UiScale::new(self.ui_scale);
     let func = self.func.clone();
     let is_secondary = self.kind == NotificationKind::Secondary;
     let bg = if is_secondary {
@@ -33,10 +38,10 @@ impl Component for ActionButton {
       .direction(Direction::Horizontal)
       .main_align(Alignment::Center)
       .cross_align(Alignment::Center)
-      .height(Size::px(30.0_f32))
+      .height(Size::px(scale.px(30.0)))
       .corner_radius(CornerRadius::new_all(self.theme.border_radius))
-      .margin(Gaps::new(0., 6., 0., 0.))
-      .padding(Gaps::new(4., 4., 4., 4.))
+      .margin(Gaps::new(0., 6., 0., 0.).scaled(scale.factor()))
+      .padding(Gaps::new_all(4.).scaled(scale.factor()))
       .background(bg)
       .maybe(is_secondary, |el| {
         el.border(Border::new().fill(self.theme.muted_gray).width(1.))
@@ -54,7 +59,7 @@ impl Component for ActionButton {
       })
       .child(
         label()
-          .font_size(14.)
+          .font_size(scale.px(14.))
           .color(self.theme.text_color)
           .text(self.label.clone()),
       )

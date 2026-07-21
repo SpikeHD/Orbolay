@@ -75,6 +75,10 @@ fn default_border_radius() -> f32 {
   10.
 }
 
+fn default_ui_scale() -> f32 {
+  1.0
+}
+
 fn default_true() -> bool {
   true
 }
@@ -121,6 +125,8 @@ pub struct Config {
   pub text_color: (u8, u8, u8),
   #[serde(default = "default_border_radius")]
   pub border_radius: f32,
+  #[serde(default = "default_ui_scale")]
+  pub ui_scale: f32,
 }
 
 impl Default for Config {
@@ -146,6 +152,7 @@ impl Default for Config {
       accent: default_accent(),
       text_color: default_text(),
       border_radius: 10.,
+      ui_scale: default_ui_scale(),
     }
   }
 }

@@ -8,7 +8,10 @@ use orbolay_core::{
   util::bridge::BridgeMessage,
 };
 
-use crate::util::theme::{self, Theme};
+use crate::util::{
+  scale::{GapsScaleExt, UiScale},
+  theme::{self, Theme},
+};
 
 static DEAFENED_SVG: &[u8] = include_bytes!("../../../../assets/deafened.svg");
 static DEAFEN_SVG: &[u8] = include_bytes!("../../../../assets/deafen.svg");
@@ -24,10 +27,12 @@ struct ControlButton {
   is_red: bool,
   on_click: EventHandler<()>,
   theme: Theme,
+  ui_scale: f32,
 }
 
 impl Component for ControlButton {
   fn render(&self) -> impl IntoElement {
+    let scale = UiScale::new(self.ui_scale);
     let mut hovered = use_state(|| false);
     let is_red = self.is_red;
     let icon = self.icon;
@@ -45,8 +50,8 @@ impl Component for ControlButton {
       .cross_align(Alignment::Center)
       .height(Size::fill())
       .width(Size::percent(20.0_f32))
-      .margin(Gaps::new_all(6.0_f32))
-      .padding(Gaps::new_all(6.0_f32))
+      .margin(Gaps::new_all(6.0_f32).scaled(scale.factor()))
+      .padding(Gaps::new_all(6.0_f32).scaled(scale.factor()))
       .corner_radius(CornerRadius::new_all(self.theme.border_radius))
       .background(if *hovered.read() {
         if is_red {
@@ -68,8 +73,8 @@ impl Component for ControlButton {
       })
       .child(
         SvgViewer::new(icon)
-          .width(Size::px(24.0_f32))
-          .height(Size::px(24.0_f32)),
+          .width(Size::px(scale.px(24.0)))
+          .height(Size::px(scale.px(24.0))),
       )
   }
 }
@@ -80,10 +85,12 @@ pub struct VoiceControls {
   pub app_state: State<AppState>,
   pub soundboard_open: State<bool>,
   pub theme: Theme,
+  pub ui_scale: f32,
 }
 
 impl Component for VoiceControls {
   fn render(&self) -> impl IntoElement {
+    let scale = UiScale::new(self.ui_scale);
     let mut app_state = self.app_state;
     let mut soundboard_open = self.soundboard_open;
     let is_muted = self.user.voice_state == UserVoiceState::Muted;
@@ -95,8 +102,8 @@ impl Component for VoiceControls {
       .main_align(Alignment::Center)
       .cross_align(Alignment::Center)
       .height(Size::auto())
-      .max_height(Size::px(60.0_f32))
-      .max_width(Size::px(400.0_f32))
+      .max_height(Size::px(scale.px(60.0)))
+      .max_width(Size::px(scale.px(400.0)))
       .background(self.theme.gray)
       .corner_radius(CornerRadius::new_all(self.theme.border_radius))
       .child(ControlButton {
@@ -114,6 +121,7 @@ impl Component for VoiceControls {
         })
         .into(),
         theme: self.theme,
+        ui_scale: scale.factor(),
       })
       .child(ControlButton {
         icon: if is_deafened {
@@ -130,6 +138,7 @@ impl Component for VoiceControls {
         })
         .into(),
         theme: self.theme,
+        ui_scale: scale.factor(),
       })
       .maybe(
         app_state.read().transport_mode == TransportMode::Ipc,
@@ -143,6 +152,7 @@ impl Component for VoiceControls {
             })
             .into(),
             theme: self.theme,
+            ui_scale: scale.factor(),
           })
         },
       )
@@ -157,6 +167,7 @@ impl Component for VoiceControls {
         })
         .into(),
         theme: self.theme,
+        ui_scale: scale.factor(),
       })
       .maybe(is_streaming, |el| {
         el.child(ControlButton {
@@ -170,6 +181,7 @@ impl Component for VoiceControls {
           })
           .into(),
           theme: self.theme,
+          ui_scale: scale.factor(),
         })
       })
   }

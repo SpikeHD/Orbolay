@@ -8,7 +8,11 @@ use orbolay_core::{
 
 use crate::{
   components::ActionButton,
-  util::{image::avatar_image, theme::Theme},
+  util::{
+    image::avatar_image,
+    scale::{GapsScaleExt, UiScale},
+    theme::Theme,
+  },
 };
 
 #[derive(PartialEq)]
@@ -16,10 +20,12 @@ pub struct MessageRow {
   pub app_state: State<AppState>,
   pub message: Notification,
   pub theme: Theme,
+  pub ui_scale: f32,
 }
 
 impl Component for MessageRow {
   fn render(&self) -> impl IntoElement {
+    let scale = UiScale::new(self.ui_scale);
     let mut app_state = self.app_state;
     let message = self.message.clone();
     let mut hovered = use_state(|| false);
@@ -34,9 +40,9 @@ impl Component for MessageRow {
       .direction(Direction::Horizontal)
       .main_align(Alignment::Start)
       .cross_align(Alignment::Start)
-      .max_width(Size::px(400.0_f32))
-      .margin(Gaps::new_all(6.))
-      .padding(Gaps::new_all(10.))
+      .max_width(Size::px(scale.px(400.0)))
+      .margin(Gaps::new_all(6.).scaled(scale.factor()))
+      .padding(Gaps::new_all(10.).scaled(scale.factor()))
       .corner_radius(CornerRadius::new_all(self.theme.border_radius))
       .background(self.theme.gray)
       .overflow(Overflow::Clip)
@@ -60,9 +66,9 @@ impl Component for MessageRow {
       })
       .child(
         avatar_image(&self.message.icon, None)
-          .width(Size::px(42.0_f32))
-          .height(Size::px(42.0_f32))
-          .margin(Gaps::new(0., 10., 0., 0.)),
+          .width(Size::px(scale.px(42.0)))
+          .height(Size::px(scale.px(42.0)))
+          .margin(Gaps::new(0., 10., 0., 0.).scaled(scale.factor())),
       )
       .child(
         rect()
@@ -72,17 +78,17 @@ impl Component for MessageRow {
           .width(Size::fill())
           .child(
             label()
-              .font_size(14.)
+              .font_size(scale.px(14.))
               .font_weight(FontWeight::BOLD)
               .color(self.theme.text_color)
-              .margin(Gaps::new(0., 0., 4., 0.))
+              .margin(Gaps::new(0., 0., 4., 0.).scaled(scale.factor()))
               .max_lines(1)
               .text(self.message.title.clone())
               .text_overflow(TextOverflow::Ellipsis),
           )
           .child(
             label()
-              .font_size(14.)
+              .font_size(scale.px(14.))
               .width(Size::Fill)
               .color(self.theme.text_color)
               .max_lines(2)
@@ -96,7 +102,7 @@ impl Component for MessageRow {
                 .main_align(Alignment::Start)
                 .cross_align(Alignment::Center)
                 .content(Content::wrap())
-                .margin(Gaps::new(6., 0., 0., 0.))
+                .margin(Gaps::new(6., 0., 0., 0.).scaled(scale.factor()))
                 .children(
                   self
                     .message
@@ -113,6 +119,7 @@ impl Component for MessageRow {
                         label: action.label.clone(),
                         kind: action.kind.clone(),
                         theme: self.theme,
+                        ui_scale: scale.factor(),
                       }
                       .into()
                     })
