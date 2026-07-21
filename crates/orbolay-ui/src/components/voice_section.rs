@@ -34,10 +34,7 @@ impl Component for VoiceSection {
     // unwrap: this does not fail
     let alignment = CornerAlignment::from_str(&self.user_alignment).unwrap();
     let scale = UiScale::new(self.ui_scale);
-    let gaps = alignment.to_gaps(
-      scale.int(self.user_offset_x),
-      scale.int(self.user_offset_y),
-    );
+    let gaps = alignment.to_gaps(scale.int(self.user_offset_x), scale.int(self.user_offset_y));
     let is_right_aligned = alignment.x == AxisAlignment::End;
 
     let mut sorted_users = self.voice_users.clone();
