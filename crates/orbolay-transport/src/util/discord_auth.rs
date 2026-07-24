@@ -9,7 +9,7 @@ pub fn build_rpc_authorize_request() -> serde_json::Value {
     "cmd": "AUTHORIZE",
     "args": {
       "client_id": CLIENT_ID,
-      "scopes": ["rpc", "rpc.voice.write", "messages.read", "rpc.notifications.read"],
+      "scopes": ["rpc", "rpc.voice.write", "rpc.screenshare.read", "messages.read", "rpc.notifications.read"],
       "prompt": "none"
     },
     "nonce": "helloworld"

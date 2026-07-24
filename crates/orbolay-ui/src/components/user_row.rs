@@ -18,6 +18,7 @@ use crate::{
 static DEAFENED_SVG: &[u8] = include_bytes!("../../../../assets/deafened.svg");
 static MUTED_SVG: &[u8] = include_bytes!("../../../../assets/muted.svg");
 static STREAMING_SVG: &[u8] = include_bytes!("../../../../assets/streaming.svg");
+static CAMERA_SVG: &[u8] = include_bytes!("../../../../assets/camera.svg");
 
 #[derive(PartialEq)]
 struct AvatarIcon {
@@ -92,6 +93,14 @@ impl Component for UserLabel {
       .maybe(user.streaming, |el| {
         el.child(
           SvgViewer::new(STREAMING_SVG)
+            .width(Size::px(scale.px(16.0)))
+            .height(Size::px(scale.px(16.0)))
+            .margin(Gaps::new(0., 6., 0., 0.).scaled(scale.factor())),
+        )
+      })
+      .maybe(user.camera, |el| {
+        el.child(
+          SvgViewer::new(CAMERA_SVG)
             .width(Size::px(scale.px(16.0)))
             .height(Size::px(scale.px(16.0)))
             .margin(Gaps::new(0., 6., 0., 0.).scaled(scale.factor())),

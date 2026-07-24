@@ -57,6 +57,16 @@ pub struct RpcVoiceState {
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
+pub struct ScreenshareState {
+  pub active: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+pub struct VideoState {
+  pub active: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct VoiceConnectionPing {
   pub time: i64,
   pub value: i64,

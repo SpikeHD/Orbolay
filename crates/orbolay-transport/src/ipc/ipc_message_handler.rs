@@ -1,14 +1,9 @@
 use interprocess::local_socket::prelude::*;
 
 use orbolay_core::{
-  app_state::AppHandle,
-  payloads::ipc::{
-    NotificationCreatePayload, ReadyPayload, RpcVoiceState, SpeakingPayload,
-    VoiceChannelSelectPayload, VoiceConnectionStatusPayload, VoiceSettingsUpdatePayload,
-  },
-  payloads::{Notification, NotificationAction, NotificationKind},
-  user::UserVoiceState,
-  util::bridge::BridgeMessage,
+  app_state::AppHandle, payloads::{Notification, NotificationAction, NotificationKind, ipc::{
+    NotificationCreatePayload, ReadyPayload, RpcVoiceState, ScreenshareState, SpeakingPayload, VideoState, VoiceChannelSelectPayload, VoiceConnectionStatusPayload, VoiceSettingsUpdatePayload,
+  }}, user::UserVoiceState, util::bridge::BridgeMessage,
 };
 
 use crate::ipc::{
@@ -129,6 +124,30 @@ pub fn handle_ipc_message(
         user.volume = data.volume;
       } else {
         state.voice_users.push(data.into());
+      }
+    }
+    "SCREENSHARE_STATE_UPDATE" => {
+      // These are only recieved for the current user, so just set the current user as streaming or not streaming
+      let data = serde_json::from_value::<ScreenshareState>(data)?;
+      let current_user_id = state.user_id.clone();
+      if let Some(user) = state
+        .voice_users
+        .iter_mut()
+        .find(|user| user.id == current_user_id)
+      {
+        user.streaming = data.active;
+      }
+    }
+    "VIDEO_STATE_UPDATE" => {
+      // These are only recieved for the current user, so just set the current user as "camera active" or not
+      let data = serde_json::from_value::<VideoState>(data)?;
+      let current_user_id = state.user_id.clone();
+      if let Some(user) = state
+        .voice_users
+        .iter_mut()
+        .find(|user| user.id == current_user_id)
+      {
+        user.camera = data.active;
       }
     }
     "SPEAKING_START" => {

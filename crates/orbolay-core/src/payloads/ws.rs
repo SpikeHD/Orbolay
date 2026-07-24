@@ -11,6 +11,7 @@ pub struct WsVoiceState {
   pub deaf: Option<bool>,
   pub speaking: Option<bool>,
   pub streaming: Option<bool>,
+  pub camera: Option<bool>,
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
