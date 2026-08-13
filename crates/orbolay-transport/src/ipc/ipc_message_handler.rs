@@ -157,6 +157,7 @@ pub fn handle_ipc_message(
         .iter_mut()
         .find(|user| user.id == data.user_id)
       {
+        user.speaking_epoch += 1;
         user.voice_state = UserVoiceState::Speaking;
       }
     }
@@ -167,7 +168,21 @@ pub fn handle_ipc_message(
         .iter_mut()
         .find(|user| user.id == data.user_id)
       {
-        user.voice_state = UserVoiceState::NotSpeaking;
+        let epoch = user.speaking_epoch;
+        let user_id = user.id.clone();
+        let app = app.clone();
+
+        // Set NotSpeaking after an extra second
+        std::thread::spawn(move || {
+          std::thread::sleep(std::time::Duration::from_secs(1));
+          app.update(|state| {
+            if let Some(user) = state.voice_users.iter_mut().find(|user| user.id == user_id) {
+              if user.speaking_epoch == epoch {
+                user.voice_state = UserVoiceState::NotSpeaking;
+              }
+            }
+          });
+        });
       }
     }
     "VOICE_STATE_DELETE" => {

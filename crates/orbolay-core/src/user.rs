@@ -44,6 +44,7 @@ pub struct User {
   pub streaming: bool,
   pub camera: bool,
   pub volume: f32,
+  pub speaking_epoch: u64,
 }
 
 use crate::payloads::WsVoiceState;
@@ -61,6 +62,7 @@ impl From<WsVoiceState> for User {
       streaming: val.streaming.unwrap_or_default(),
       camera: val.camera.unwrap_or_default(),
       volume: 100.,
+      speaking_epoch: 0,
     }
   }
 }
@@ -102,6 +104,7 @@ impl From<RpcVoiceState> for User {
       streaming: false,
       camera: false,
       volume: val.volume,
+      speaking_epoch: 0,
     }
   }
 }
