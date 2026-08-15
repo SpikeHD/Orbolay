@@ -1,9 +1,17 @@
 use interprocess::local_socket::prelude::*;
 
 use orbolay_core::{
-  app_state::AppHandle, payloads::{Notification, NotificationAction, NotificationKind, ipc::{
-    NotificationCreatePayload, ReadyPayload, RpcVoiceState, ScreenshareState, SpeakingPayload, VideoState, VoiceChannelSelectPayload, VoiceConnectionStatusPayload, VoiceSettingsUpdatePayload,
-  }}, user::UserVoiceState, util::bridge::BridgeMessage,
+  app_state::AppHandle,
+  payloads::{
+    Notification, NotificationAction, NotificationKind,
+    ipc::{
+      NotificationCreatePayload, ReadyPayload, RpcVoiceState, ScreenshareState, SpeakingPayload,
+      VideoState, VoiceChannelSelectPayload, VoiceConnectionStatusPayload,
+      VoiceSettingsUpdatePayload,
+    },
+  },
+  user::UserVoiceState,
+  util::bridge::BridgeMessage,
 };
 
 use crate::ipc::{
@@ -157,7 +165,7 @@ pub fn handle_ipc_message(
         .iter_mut()
         .find(|user| user.id == data.user_id)
       {
-        user.speaking_epoch += 1;
+        user.speaking_epoch += 0.5;
         user.voice_state = UserVoiceState::Speaking;
       }
     }
@@ -174,7 +182,7 @@ pub fn handle_ipc_message(
 
         // Set NotSpeaking after an extra second
         std::thread::spawn(move || {
-          std::thread::sleep(std::time::Duration::from_secs(1));
+          std::thread::sleep(std::time::Duration::from_millis(500));
           app.update(|state| {
             if let Some(user) = state.voice_users.iter_mut().find(|user| user.id == user_id) {
               if user.speaking_epoch == epoch {

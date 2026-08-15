@@ -260,8 +260,6 @@ fn app() -> impl IntoElement {
           is_open,
           ..synced
         };
-
-        update_monitor();
       }
     });
 
@@ -271,12 +269,17 @@ fn app() -> impl IntoElement {
 
       // Write the config regardless so we don't trigger this in the future
       {
-        let state = app.read(|state| state.config.clone());
-        save_config(&state);
+        let config = app.read(|state| state.config.clone());
+        save_config(&config);
       }
     }
 
-    start_config_watcher(app.clone());
+    start_config_watcher(app.clone(), |old_config, new_config| {
+      // Reposition the window when the target monitor changes
+      if old_config.display_idx != new_config.display_idx {
+        update_monitor();
+      }
+    });
     maybe_notify_update(app.clone());
 
     #[cfg(not(target_os = "macos"))]
