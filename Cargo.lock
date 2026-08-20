@@ -3348,7 +3348,7 @@ dependencies = [
 
 [[package]]
 name = "orbolay"
-version = "3.6.0"
+version = "3.7.0"
 dependencies = [
  "chrono",
  "display-info",
