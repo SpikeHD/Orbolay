@@ -165,7 +165,7 @@ pub fn handle_ipc_message(
         .iter_mut()
         .find(|user| user.id == data.user_id)
       {
-        user.speaking_epoch += 0.5;
+        user.speaking_epoch += 1;
         user.voice_state = UserVoiceState::Speaking;
       }
     }
@@ -182,7 +182,7 @@ pub fn handle_ipc_message(
 
         // Set NotSpeaking after an extra second
         std::thread::spawn(move || {
-          std::thread::sleep(std::time::Duration::from_millis(500));
+          std::thread::sleep(std::time::Duration::from_millis(300));
           app.update(|state| {
             if let Some(user) = state.voice_users.iter_mut().find(|user| user.id == user_id) {
               if user.speaking_epoch == epoch {
