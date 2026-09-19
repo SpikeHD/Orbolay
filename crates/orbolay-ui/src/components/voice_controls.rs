@@ -141,22 +141,17 @@ impl Component for VoiceControls {
         theme: self.theme,
         ui_scale: scale.factor(),
       })
-      .maybe(
-        app_state.read().transport_mode == TransportMode::Ipc,
-        |el| {
-          el.child(ControlButton {
-            icon: SOUNDBOARD_SVG,
-            is_red: false,
-            on_click: (move |()| {
-              let is_open = *soundboard_open.read();
-              soundboard_open.set(!is_open);
-            })
-            .into(),
-            theme: self.theme,
-            ui_scale: scale.factor(),
-          })
-        },
-      )
+      .child(ControlButton {
+        icon: SOUNDBOARD_SVG,
+        is_red: false,
+        on_click: (move |()| {
+          let is_open = *soundboard_open.read();
+          soundboard_open.set(!is_open);
+        })
+        .into(),
+        theme: self.theme,
+        ui_scale: scale.factor(),
+      })
       .child(ControlButton {
         icon: DISCONNECT_SVG,
         is_red: true,

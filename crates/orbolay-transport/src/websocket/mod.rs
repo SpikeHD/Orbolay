@@ -1,11 +1,12 @@
 use orbolay_logging::{error, log, success, warn};
 use serde_json::Value;
+use std::collections::HashMap;
 use std::net::{TcpListener, TcpStream};
 use tungstenite::{Message, Utf8Bytes, accept};
 
 use orbolay_core::{
   app_state::AppHandle,
-  payloads::{ChannelJoinPayload, NotificationPayload, UpdatePayload},
+  payloads::{ChannelJoinPayload, NotificationPayload, SoundboardSoundPayload, UpdatePayload},
   util::bridge::BridgeMessage,
 };
 
@@ -192,6 +193,24 @@ pub fn handle_ws_message(
         .as_bool()
         .unwrap_or_default();
       app.update(|state| state.is_censor = is_censor);
+    }
+    "SOUNDBOARD_UPDATE" => {
+      let sounds = match data.get("sounds") {
+        Some(sounds) => serde_json::from_value::<Vec<SoundboardSoundPayload>>(sounds.clone())?,
+        None => serde_json::from_value::<Vec<SoundboardSoundPayload>>(data)?,
+      };
+      let mut by_guild: HashMap<String, Vec<_>> = HashMap::new();
+      for sound in sounds {
+        by_guild
+          .entry(sound.guild_id.clone().unwrap_or_default())
+          .or_default()
+          .push(sound);
+      }
+      app.update(|state| {
+        for (guild_id, sounds) in by_guild {
+          state.soundboard_cache.insert(guild_id, sounds);
+        }
+      });
     }
     _ => {
       warn!("Unknown command: {}", msg.cmd);
