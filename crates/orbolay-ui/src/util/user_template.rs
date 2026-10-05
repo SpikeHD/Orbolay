@@ -28,6 +28,16 @@ const ROOT_ID: &str = "user";
 const NAME_TOKEN: &str = "{{name}}";
 const AVATAR_TOKEN: &str = "{{avatar}}";
 
+const MUTED_ICON_TOKEN: &str = "{{muted-icon}}";
+const DEAFENED_ICON_TOKEN: &str = "{{deafened-icon}}";
+const STREAMING_ICON_TOKEN: &str = "{{streaming-icon}}";
+const CAMERA_ICON_TOKEN: &str = "{{camera-icon}}";
+
+const MUTED_ICON: &str = include_str!("../../../../assets/muted.svg");
+const DEAFENED_ICON: &str = include_str!("../../../../assets/deafened.svg");
+const STREAMING_ICON: &str = include_str!("../../../../assets/streaming.svg");
+const CAMERA_ICON: &str = include_str!("../../../../assets/camera.svg");
+
 const DEFAULT_TEMPLATE: &[u8] = include_bytes!("../../../../templates/default/index.html");
 
 static DEFAULT: LazyLock<UserTemplate> = LazyLock::new(|| {
@@ -155,10 +165,9 @@ impl UserTemplate {
     if is_right_aligned {
       state_classes.push("right");
     }
-    let new_root_tag = render_tag(
-      &self.root_name,
-      &merge_classes(&self.root_attrs, &state_classes),
-    );
+    let mut new_attrs = merge_classes(&self.root_attrs, &state_classes);
+    new_attrs.push(("data-user-id".to_string(), user.id.clone()));
+    let new_root_tag = render_tag(&self.root_name, &new_attrs);
     let mut html = self.html.replace(&root_tag, &new_root_tag);
 
     html = html.replace(
@@ -167,7 +176,35 @@ impl UserTemplate {
     );
     html = html.replace(AVATAR_TOKEN, &avatar_url(user));
     html = html.replace(NAME_TOKEN, &escape_html(&user.name));
+    html = html.replace(
+      MUTED_ICON_TOKEN,
+      &status_icon(user.voice_state == UserVoiceState::Muted, "muted", MUTED_ICON),
+    );
+    html = html.replace(
+      DEAFENED_ICON_TOKEN,
+      &status_icon(
+        user.voice_state == UserVoiceState::Deafened,
+        "deafened",
+        DEAFENED_ICON,
+      ),
+    );
+    html = html.replace(
+      STREAMING_ICON_TOKEN,
+      &status_icon(user.streaming, "streaming", STREAMING_ICON),
+    );
+    html = html.replace(
+      CAMERA_ICON_TOKEN,
+      &status_icon(user.camera, "camera", CAMERA_ICON),
+    );
     html
+  }
+}
+
+fn status_icon(active: bool, state: &str, svg: &str) -> String {
+  if active {
+    format!("<span class=\"status-icon {state}\">{svg}</span>")
+  } else {
+    String::new()
   }
 }
 

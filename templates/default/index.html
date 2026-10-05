@@ -34,15 +34,15 @@
       .avatar-wrap {
         position: relative;
         flex: none;
-        width: 52px;
-        height: 52px;
+        width: 48px;
+        height: 48px;
         font-size: 0;
         line-height: 0;
       }
 
       .avatar {
-        width: 52px;
-        height: 52px;
+        width: 48px;
+        height: 48px;
         border-radius: 50%;
         object-fit: cover;
         background: var(--muted-gray);
@@ -53,8 +53,8 @@
         position: absolute;
         top: 0;
         left: 0;
-        width: 52px;
-        height: 52px;
+        width: 48px;
+        height: 48px;
         border-radius: 50%;
         border: 3px solid transparent;
         box-sizing: border-box;
@@ -70,18 +70,44 @@
       }
 
       .name {
-        flex: none;
-        max-width: calc(100% - 56px);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex: 0 1 auto;
         min-width: 0;
         background: var(--gray);
         border-radius: var(--border-radius);
         color: var(--text);
         font-size: 14px;
-        line-height: 1;
+        line-height: 16px;
         padding: 6px;
+        overflow: hidden;
+      }
+
+      .name-text {
+        flex: 0 1 auto;
+        min-width: 0;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+      }
+
+      .status-icons {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex: none;
+      }
+
+      .status-icon {
+        display: inline-flex;
+        align-items: center;
+      }
+
+      .status-icon svg {
+        display: block;
+        width: 16px;
+        height: 16px;
       }
     </style>
   </head>
@@ -91,7 +117,15 @@
         <img class="avatar" src="{{avatar}}" />
         <span class="ring"></span>
       </span>
-      <span class="name">{{name}}</span>
+      <span class="name">
+        <span class="name-text">{{name}}</span>
+        <span class="status-icons">
+          {{muted-icon}}
+          {{deafened-icon}}
+          {{streaming-icon}}
+          {{camera-icon}}
+        </span>
+      </span>
     </div>
   </body>
 </html>

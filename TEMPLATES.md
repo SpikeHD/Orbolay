@@ -21,6 +21,10 @@ If the template selected is invalid, Orbolay will log and the default will be us
 * Stylesheet `<link>` tags and `<img>` sources must be network URLs (`http`/`https`)
   * There is no support for relative paths
 
+## Root Element Attributes
+
+In addition to the state classes, the root element of a user template is given a `data-user-id` attribute containing the user's Discord ID. This can be used in CSS selectors to target a specific user (e.g. `#user[data-user-id="123456789"]`).
+
 ## Substitution Keys
 
 In order for your template to display the user name, avatar, etc., you will use keywords that will be replaced at runtime.
@@ -29,6 +33,14 @@ In order for your template to display the user name, avatar, etc., you will use 
 
 * `{{avatar}}` - the avatar link, example usage: `<img src="{{avatar}}" />`
 * `{{name}}` - this is just text, example usage: `<span>{{name}}</span>`
+* `{{muted-icon}}` - the muted SVG icon, replaced with an empty string when the user is not muted
+* `{{deafened-icon}}` - the deafened SVG icon, replaced with an empty string when the user is not deafened
+* `{{streaming-icon}}` - the streaming SVG icon, replaced with an empty string when the user is not streaming
+* `{{camera-icon}}` - the camera SVG icon, replaced with an empty string when the user does not have their camera on
+
+> [!NOTE]
+> Each status icon is injected as a `<span class="status-icon <state>">` wrapping an inline `<svg>`. Place the token wherever
+you want the icon to appear. The icon is only present when the corresponding state class is active.
 
 ### Notifications
 
