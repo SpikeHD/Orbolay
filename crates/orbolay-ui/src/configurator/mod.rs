@@ -8,6 +8,7 @@ use orbolay_core::{
 };
 
 use crate::util::theme::{GRAY, LIGHT_GRAY, MUTED_GRAY, RED, TRANSPARENT, from_tuple, to_tuple};
+use crate::util::user_template::list_user_templates;
 
 #[cfg(not(target_os = "macos"))]
 use orbolay_keys::{DEFAULT_OVERLAY_TOGGLE, keys_to_strings, strings_to_keys};
@@ -142,6 +143,13 @@ fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
   let mut reset_version = use_state(|| 0usize);
   let config = local_config.read().clone();
 
+  let template_options = {
+    let mut options = vec!["Default".to_string()];
+    options.extend(list_user_templates());
+    options
+  };
+  let template_initial = config.user_template.clone().unwrap_or_else(|| "Default".to_string());
+
   let all_displays = DisplayInfo::all().unwrap_or_default();
   let display_names: Vec<String> = all_displays
     .iter()
@@ -240,6 +248,20 @@ fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
         if let Some(idx) = display_names_for_update.iter().position(|name| name == &v) {
           cfg.display_idx = Some(idx);
         }
+      }),
+      disabled: false,
+    })
+    .child(divider())
+    .child(SettingRow {
+      name: "User Template".into(),
+      description: Some(
+        "How voice users are rendered. Templates are HTML/CSS files in \
+         ~/.config/orbolay/templates/users/ (one per file, e.g. my_template.html)."
+          .into(),
+      ),
+      kind: SettingKind::Dropdown(template_options, Some(template_initial)),
+      on_change: make_updater(app.clone(), local_config, |cfg, v| {
+        cfg.user_template = (v != "Default").then_some(v);
       }),
       disabled: false,
     })

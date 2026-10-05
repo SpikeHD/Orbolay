@@ -150,6 +150,9 @@ fn main() {
           .with_decorations(false)
           .with_transparency(true)
           .with_background(Color::TRANSPARENT)
+          .with_window_handle(|w| {
+            *window::WINDOW_ID.lock().unwrap() = Some(w.id());
+          })
           .with_window_attributes(move |mut w, _event_loop| {
             w = w
               .with_inner_size(window_size)
@@ -362,6 +365,8 @@ fn app() -> impl IntoElement {
       display_voice_members: config.display_voice_members.clone().unwrap_or_default(),
       theme,
       ui_scale,
+      user_template_size: config.user_template_size,
+      user_template: config.user_template.clone(),
     })
     // Messages
     .maybe(messages_enabled, |el| el.child(MessagesSection {

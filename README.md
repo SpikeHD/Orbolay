@@ -204,6 +204,10 @@ hl.window_rule({
 })
 ```
 
+# Custom Templates
+
+Components within Orbolay can be customized with HTML and CSS! See [./TEMPLATES.md] for more information.
+
 # Building
 
 ## Requirements

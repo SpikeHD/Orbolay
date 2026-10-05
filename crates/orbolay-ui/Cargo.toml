@@ -12,6 +12,7 @@ freya = { workspace = true }
 orbolay-core = { path = "../orbolay-core" }
 orbolay-keys = { path = "../orbolay-keys" }
 orbolay-logging = { path = "../orbolay-logging" }
+scraper = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 ureq = { workspace = true }

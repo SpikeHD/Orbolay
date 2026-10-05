@@ -34,12 +34,6 @@ impl Component for SoundButton {
     let mut app_state = self.app_state;
     let mut hovered = use_state(|| false);
 
-    use_drop(move || {
-      if *hovered.read() {
-        Cursor::set(CursorIcon::default());
-      }
-    });
-
     let sound_id = self.sound.sound_id.clone();
     let source_guild_id = self.sound.guild_id.clone();
     let available = self.sound.available;
@@ -75,13 +69,12 @@ impl Component for SoundButton {
           }),
         });
       })
+      .cursor(CursorIcon::Pointer)
       .on_pointer_enter(move |_| {
         *hovered.write() = true;
-        Cursor::set(CursorIcon::Pointer);
       })
       .on_pointer_leave(move |_| {
         *hovered.write() = false;
-        Cursor::set(CursorIcon::default());
       })
       .overflow(Overflow::Clip)
       .child(

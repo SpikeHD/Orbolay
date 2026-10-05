@@ -47,6 +47,24 @@ pub fn from_tuple(rgb: (u8, u8, u8)) -> Color {
   Color::from_rgb(rgb.0, rgb.1, rgb.2)
 }
 
+/// Format a color as an uppercase `#RRGGBB` string
+pub fn to_hex(color: Color) -> String {
+  let RGB { r, g, b } = color.to_rgb();
+  format!("#{r:02X}{g:02X}{b:02X}")
+}
+
+/// Parse a `#RRGGBB` (or `RRGGBB`) string into a color
+pub fn from_hex(value: &str) -> Option<Color> {
+  let hex = value.trim().trim_start_matches('#');
+  if hex.len() != 6 {
+    return None;
+  }
+  let r = u8::from_str_radix(&hex[0..2], 16).ok()?;
+  let g = u8::from_str_radix(&hex[2..4], 16).ok()?;
+  let b = u8::from_str_radix(&hex[4..6], 16).ok()?;
+  Some(Color::from_rgb(r, g, b))
+}
+
 fn blend(base: Color, tint: Color, tint_strength: f32) -> Color {
   let RGB {
     r: base_r,

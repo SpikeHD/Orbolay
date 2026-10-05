@@ -26,13 +26,6 @@ impl Component for ActionButton {
     } else {
       theme::GREEN
     };
-    let mut hovered = use_state(|| false);
-
-    use_drop(move || {
-      if *hovered.read() {
-        Cursor::set(CursorIcon::default());
-      }
-    });
 
     rect()
       .direction(Direction::Horizontal)
@@ -46,16 +39,9 @@ impl Component for ActionButton {
       .maybe(is_secondary, |el| {
         el.border(Border::new().fill(self.theme.muted_gray).width(1.))
       })
+      .cursor(CursorIcon::Pointer)
       .on_press(move |_| {
         func.call(());
-      })
-      .on_pointer_enter(move |_| {
-        *hovered.write() = true;
-        Cursor::set(CursorIcon::Pointer);
-      })
-      .on_pointer_leave(move |_| {
-        *hovered.write() = false;
-        Cursor::set(CursorIcon::default());
       })
       .child(
         label()

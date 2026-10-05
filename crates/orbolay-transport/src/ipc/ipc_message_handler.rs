@@ -180,14 +180,15 @@ pub fn handle_ipc_message(
         let user_id = user.id.clone();
         let app = app.clone();
 
-        // Set NotSpeaking after an extra second
+        // Set NotSpeaking after a short delay
         std::thread::spawn(move || {
           std::thread::sleep(std::time::Duration::from_millis(300));
           app.update(|state| {
-            if let Some(user) = state.voice_users.iter_mut().find(|user| user.id == user_id) {
-              if user.speaking_epoch == epoch {
-                user.voice_state = UserVoiceState::NotSpeaking;
-              }
+            if let Some(user) = state.voice_users.iter_mut().find(|user| user.id == user_id)
+              && user.speaking_epoch == epoch
+              && user.voice_state == UserVoiceState::Speaking
+            {
+              user.voice_state = UserVoiceState::NotSpeaking;
             }
           });
         });

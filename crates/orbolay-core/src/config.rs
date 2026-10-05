@@ -79,6 +79,10 @@ fn default_ui_scale() -> f32 {
   1.0
 }
 
+fn default_user_template_size() -> (u32, u32) {
+  (320, 56)
+}
+
 fn default_true() -> bool {
   true
 }
@@ -127,6 +131,13 @@ pub struct Config {
   pub border_radius: f32,
   #[serde(default = "default_ui_scale")]
   pub ui_scale: f32,
+  /// Design box size (width, height in logical pixels) for custom user template rows.
+  #[serde(default = "default_user_template_size")]
+  pub user_template_size: (u32, u32),
+  /// The selected user row template (a `.html` file in
+  /// `~/.config/orbolay/templates/users/`). `None` uses the built-in default.
+  #[serde(default)]
+  pub user_template: Option<String>,
 }
 
 impl Default for Config {
@@ -153,6 +164,8 @@ impl Default for Config {
       text_color: default_text(),
       border_radius: 10.,
       ui_scale: default_ui_scale(),
+      user_template_size: default_user_template_size(),
+      user_template: None,
     }
   }
 }
