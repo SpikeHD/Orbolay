@@ -25,6 +25,7 @@ const ROOT_ID: &str = "user";
 
 const NAME_TOKEN: &str = "{{name}}";
 const AVATAR_TOKEN: &str = "{{avatar}}";
+const VOLUME_PERCENT_TOKEN: &str = "{{volume-percent}}";
 
 const MUTED_ICON_TOKEN: &str = "{{muted-icon}}";
 const DEAFENED_ICON_TOKEN: &str = "{{deafened-icon}}";
@@ -174,6 +175,10 @@ impl UserTemplate {
     );
     html = html.replace(AVATAR_TOKEN, &avatar_url(user));
     html = html.replace(NAME_TOKEN, &escape_html(&user.name));
+    html = html.replace(
+      VOLUME_PERCENT_TOKEN,
+      &format!("{:.0}", user.volume.clamp(0., 200.) / 2.),
+    );
     html = html.replace(
       MUTED_ICON_TOKEN,
       &status_icon(
