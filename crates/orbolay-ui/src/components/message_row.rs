@@ -3,11 +3,7 @@ use freya::{
   prelude::*,
 };
 
-use orbolay_core::{
-  app_state::AppState,
-  payloads::Notification,
-  util::bridge::BridgeMessage,
-};
+use orbolay_core::{app_state::AppState, payloads::Notification, util::bridge::BridgeMessage};
 
 use crate::util::{
   notification_template::{self, load_notification_template},

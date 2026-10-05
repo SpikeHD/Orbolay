@@ -16,7 +16,9 @@ use orbolay_core::{
 use orbolay_logging::warn;
 use scraper::{Html, Selector};
 
-use crate::util::html_template::{escape_html, is_network_url, merge_classes, render_tag, theme_decls};
+use crate::util::html_template::{
+  escape_html, is_network_url, merge_classes, render_tag, theme_decls,
+};
 use crate::util::theme::Theme;
 
 pub const TEMPLATES_DIR: &str = "templates";
@@ -31,8 +33,7 @@ const BODY_TOKEN: &str = "{{body}}";
 const ICON_TOKEN: &str = "{{icon}}";
 const ACTIONS_TOKEN: &str = "{{actions}}";
 
-const DEFAULT_TEMPLATE: &[u8] =
-  include_bytes!("../../../../templates/notification/index.html");
+const DEFAULT_TEMPLATE: &[u8] = include_bytes!("../../../../templates/notification/index.html");
 
 static DEFAULT: LazyLock<NotificationTemplate> = LazyLock::new(|| {
   let html = std::str::from_utf8(DEFAULT_TEMPLATE).expect("default template is valid UTF-8");

@@ -178,7 +178,11 @@ impl UserTemplate {
     html = html.replace(NAME_TOKEN, &escape_html(&user.name));
     html = html.replace(
       MUTED_ICON_TOKEN,
-      &status_icon(user.voice_state == UserVoiceState::Muted, "muted", MUTED_ICON),
+      &status_icon(
+        user.voice_state == UserVoiceState::Muted,
+        "muted",
+        MUTED_ICON,
+      ),
     );
     html = html.replace(
       DEAFENED_ICON_TOKEN,

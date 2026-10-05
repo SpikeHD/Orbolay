@@ -9,8 +9,7 @@ use orbolay_core::{
 
 use crate::util::theme::{GRAY, LIGHT_GRAY, MUTED_GRAY, RED, TRANSPARENT, from_tuple, to_tuple};
 use crate::util::{
-  notification_template::list_notification_templates,
-  user_template::list_user_templates,
+  notification_template::list_notification_templates, user_template::list_user_templates,
 };
 
 #[cfg(not(target_os = "macos"))]
@@ -151,15 +150,20 @@ fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
     options.extend(list_user_templates());
     options
   };
-  let template_initial = config.user_template.clone().unwrap_or_else(|| "Default".to_string());
+  let template_initial = config
+    .user_template
+    .clone()
+    .unwrap_or_else(|| "Default".to_string());
 
   let notification_template_options = {
     let mut options = vec!["Default".to_string()];
     options.extend(list_notification_templates());
     options
   };
-  let notification_template_initial =
-    config.notification_template.clone().unwrap_or_else(|| "Default".to_string());
+  let notification_template_initial = config
+    .notification_template
+    .clone()
+    .unwrap_or_else(|| "Default".to_string());
 
   let all_displays = DisplayInfo::all().unwrap_or_default();
   let display_names: Vec<String> = all_displays
