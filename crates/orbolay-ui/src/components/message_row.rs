@@ -16,7 +16,6 @@ pub struct MessageRow {
   pub app_state: State<AppState>,
   pub message: Notification,
   pub theme: Theme,
-  pub template_generation: u64,
   pub box_size: (u32, u32),
   pub notification_template: Option<String>,
   pub ui_scale: f32,
@@ -36,19 +35,19 @@ impl Component for MessageRow {
     let width = scale.px(self.box_size.0 as f32);
     let height = scale.px(self.box_size.1 as f32);
     let message = self.message.clone();
-    let template_name = self.notification_template.clone();
     let ui_scale = self.ui_scale;
     let mut app_state = self.app_state;
 
     let handle = use_html(|| HtmlSource::html(String::new()));
-    let deps = (self.message.clone(), self.theme, self.template_generation);
+    let deps = (
+      self.message.clone(),
+      self.theme,
+      self.notification_template.clone(),
+    );
 
     use_side_effect_with_deps(&deps, move |deps| {
-      let (message, theme, generation) = deps.clone();
-      let template = load_notification_template(template_name.as_deref());
-      if template.generation != generation {
-        return;
-      }
+      let (message, theme, notification_template) = deps.clone();
+      let template = load_notification_template(notification_template.as_deref());
       let mut handle = handle;
       handle.load_html(template.render(&message, &theme));
     });

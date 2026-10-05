@@ -12,7 +12,7 @@ use orbolay_core::{
 use crate::{
   components::UserRow,
   config::{AxisAlignment, CornerAlignment},
-  util::{scale::UiScale, theme::Theme, user_template::load_user_template},
+  util::{scale::UiScale, theme::Theme},
 };
 
 #[derive(PartialEq)]
@@ -38,7 +38,6 @@ impl Component for VoiceSection {
     let scale = UiScale::new(self.ui_scale);
     let gaps = alignment.to_gaps(scale.int(self.user_offset_x), scale.int(self.user_offset_y));
     let is_right_aligned = alignment.x == AxisAlignment::End;
-    let template_generation = load_user_template(self.user_template.as_deref()).generation;
 
     let mut sorted_users = self.voice_users.clone();
     sorted_users.sort_by(|a, b| a.id.cmp(&b.id));
@@ -90,7 +89,6 @@ impl Component for VoiceSection {
             is_voice_semitransparent,
             can_context_menu,
             theme: self.theme,
-            template_generation,
             box_size: self.user_template_size,
             user_template: self.user_template.clone(),
             is_right_aligned,

@@ -26,7 +26,6 @@ pub struct UserRow {
   pub is_voice_semitransparent: bool,
   pub can_context_menu: bool,
   pub theme: Theme,
-  pub template_generation: u64,
   pub box_size: (u32, u32),
   pub user_template: Option<String>,
   pub is_right_aligned: bool,
@@ -53,21 +52,17 @@ impl Component for UserRow {
     };
 
     let handle = use_html(|| HtmlSource::html(String::new()));
-    let user_template = self.user_template.clone();
     let deps = (
       self.user.clone(),
       self.is_self,
       self.theme,
-      self.template_generation,
+      self.user_template.clone(),
       self.is_right_aligned,
     );
 
     use_side_effect_with_deps(&deps, move |deps| {
-      let (user, is_self, theme, generation, is_right_aligned) = deps.clone();
+      let (user, is_self, theme, user_template, is_right_aligned) = deps.clone();
       let template = load_user_template(user_template.as_deref());
-      if template.generation != generation {
-        return;
-      }
       let mut handle = handle;
       handle.load_html(template.render(&user, is_self, &theme, is_right_aligned));
     });
