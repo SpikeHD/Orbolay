@@ -10,37 +10,31 @@ use std::{
 
 use orbolay_core::{
   config::config_dir,
-  user::{User, UserVoiceState},
+  payloads::{Notification, NotificationKind},
+  util::text::strip,
 };
 use orbolay_logging::warn;
 use scraper::{Html, Selector};
 
-use crate::util::html_template::{
-  escape_html, is_network_url, merge_classes, render_tag, theme_decls,
-};
+use crate::util::html_template::{escape_html, is_network_url, merge_classes, render_tag, theme_decls};
 use crate::util::theme::Theme;
 
 pub const TEMPLATES_DIR: &str = "templates";
-pub const USER_TEMPLATES: &str = "users";
+pub const NOTIFICATION_TEMPLATES: &str = "notifications";
 
-const ROOT_ID: &str = "user";
+pub const ACTION_ATTR: &str = "data-action";
 
-const NAME_TOKEN: &str = "{{name}}";
-const AVATAR_TOKEN: &str = "{{avatar}}";
+const ROOT_ID: &str = "notification";
 
-const MUTED_ICON_TOKEN: &str = "{{muted-icon}}";
-const DEAFENED_ICON_TOKEN: &str = "{{deafened-icon}}";
-const STREAMING_ICON_TOKEN: &str = "{{streaming-icon}}";
-const CAMERA_ICON_TOKEN: &str = "{{camera-icon}}";
+const TITLE_TOKEN: &str = "{{title}}";
+const BODY_TOKEN: &str = "{{body}}";
+const ICON_TOKEN: &str = "{{icon}}";
+const ACTIONS_TOKEN: &str = "{{actions}}";
 
-const MUTED_ICON: &str = include_str!("../../../../assets/muted.svg");
-const DEAFENED_ICON: &str = include_str!("../../../../assets/deafened.svg");
-const STREAMING_ICON: &str = include_str!("../../../../assets/streaming.svg");
-const CAMERA_ICON: &str = include_str!("../../../../assets/camera.svg");
+const DEFAULT_TEMPLATE: &[u8] =
+  include_bytes!("../../../../templates/notification/index.html");
 
-const DEFAULT_TEMPLATE: &[u8] = include_bytes!("../../../../templates/user/index.html");
-
-static DEFAULT: LazyLock<UserTemplate> = LazyLock::new(|| {
+static DEFAULT: LazyLock<NotificationTemplate> = LazyLock::new(|| {
   let html = std::str::from_utf8(DEFAULT_TEMPLATE).expect("default template is valid UTF-8");
   preprocess(html).expect("the built-in default template must be valid")
 });
@@ -54,7 +48,7 @@ fn next_generation() -> u64 {
 struct TemplateCache {
   name: Option<String>,
   mtime: Option<SystemTime>,
-  template: UserTemplate,
+  template: NotificationTemplate,
 }
 
 static CACHE: LazyLock<Mutex<TemplateCache>> = LazyLock::new(|| {
@@ -66,7 +60,7 @@ static CACHE: LazyLock<Mutex<TemplateCache>> = LazyLock::new(|| {
 });
 
 #[derive(Clone)]
-pub struct UserTemplate {
+pub struct NotificationTemplate {
   html: String,
   root_name: String,
   root_attrs: Vec<(String, String)>,
@@ -74,20 +68,20 @@ pub struct UserTemplate {
   pub generation: u64,
 }
 
-fn default_template() -> UserTemplate {
+fn default_template() -> NotificationTemplate {
   DEFAULT.clone()
 }
 
-fn user_templates_dir() -> Option<PathBuf> {
-  config_dir().map(|dir| dir.join(TEMPLATES_DIR).join(USER_TEMPLATES))
+fn notification_templates_dir() -> Option<PathBuf> {
+  config_dir().map(|dir| dir.join(TEMPLATES_DIR).join(NOTIFICATION_TEMPLATES))
 }
 
-fn user_template_path(name: &str) -> Option<PathBuf> {
-  user_templates_dir().map(|dir| dir.join(format!("{name}.html")))
+fn notification_template_path(name: &str) -> Option<PathBuf> {
+  notification_templates_dir().map(|dir| dir.join(format!("{name}.html")))
 }
 
-pub fn list_user_templates() -> Vec<String> {
-  let Some(dir) = user_templates_dir() else {
+pub fn list_notification_templates() -> Vec<String> {
+  let Some(dir) = notification_templates_dir() else {
     return Vec::new();
   };
   let Ok(entries) = fs::read_dir(&dir) else {
@@ -111,7 +105,7 @@ pub fn list_user_templates() -> Vec<String> {
   names
 }
 
-fn read_template_file(path: &Path) -> UserTemplate {
+fn read_template_file(path: &Path) -> NotificationTemplate {
   match fs::read_to_string(path) {
     Ok(raw) => match preprocess(&raw) {
       Ok(mut template) => {
@@ -119,22 +113,22 @@ fn read_template_file(path: &Path) -> UserTemplate {
         template
       }
       Err(reason) => {
-        warn!("Invalid user template {path:?}: {reason}; using the built-in default");
+        warn!("Invalid notification template {path:?}: {reason}; using the built-in default");
         default_template()
       }
     },
     Err(err) => {
-      warn!("Failed to read user template {path:?}: {err}; using the built-in default");
+      warn!("Failed to read notification template {path:?}: {err}; using the built-in default");
       default_template()
     }
   }
 }
 
-pub fn load_user_template(name: Option<&str>) -> UserTemplate {
+pub fn load_notification_template(name: Option<&str>) -> NotificationTemplate {
   let Some(name) = name else {
     return default_template();
   };
-  let Some(path) = user_template_path(name) else {
+  let Some(path) = notification_template_path(name) else {
     return default_template();
   };
 
@@ -152,21 +146,21 @@ pub fn load_user_template(name: Option<&str>) -> UserTemplate {
   template
 }
 
-impl UserTemplate {
-  pub fn render(
-    &self,
-    user: &User,
-    is_self: bool,
-    theme: &Theme,
-    is_right_aligned: bool,
-  ) -> String {
+impl NotificationTemplate {
+  pub fn render(&self, notification: &Notification, theme: &Theme) -> String {
     let root_tag = render_tag(&self.root_name, &self.root_attrs);
-    let mut state_classes = user_template_classes(user, is_self);
-    if is_right_aligned {
-      state_classes.push("right");
+    let mut classes = Vec::new();
+    if notification.icon.is_empty() {
+      classes.push("no-icon");
     }
-    let mut new_attrs = merge_classes(&self.root_attrs, &state_classes);
-    new_attrs.push(("data-user-id".to_string(), user.id.clone()));
+    if notification
+      .actions
+      .as_deref()
+      .is_some_and(|actions| !actions.is_empty())
+    {
+      classes.push("has-actions");
+    }
+    let new_attrs = merge_classes(&self.root_attrs, &classes);
     let new_root_tag = render_tag(&self.root_name, &new_attrs);
     let mut html = self.html.replace(&root_tag, &new_root_tag);
 
@@ -174,41 +168,37 @@ impl UserTemplate {
       "</head>",
       &format!("<style>:root{{{}}}</style></head>", theme_decls(theme)),
     );
-    html = html.replace(AVATAR_TOKEN, &avatar_url(user));
-    html = html.replace(NAME_TOKEN, &escape_html(&user.name));
-    html = html.replace(
-      MUTED_ICON_TOKEN,
-      &status_icon(user.voice_state == UserVoiceState::Muted, "muted", MUTED_ICON),
-    );
-    html = html.replace(
-      DEAFENED_ICON_TOKEN,
-      &status_icon(
-        user.voice_state == UserVoiceState::Deafened,
-        "deafened",
-        DEAFENED_ICON,
-      ),
-    );
-    html = html.replace(
-      STREAMING_ICON_TOKEN,
-      &status_icon(user.streaming, "streaming", STREAMING_ICON),
-    );
-    html = html.replace(
-      CAMERA_ICON_TOKEN,
-      &status_icon(user.camera, "camera", CAMERA_ICON),
-    );
+    html = html.replace(TITLE_TOKEN, &escape_html(&notification.title));
+    html = html.replace(BODY_TOKEN, &escape_html(&strip(&notification.body)));
+    html = html.replace(ICON_TOKEN, &notification.icon);
+    html = html.replace(ACTIONS_TOKEN, &actions_html(notification));
     html
   }
 }
 
-fn status_icon(active: bool, state: &str, svg: &str) -> String {
-  if active {
-    format!("<span class=\"status-icon {state}\">{svg}</span>")
-  } else {
-    String::new()
+fn actions_html(notification: &Notification) -> String {
+  match &notification.actions {
+    Some(actions) => actions
+      .iter()
+      .enumerate()
+      .map(|(index, action)| {
+        let kind_class = if action.kind == NotificationKind::Secondary {
+          "action secondary"
+        } else {
+          "action"
+        };
+        format!(
+          "<button class=\"{kind_class}\" {ACTION_ATTR}=\"{index}\">{}</button>",
+          escape_html(&action.label)
+        )
+      })
+      .collect::<Vec<_>>()
+      .join(""),
+    None => String::new(),
   }
 }
 
-fn preprocess(raw: &str) -> Result<UserTemplate, String> {
+fn preprocess(raw: &str) -> Result<NotificationTemplate, String> {
   let doc = Html::parse_document(raw);
   let root_selector = Selector::parse(&format!("#{ROOT_ID}")).expect("valid selector");
 
@@ -247,20 +237,22 @@ fn preprocess(raw: &str) -> Result<UserTemplate, String> {
 
   for img in doc.select(&Selector::parse("img[src]").expect("valid selector")) {
     let src = img.attr("src").expect("selector matched on [src]");
-    if src == AVATAR_TOKEN || is_network_url(src) {
+    if src == ICON_TOKEN || is_network_url(src) {
       continue;
     }
     return Err(format!(
-      "<img> src must be a network URL or {AVATAR_TOKEN}, got: {src}"
+      "<img> src must be a network URL or {ICON_TOKEN}, got: {src}"
     ));
   }
 
-  if !raw.contains(NAME_TOKEN) {
-    return Err(format!("must contain the {NAME_TOKEN} token"));
+  for token in [TITLE_TOKEN, BODY_TOKEN] {
+    if !raw.contains(token) {
+      return Err(format!("must contain the {token} token"));
+    }
   }
 
   let element = root.value();
-  Ok(UserTemplate {
+  Ok(NotificationTemplate {
     html: doc.html(),
     root_name: element.name().to_string(),
     root_attrs: element
@@ -269,44 +261,4 @@ fn preprocess(raw: &str) -> Result<UserTemplate, String> {
       .collect(),
     generation: 0,
   })
-}
-
-pub fn user_template_classes(user: &User, is_self: bool) -> Vec<&'static str> {
-  let mut classes = Vec::new();
-
-  match user.voice_state {
-    UserVoiceState::Speaking => classes.push("speaking"),
-    UserVoiceState::Muted => classes.push("muted"),
-    UserVoiceState::Deafened => classes.push("deafened"),
-    UserVoiceState::NotSpeaking => {}
-  }
-
-  if user.streaming {
-    classes.push("streaming");
-  }
-
-  if user.camera {
-    classes.push("camera");
-  }
-
-  if user.avatar.is_empty() {
-    classes.push("no-avatar");
-  }
-
-  if is_self {
-    classes.push("self");
-  }
-
-  classes
-}
-
-fn avatar_url(user: &User) -> String {
-  if user.avatar.is_empty() {
-    return String::new();
-  }
-
-  format!(
-    "https://cdn.discordapp.com/avatars/{}/{}.png?size=160",
-    user.id, user.avatar
-  )
 }

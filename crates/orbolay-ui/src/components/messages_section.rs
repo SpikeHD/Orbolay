@@ -7,7 +7,11 @@ use orbolay_core::{app_state::AppState, payloads::Notification};
 use crate::{
   components::MessageRow,
   config::CornerAlignment,
-  util::{scale::UiScale, theme::Theme},
+  util::{
+    notification_template::load_notification_template,
+    scale::UiScale,
+    theme::Theme,
+  },
 };
 
 #[derive(PartialEq)]
@@ -19,6 +23,7 @@ pub struct MessagesSection {
   pub message_offset_x: i32,
   pub message_offset_y: i32,
   pub messages_semitransparent: bool,
+  pub notification_template: Option<String>,
   pub app_state: State<AppState>,
   pub theme: Theme,
   pub ui_scale: f32,
@@ -38,6 +43,8 @@ impl Component for MessagesSection {
     } else {
       1.0_f32
     };
+    let template_generation =
+      load_notification_template(self.notification_template.as_deref()).generation;
 
     self.messages.iter().fold(
       rect()
@@ -54,10 +61,19 @@ impl Component for MessagesSection {
         if self.is_censor {
           el
         } else {
+          let has_actions = message.actions.is_some() && !message.actions.as_ref().unwrap().is_empty();
+
           el.child(MessageRow {
             app_state: self.app_state,
             message: message.clone(),
             theme: self.theme,
+            template_generation,
+            box_size: if has_actions {
+              (400, 100)
+            } else {
+              (400, 66)
+            },
+            notification_template: self.notification_template.clone(),
             ui_scale: scale.factor(),
           })
         }

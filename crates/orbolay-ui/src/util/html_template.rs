@@ -85,7 +85,7 @@ pub fn is_network_url(url: &str) -> bool {
 
 pub fn theme_decls(theme: &Theme) -> String {
   format!(
-    "--gray: {}; --darkish-gray: {}; --light-gray: {}; --superlight-gray: {}; --muted-gray: {}; --text: {}; --border-radius: {}px;",
+    "--gray: {}; --darkish-gray: {}; --light-gray: {}; --superlight-gray: {}; --muted-gray: {}; --text: {}; --green: #01863B; --border-radius: {}px;",
     to_hex(theme.gray),
     to_hex(theme.darkish_gray),
     to_hex(theme.light_gray),

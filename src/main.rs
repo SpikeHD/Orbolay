@@ -365,7 +365,7 @@ fn app() -> impl IntoElement {
       display_voice_members: config.display_voice_members.clone().unwrap_or_default(),
       theme,
       ui_scale,
-      user_template_size: config.user_template_size,
+      user_template_size: (320, 56),
       user_template: config.user_template.clone(),
     })
     // Messages
@@ -380,6 +380,7 @@ fn app() -> impl IntoElement {
       message_offset_x: config.message_offset_x,
       message_offset_y: config.message_offset_y,
       messages_semitransparent: config.messages_semitransparent,
+      notification_template: config.notification_template.clone(),
       app_state,
       theme,
       ui_scale,

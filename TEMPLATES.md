@@ -4,7 +4,7 @@
 > Templates are experimental! They may not support fancy animations or filters... yet.
 
 > [!NOTE]
-> You can find the default template (to use as an example or base) in `templates/default` in this repository!
+> You can find the default templates (to use as an example or base) in `templates/default` and `templates/default-notification` in this repository!
 
 Orbolay contains a HTML/CSS renderer used for rendering certain components. This makes it easy to change and modify
 the look and feel however you'd like! The template can be changed at any time in the settings menu.
@@ -44,7 +44,19 @@ you want the icon to appear. The icon is only present when the corresponding sta
 
 ### Notifications
 
-* TODO
+* `{{title}}` - the notification title, example usage: `<span>{{title}}</span>`
+* `{{body}}` - the notification body (markdown stripped), example usage: `<span>{{body}}</span>`
+* `{{icon}}` - the icon image link, example usage: `<img src="{{icon}}" />`
+* `{{actions}}` - a set of clickable `<button>` elements, one per action, each with a `data-action="<index>"` attribute. Example output:
+
+```html
+<button class="action" data-action="0">Accept</button>
+<button class="action secondary" data-action="1">Reject</button>
+```
+
+> [!NOTE]
+> Orbolay routes a click on an element carrying a `data-action` attribute to the matching action. Any other click
+on the notification navigates to the source message.
 
 ## Available CSS Variables
 
@@ -54,12 +66,14 @@ you want the icon to appear. The icon is only present when the corresponding sta
 * `--superlight-gray`
 * `--muted-gray`
 * `--text`
+* `--green`
 * `--border-radius`
 
 ## Available State Classes
 
-State classes are what allow your template to know how to render the current state. For example, to know if a user is speaking or not.
-These state classes will be applied to the element containing the required `id` attribute.
+State classes are applied to the root element to allow your template to know how to render the current state.
+For example, to know if a user is speaking or not. These state classes will be applied to the element containing the
+required `id` attribute.
 
 ### Users
 
@@ -74,4 +88,5 @@ These state classes will be applied to the element containing the required `id` 
 
 ### Notifications
 
-* TODO
+* `no-icon` - the notification has no icon to display
+* `has-actions` - the notification has clickable action buttons

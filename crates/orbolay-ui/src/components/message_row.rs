@@ -1,18 +1,18 @@
-use freya::prelude::*;
+use freya::{
+  html::{HtmlSource, HtmlViewer, use_html},
+  prelude::*,
+};
 
 use orbolay_core::{
   app_state::AppState,
   payloads::Notification,
-  util::{bridge::BridgeMessage, text::strip},
+  util::bridge::BridgeMessage,
 };
 
-use crate::{
-  components::ActionButton,
-  util::{
-    image::avatar_image,
-    scale::{GapsScaleExt, UiScale},
-    theme::Theme,
-  },
+use crate::util::{
+  notification_template::{self, load_notification_template},
+  scale::{GapsScaleExt, UiScale},
+  theme::Theme,
 };
 
 #[derive(PartialEq)]
@@ -20,26 +20,80 @@ pub struct MessageRow {
   pub app_state: State<AppState>,
   pub message: Notification,
   pub theme: Theme,
+  pub template_generation: u64,
+  pub box_size: (u32, u32),
+  pub notification_template: Option<String>,
   pub ui_scale: f32,
 }
 
 impl Component for MessageRow {
+  fn render_key(&self) -> DiffKey {
+    if let Some(message_id) = &self.message.message_id {
+      DiffKey::from(message_id)
+    } else {
+      DiffKey::from(&self.message.title)
+    }
+  }
+
   fn render(&self) -> impl IntoElement {
     let scale = UiScale::new(self.ui_scale);
-    let mut app_state = self.app_state;
+    let width = scale.px(self.box_size.0 as f32);
+    let height = scale.px(self.box_size.1 as f32);
     let message = self.message.clone();
+    let template_name = self.notification_template.clone();
+    let ui_scale = self.ui_scale;
+    let mut app_state = self.app_state;
+
+    let handle = use_html(|| HtmlSource::html(String::new()));
+    let deps = (self.message.clone(), self.theme, self.template_generation);
+
+    use_side_effect_with_deps(&deps, move |deps| {
+      let (message, theme, generation) = deps.clone();
+      let template = load_notification_template(template_name.as_deref());
+      if template.generation != generation {
+        return;
+      }
+      let mut handle = handle;
+      handle.load_html(template.render(&message, &theme));
+    });
 
     rect()
       .direction(Direction::Horizontal)
-      .main_align(Alignment::Start)
-      .cross_align(Alignment::Start)
-      .max_width(Size::px(scale.px(400.0)))
+      .main_align(Alignment::Center)
+      .cross_align(Alignment::Center)
+      .width(Size::px(width))
+      .height(Size::px(height))
       .margin(Gaps::new_all(6.).scaled(scale.factor()))
-      .padding(Gaps::new_all(10.).scaled(scale.factor()))
-      .corner_radius(CornerRadius::new_all(self.theme.border_radius))
-      .background(self.theme.gray)
-      .overflow(Overflow::Clip)
-      .on_press(move |_| {
+      .cursor(CursorIcon::Pointer)
+      .child(
+        rect()
+          .width(Size::px(self.box_size.0 as f32))
+          .height(Size::px(self.box_size.1 as f32))
+          .scale(self.ui_scale)
+          .child(HtmlViewer::new(handle)),
+      )
+      .on_press(move |event: Event<PressEventData>| {
+        let (mouse_x, mouse_y) = match &*event {
+          PressEventData::Mouse(m) => (m.element_location.x, m.element_location.y),
+          PressEventData::Touch(t) => (t.element_location.x, t.element_location.y),
+          PressEventData::Keyboard(_) => return,
+        };
+        let local_x = (mouse_x as f32) / ui_scale;
+        let local_y = (mouse_y as f32) / ui_scale;
+        let hits = handle.elements_at(local_x, local_y);
+
+        for hit in hits {
+          if let Some(index) = hit
+            .attr(notification_template::ACTION_ATTR)
+            .and_then(|value| value.parse::<usize>().ok())
+            && let Some(actions) = &message.actions
+            && let Some(action) = actions.get(index)
+          {
+            (action.action)();
+            return;
+          }
+        }
+
         app_state.write().send(BridgeMessage {
           cmd: "NAVIGATE".to_string(),
           data: serde_json::json!({
@@ -49,70 +103,5 @@ impl Component for MessageRow {
           }),
         })
       })
-      .cursor(CursorIcon::Pointer)
-      .child(
-        avatar_image(&self.message.icon, None)
-          .width(Size::px(scale.px(42.0)))
-          .height(Size::px(scale.px(42.0)))
-          .margin(Gaps::new(0., 10., 0., 0.).scaled(scale.factor())),
-      )
-      .child(
-        rect()
-          .direction(Direction::Vertical)
-          .main_align(Alignment::Start)
-          .cross_align(Alignment::Start)
-          .width(Size::fill())
-          .child(
-            label()
-              .font_size(scale.px(14.))
-              .font_weight(FontWeight::BOLD)
-              .color(self.theme.text_color)
-              .margin(Gaps::new(0., 0., 4., 0.).scaled(scale.factor()))
-              .max_lines(1)
-              .text(self.message.title.clone())
-              .text_overflow(TextOverflow::Ellipsis),
-          )
-          .child(
-            label()
-              .font_size(scale.px(14.))
-              .width(Size::Fill)
-              .color(self.theme.text_color)
-              .max_lines(2)
-              .text(strip(&self.message.body))
-              .text_overflow(TextOverflow::Ellipsis),
-          )
-          .maybe(self.message.actions.is_some(), |el| {
-            el.child(
-              rect()
-                .direction(Direction::Horizontal)
-                .main_align(Alignment::Start)
-                .cross_align(Alignment::Center)
-                .content(Content::wrap())
-                .margin(Gaps::new(6., 0., 0., 0.).scaled(scale.factor()))
-                .children(
-                  self
-                    .message
-                    .actions
-                    .as_ref()
-                    .unwrap()
-                    .iter()
-                    .map(|action| {
-                      let func = action.action.clone();
-                      ActionButton {
-                        func: Callback::new(move |_| {
-                          func();
-                        }),
-                        label: action.label.clone(),
-                        kind: action.kind.clone(),
-                        theme: self.theme,
-                        ui_scale: scale.factor(),
-                      }
-                      .into()
-                    })
-                    .collect::<Vec<Element>>(),
-                ),
-            )
-          }),
-      )
   }
 }
