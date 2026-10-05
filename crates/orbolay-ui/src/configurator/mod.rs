@@ -2,9 +2,10 @@ use display_info::DisplayInfo;
 use freya::prelude::*;
 
 use orbolay_core::{
-  app_state::{AppHandle, SharedAppState}, config::{
-    Config, TransportMode, config_dir, load_config, save_config,
-  }, dirs::{TEMPLATES_DIR, ensure_config_dirs}, payloads::Notification,
+  app_state::{AppHandle, SharedAppState},
+  config::{Config, TransportMode, config_dir, load_config, save_config},
+  dirs::{TEMPLATES_DIR, ensure_config_dirs},
+  payloads::Notification,
 };
 use orbolay_logging::warn;
 
@@ -284,11 +285,7 @@ fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
     .child(divider())
     .child(SettingRow {
       name: "User Template".into(),
-      description: Some(
-        "How voice users are rendered. Templates are HTML/CSS files in \
-         ~/.config/orbolay/templates/users/ (one per file, e.g. my_template.html)."
-          .into(),
-      ),
+      description: Some("Template used to render voice users.".into()),
       kind: SettingKind::Dropdown(template_options, Some(template_initial)),
       on_change: make_updater(app.clone(), local_config, |cfg, v| {
         cfg.user_template = (v != "Default").then_some(v);
@@ -298,11 +295,7 @@ fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
     .child(divider())
     .child(SettingRow {
       name: "Notification Template".into(),
-      description: Some(
-        "How notifications are rendered. Templates are HTML/CSS files in \
-         ~/.config/orbolay/templates/notifications/ (one per file, e.g. my_template.html)."
-          .into(),
-      ),
+      description: Some("Template used to render notifications.".into()),
       kind: SettingKind::Dropdown(
         notification_template_options,
         Some(notification_template_initial),

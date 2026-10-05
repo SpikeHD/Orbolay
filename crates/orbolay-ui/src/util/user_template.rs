@@ -9,7 +9,9 @@ use std::{
 };
 
 use orbolay_core::{
-  config::config_dir, dirs::{TEMPLATES_DIR, USER_TEMPLATES}, user::{User, UserVoiceState},
+  config::config_dir,
+  dirs::{TEMPLATES_DIR, USER_TEMPLATES},
+  user::{User, UserVoiceState},
 };
 use orbolay_logging::warn;
 use scraper::{Html, Selector};

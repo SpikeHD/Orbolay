@@ -9,7 +9,10 @@ use std::{
 };
 
 use orbolay_core::{
-  config::config_dir, dirs::{NOTIFICATION_TEMPLATES, TEMPLATES_DIR}, payloads::{Notification, NotificationKind}, util::text::strip,
+  config::config_dir,
+  dirs::{NOTIFICATION_TEMPLATES, TEMPLATES_DIR},
+  payloads::{Notification, NotificationKind},
+  util::text::strip,
 };
 use orbolay_logging::warn;
 use scraper::{Html, Selector};
