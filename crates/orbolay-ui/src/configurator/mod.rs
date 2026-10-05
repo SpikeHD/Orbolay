@@ -2,10 +2,11 @@ use display_info::DisplayInfo;
 use freya::prelude::*;
 
 use orbolay_core::{
-  app_state::{AppHandle, SharedAppState},
-  config::{Config, TransportMode, load_config, save_config},
-  payloads::Notification,
+  app_state::{AppHandle, SharedAppState}, config::{
+    Config, TransportMode, config_dir, load_config, save_config,
+  }, dirs::{TEMPLATES_DIR, ensure_config_dirs}, payloads::Notification,
 };
+use orbolay_logging::warn;
 
 use crate::util::theme::{GRAY, LIGHT_GRAY, MUTED_GRAY, RED, TRANSPARENT, from_tuple, to_tuple};
 use crate::util::{
@@ -132,6 +133,20 @@ fn wide_button(
     .background(color)
     .on_press(on_press)
     .child(label().text(text.into()).color(Color::WHITE).font_size(14.))
+}
+
+fn open_templates_folder() {
+  let Some(dir) = config_dir() else {
+    warn!("Could not resolve the config directory");
+    return;
+  };
+  let templates_dir = dir.join(TEMPLATES_DIR);
+
+  ensure_config_dirs();
+
+  if let Err(err) = open::that(&templates_dir) {
+    warn!("Failed to open templates folder: {err}");
+  }
 }
 
 fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
@@ -297,6 +312,10 @@ fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
       }),
       disabled: false,
     })
+    .child(divider())
+    .child(wide_button("Open Templates Folder", LIGHT_GRAY, |_| {
+      open_templates_folder();
+    }))
     .child(divider())
     .child(SettingRow {
       name: "Accent Color".into(),

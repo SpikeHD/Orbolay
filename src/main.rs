@@ -11,10 +11,7 @@ use freya::prelude::*;
 use gumdrop::Options;
 use native_dialog::{MessageDialogBuilder, MessageLevel};
 use orbolay_core::{
-  app_state::{AppHandle, AppState, SharedAppState},
-  config::{TransportMode, is_first_run, load_config, save_config},
-  payloads::{Notification, NotificationAction, NotificationKind},
-  util::bridge::BridgeMessage,
+  app_state::{AppHandle, AppState, SharedAppState}, config::{TransportMode, is_first_run, load_config, save_config}, dirs::ensure_config_dirs, payloads::{Notification, NotificationAction, NotificationKind}, util::bridge::BridgeMessage,
 };
 use orbolay_logging::{log, warn};
 use orbolay_transport::{create_transport_thread, maybe_notify_update, start_config_watcher};
@@ -90,6 +87,8 @@ fn main() {
     );
     std::process::exit(0);
   }
+
+  ensure_config_dirs();
 
   if args.config {
     open_configurator_standalone();

@@ -4138,6 +4138,7 @@ dependencies = [
  "display-info",
  "flume",
  "freya",
+ "open",
  "orbolay-core",
  "orbolay-keys",
  "orbolay-logging",

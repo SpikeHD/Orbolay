@@ -9,9 +9,7 @@ use std::{
 };
 
 use orbolay_core::{
-  config::config_dir,
-  payloads::{Notification, NotificationKind},
-  util::text::strip,
+  config::config_dir, dirs::{NOTIFICATION_TEMPLATES, TEMPLATES_DIR}, payloads::{Notification, NotificationKind}, util::text::strip,
 };
 use orbolay_logging::warn;
 use scraper::{Html, Selector};
@@ -20,9 +18,6 @@ use crate::util::html_template::{
   escape_html, is_network_url, merge_classes, render_tag, theme_decls,
 };
 use crate::util::theme::Theme;
-
-pub const TEMPLATES_DIR: &str = "templates";
-pub const NOTIFICATION_TEMPLATES: &str = "notifications";
 
 pub const ACTION_ATTR: &str = "data-action";
 

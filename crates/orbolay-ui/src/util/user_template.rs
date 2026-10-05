@@ -9,8 +9,7 @@ use std::{
 };
 
 use orbolay_core::{
-  config::config_dir,
-  user::{User, UserVoiceState},
+  config::config_dir, dirs::{TEMPLATES_DIR, USER_TEMPLATES}, user::{User, UserVoiceState},
 };
 use orbolay_logging::warn;
 use scraper::{Html, Selector};
@@ -19,9 +18,6 @@ use crate::util::html_template::{
   escape_html, is_network_url, merge_classes, render_tag, theme_decls,
 };
 use crate::util::theme::Theme;
-
-pub const TEMPLATES_DIR: &str = "templates";
-pub const USER_TEMPLATES: &str = "users";
 
 const ROOT_ID: &str = "user";
 
