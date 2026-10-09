@@ -1915,7 +1915,7 @@ checksum = "d8866fac38f53fc87fa3ae1b09ddd723e0482f8fa74323518b4c59df2c55a00a"
 [[package]]
 name = "freya"
 version = "0.5.0-rc.9"
-source = "git+https://github.com/SpikeHD/freya.git?branch=feat%2Fexpose-element-clicking#8ad3d2d781a088f405005fc9302c87a305cb6e80"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Fhtml-viewer-cache#db7503276e93f52932465865afa8a84a9ff1accf"
 dependencies = [
  "cfg-if",
  "freya-android",
@@ -1934,7 +1934,7 @@ dependencies = [
 [[package]]
 name = "freya-android"
 version = "0.5.0-rc.9"
-source = "git+https://github.com/SpikeHD/freya.git?branch=feat%2Fexpose-element-clicking#8ad3d2d781a088f405005fc9302c87a305cb6e80"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Fhtml-viewer-cache#db7503276e93f52932465865afa8a84a9ff1accf"
 dependencies = [
  "freya-components",
  "freya-core",
@@ -1947,7 +1947,7 @@ dependencies = [
 [[package]]
 name = "freya-animation"
 version = "0.5.0-rc.9"
-source = "git+https://github.com/SpikeHD/freya.git?branch=feat%2Fexpose-element-clicking#8ad3d2d781a088f405005fc9302c87a305cb6e80"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Fhtml-viewer-cache#db7503276e93f52932465865afa8a84a9ff1accf"
 dependencies = [
  "easer",
  "freya-core",
@@ -1956,7 +1956,7 @@ dependencies = [
 [[package]]
 name = "freya-clipboard"
 version = "0.5.0-rc.9"
-source = "git+https://github.com/SpikeHD/freya.git?branch=feat%2Fexpose-element-clicking#8ad3d2d781a088f405005fc9302c87a305cb6e80"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Fhtml-viewer-cache#db7503276e93f52932465865afa8a84a9ff1accf"
 dependencies = [
  "copypasta",
  "freya-core",
@@ -1965,7 +1965,7 @@ dependencies = [
 [[package]]
 name = "freya-components"
 version = "0.5.0-rc.9"
-source = "git+https://github.com/SpikeHD/freya.git?branch=feat%2Fexpose-element-clicking#8ad3d2d781a088f405005fc9302c87a305cb6e80"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Fhtml-viewer-cache#db7503276e93f52932465865afa8a84a9ff1accf"
 dependencies = [
  "accesskit",
  "anyhow",
@@ -1990,7 +1990,7 @@ dependencies = [
 [[package]]
 name = "freya-core"
 version = "0.5.0-rc.9"
-source = "git+https://github.com/SpikeHD/freya.git?branch=feat%2Fexpose-element-clicking#8ad3d2d781a088f405005fc9302c87a305cb6e80"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Fhtml-viewer-cache#db7503276e93f52932465865afa8a84a9ff1accf"
 dependencies = [
  "accesskit",
  "async-io",
@@ -2020,7 +2020,7 @@ dependencies = [
 [[package]]
 name = "freya-edit"
 version = "0.5.0-rc.9"
-source = "git+https://github.com/SpikeHD/freya.git?branch=feat%2Fexpose-element-clicking#8ad3d2d781a088f405005fc9302c87a305cb6e80"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Fhtml-viewer-cache#db7503276e93f52932465865afa8a84a9ff1accf"
 dependencies = [
  "bitflags 2.13.2",
  "freya-clipboard",
@@ -2034,7 +2034,7 @@ dependencies = [
 [[package]]
 name = "freya-engine"
 version = "0.5.0-rc.9"
-source = "git+https://github.com/SpikeHD/freya.git?branch=feat%2Fexpose-element-clicking#8ad3d2d781a088f405005fc9302c87a305cb6e80"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Fhtml-viewer-cache#db7503276e93f52932465865afa8a84a9ff1accf"
 dependencies = [
  "freya-skia-safe",
 ]
@@ -2042,7 +2042,7 @@ dependencies = [
 [[package]]
 name = "freya-html"
 version = "0.5.0-rc.9"
-source = "git+https://github.com/SpikeHD/freya.git?branch=feat%2Fexpose-element-clicking#8ad3d2d781a088f405005fc9302c87a305cb6e80"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Fhtml-viewer-cache#db7503276e93f52932465865afa8a84a9ff1accf"
 dependencies = [
  "anyrender",
  "atomic_refcell",
@@ -2070,7 +2070,7 @@ dependencies = [
 [[package]]
 name = "freya-metrics-plugin"
 version = "0.5.0-rc.9"
-source = "git+https://github.com/SpikeHD/freya.git?branch=feat%2Fexpose-element-clicking#8ad3d2d781a088f405005fc9302c87a305cb6e80"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Fhtml-viewer-cache#db7503276e93f52932465865afa8a84a9ff1accf"
 dependencies = [
  "freya-core",
  "freya-engine",
@@ -2081,7 +2081,7 @@ dependencies = [
 [[package]]
 name = "freya-sdk"
 version = "0.5.0-rc.9"
-source = "git+https://github.com/SpikeHD/freya.git?branch=feat%2Fexpose-element-clicking#8ad3d2d781a088f405005fc9302c87a305cb6e80"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Fhtml-viewer-cache#db7503276e93f52932465865afa8a84a9ff1accf"
 dependencies = [
  "freya-core",
 ]
@@ -2130,7 +2130,7 @@ dependencies = [
 [[package]]
 name = "freya-winit"
 version = "0.5.0-rc.9"
-source = "git+https://github.com/SpikeHD/freya.git?branch=feat%2Fexpose-element-clicking#8ad3d2d781a088f405005fc9302c87a305cb6e80"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Fhtml-viewer-cache#db7503276e93f52932465865afa8a84a9ff1accf"
 dependencies = [
  "accesskit",
  "accesskit_winit",
@@ -4245,7 +4245,7 @@ checksum = "35fb2e5f958ec131621fdd531e9fc186ed768cbe395337403ae56c17a74c68ec"
 [[package]]
 name = "pathgraph"
 version = "0.5.0-rc.9"
-source = "git+https://github.com/SpikeHD/freya.git?branch=feat%2Fexpose-element-clicking#8ad3d2d781a088f405005fc9302c87a305cb6e80"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Fhtml-viewer-cache#db7503276e93f52932465865afa8a84a9ff1accf"
 
 [[package]]
 name = "peniko"
@@ -4621,10 +4621,10 @@ checksum = "f8dcc9c7d52a811697d2151c701e0d08956f92b0e24136cf4cf27b57a6a0d9bf"
 [[package]]
 name = "ragnarok"
 version = "0.5.0-rc.9"
-source = "git+https://github.com/SpikeHD/freya.git?branch=feat%2Fexpose-element-clicking#8ad3d2d781a088f405005fc9302c87a305cb6e80"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Fhtml-viewer-cache#db7503276e93f52932465865afa8a84a9ff1accf"
 dependencies = [
  "euclid",
- "hotpath",
+ "hashbrown 0.16.1",
  "itertools",
  "rustc-hash",
  "tracing",
@@ -6129,7 +6129,7 @@ checksum = "7d56353a2a665ad0f41a421187180aab746c8c325620617ad883a99a1cbe66d2"
 [[package]]
 name = "torin"
 version = "0.5.0-rc.9"
-source = "git+https://github.com/SpikeHD/freya.git?branch=feat%2Fexpose-element-clicking#8ad3d2d781a088f405005fc9302c87a305cb6e80"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Fhtml-viewer-cache#db7503276e93f52932465865afa8a84a9ff1accf"
 dependencies = [
  "euclid",
  "itertools",

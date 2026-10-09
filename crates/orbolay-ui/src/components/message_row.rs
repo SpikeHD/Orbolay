@@ -79,7 +79,8 @@ impl Component for MessageRow {
 
         for hit in hits {
           if let Some(index) = hit
-            .attr(notification_template::ACTION_ATTR)
+            .attributes
+            .get(notification_template::ACTION_ATTR)
             .and_then(|value| value.parse::<usize>().ok())
             && let Some(actions) = &message.actions
             && let Some(action) = actions.get(index)
