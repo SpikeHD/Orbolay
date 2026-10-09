@@ -3,11 +3,16 @@ use freya::prelude::*;
 
 use orbolay_core::{
   app_state::{AppHandle, SharedAppState},
-  config::{Config, TransportMode, load_config, save_config},
+  config::{Config, TransportMode, config_dir, load_config, save_config},
+  dirs::{TEMPLATES_DIR, ensure_config_dirs},
   payloads::Notification,
 };
+use orbolay_logging::warn;
 
 use crate::util::theme::{GRAY, LIGHT_GRAY, MUTED_GRAY, RED, TRANSPARENT, from_tuple, to_tuple};
+use crate::util::{
+  notification_template::list_notification_templates, user_template::list_user_templates,
+};
 
 #[cfg(not(target_os = "macos"))]
 use orbolay_keys::{DEFAULT_OVERLAY_TOGGLE, keys_to_strings, strings_to_keys};
@@ -131,6 +136,20 @@ fn wide_button(
     .child(label().text(text.into()).color(Color::WHITE).font_size(14.))
 }
 
+fn open_templates_folder() {
+  let Some(dir) = config_dir() else {
+    warn!("Could not resolve the config directory");
+    return;
+  };
+  let templates_dir = dir.join(TEMPLATES_DIR);
+
+  ensure_config_dirs();
+
+  if let Err(err) = open::that(&templates_dir) {
+    warn!("Failed to open templates folder: {err}");
+  }
+}
+
 fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
   use_init_theme(dark_theme);
 
@@ -141,6 +160,26 @@ fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
   let mut local_config = use_state(|| app.read(|state| state.config.clone()));
   let mut reset_version = use_state(|| 0usize);
   let config = local_config.read().clone();
+
+  let template_options = {
+    let mut options = vec!["Default".to_string()];
+    options.extend(list_user_templates());
+    options
+  };
+  let template_initial = config
+    .user_template
+    .clone()
+    .unwrap_or_else(|| "Default".to_string());
+
+  let notification_template_options = {
+    let mut options = vec!["Default".to_string()];
+    options.extend(list_notification_templates());
+    options
+  };
+  let notification_template_initial = config
+    .notification_template
+    .clone()
+    .unwrap_or_else(|| "Default".to_string());
 
   let all_displays = DisplayInfo::all().unwrap_or_default();
   let display_names: Vec<String> = all_displays
@@ -243,6 +282,33 @@ fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
       }),
       disabled: false,
     })
+    .child(divider())
+    .child(SettingRow {
+      name: "User Template".into(),
+      description: Some("Template used to render voice users.".into()),
+      kind: SettingKind::Dropdown(template_options, Some(template_initial)),
+      on_change: make_updater(app.clone(), local_config, |cfg, v| {
+        cfg.user_template = (v != "Default").then_some(v);
+      }),
+      disabled: false,
+    })
+    .child(divider())
+    .child(SettingRow {
+      name: "Notification Template".into(),
+      description: Some("Template used to render notifications.".into()),
+      kind: SettingKind::Dropdown(
+        notification_template_options,
+        Some(notification_template_initial),
+      ),
+      on_change: make_updater(app.clone(), local_config, |cfg, v| {
+        cfg.notification_template = (v != "Default").then_some(v);
+      }),
+      disabled: false,
+    })
+    .child(divider())
+    .child(wide_button("Open Templates Folder", LIGHT_GRAY, |_| {
+      open_templates_folder();
+    }))
     .child(divider())
     .child(SettingRow {
       name: "Accent Color".into(),

@@ -27,6 +27,8 @@ pub struct VoiceSection {
   pub display_voice_members: DisplayVoiceMembers,
   pub theme: Theme,
   pub ui_scale: f32,
+  pub user_template_size: (u32, u32),
+  pub user_template: Option<String>,
 }
 
 impl Component for VoiceSection {
@@ -70,21 +72,31 @@ impl Component for VoiceSection {
             u.name = censor(&u.name);
           }
 
-          el.child(UserRow {
+          let is_self = self.app_state.read().user_id == u.id;
+          // TODO websocket cannot change user volume yet
+          let can_context_menu =
+            !is_self && self.app_state.read().config.transport_mode == TransportMode::Ipc;
+          let is_voice_semitransparent = matches!(
+            self.display_voice_members,
+            DisplayVoiceMembers::AlwaysSemiTransparent
+          );
+
+          let row: Element = UserRow {
             app_state: self.app_state,
-            // TODO websocket cannot change user volume yet
-            can_context_menu: self.app_state.read().user_id != u.id.clone()
-              && self.app_state.read().config.transport_mode == TransportMode::Ipc,
             user: u,
+            is_self,
             is_open: self.is_open,
-            is_right_aligned,
-            is_voice_semitransparent: matches!(
-              self.display_voice_members,
-              DisplayVoiceMembers::AlwaysSemiTransparent
-            ),
+            is_voice_semitransparent,
+            can_context_menu,
             theme: self.theme,
+            box_size: self.user_template_size,
+            user_template: self.user_template.clone(),
+            is_right_aligned,
             ui_scale: scale.factor(),
-          })
+          }
+          .into();
+
+          el.child(row)
         },
       ),
     )

@@ -2,6 +2,8 @@ use std::fmt::Display;
 
 use serde::{Deserialize, Serialize};
 
+use crate::dirs::ensure_config_dirs;
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 #[serde(rename_all = "camelCase")]
 pub enum TransportMode {
@@ -127,6 +129,10 @@ pub struct Config {
   pub border_radius: f32,
   #[serde(default = "default_ui_scale")]
   pub ui_scale: f32,
+  #[serde(default)]
+  pub user_template: Option<String>,
+  #[serde(default)]
+  pub notification_template: Option<String>,
 }
 
 impl Default for Config {
@@ -153,6 +159,8 @@ impl Default for Config {
       text_color: default_text(),
       border_radius: 10.,
       ui_scale: default_ui_scale(),
+      user_template: None,
+      notification_template: None,
     }
   }
 }
@@ -162,10 +170,9 @@ pub fn config_dir() -> Option<std::path::PathBuf> {
 }
 
 pub fn save_config(config: &Config) {
+  ensure_config_dirs();
+
   let Some(dir) = config_dir() else { return };
-  if std::fs::create_dir_all(&dir).is_err() {
-    return;
-  }
   if let Ok(json) = serde_json::to_string_pretty(config) {
     std::fs::write(dir.join("config.json"), json).ok();
   }

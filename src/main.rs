@@ -13,6 +13,7 @@ use native_dialog::{MessageDialogBuilder, MessageLevel};
 use orbolay_core::{
   app_state::{AppHandle, AppState, SharedAppState},
   config::{TransportMode, is_first_run, load_config, save_config},
+  dirs::ensure_config_dirs,
   payloads::{Notification, NotificationAction, NotificationKind},
   util::bridge::BridgeMessage,
 };
@@ -91,6 +92,8 @@ fn main() {
     std::process::exit(0);
   }
 
+  ensure_config_dirs();
+
   if args.config {
     open_configurator_standalone();
     std::process::exit(0);
@@ -150,6 +153,9 @@ fn main() {
           .with_decorations(false)
           .with_transparency(true)
           .with_background(Color::TRANSPARENT)
+          .with_window_handle(|w| {
+            *window::WINDOW_ID.lock().unwrap() = Some(w.id());
+          })
           .with_window_attributes(move |mut w, _event_loop| {
             w = w
               .with_inner_size(window_size)
@@ -362,6 +368,8 @@ fn app() -> impl IntoElement {
       display_voice_members: config.display_voice_members.clone().unwrap_or_default(),
       theme,
       ui_scale,
+      user_template_size: (320, 56),
+      user_template: config.user_template.clone(),
     })
     // Messages
     .maybe(messages_enabled, |el| el.child(MessagesSection {
@@ -375,6 +383,7 @@ fn app() -> impl IntoElement {
       message_offset_x: config.message_offset_x,
       message_offset_y: config.message_offset_y,
       messages_semitransparent: config.messages_semitransparent,
+      notification_template: config.notification_template.clone(),
       app_state,
       theme,
       ui_scale,

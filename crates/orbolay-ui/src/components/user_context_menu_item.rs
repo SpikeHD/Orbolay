@@ -28,11 +28,12 @@ impl Component for UserContextMenuItem {
       hover_background: Some(Preference::Specific(self.theme.darkish_gray)),
       select_background: Some(Preference::Specific(self.theme.darkish_gray)),
       border_fill: Some(Preference::Specific(Color::TRANSPARENT)),
-      select_border_fill: Some(Preference::Specific(Color::TRANSPARENT)),
+      focus_border_fill: Some(Preference::Specific(Color::TRANSPARENT)),
       corner_radius: Some(Preference::Specific(CornerRadius::new_all(
         self.theme.border_radius,
       ))),
       color: Some(Preference::Specific(self.theme.text_color)),
+      select_color: Some(Preference::Specific(self.theme.text_color)),
     };
 
     let slider_theme = SliderThemePartial {

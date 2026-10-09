@@ -39,7 +39,7 @@ impl Component for DropdownControl {
 
     Select::new()
       .selected_item(selected_label)
-      .children(options.iter().enumerate().map(|(i, val)| {
+      .children(options.iter().enumerate().map(|(i, val)| -> Element {
         let val = val.clone();
         let label = val.clone();
         let on_change = on_change.clone();

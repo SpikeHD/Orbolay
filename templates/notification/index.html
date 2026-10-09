@@ -1,0 +1,122 @@
+<!doctype html>
+<html>
+  <head>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      #notification {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 12px;
+        border-radius: var(--border-radius);
+        background: var(--gray);
+        font-family: "Segoe UI", "Noto Sans", sans-serif;
+        color: var(--text);
+      }
+
+      .icon-container {
+        display: flex;
+        align-items: start;
+        justify-content: start;
+        width: 42px;
+        height: 100%;
+      }
+
+      .icon {
+        flex: none;
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        object-fit: cover;
+        background: var(--darkish-gray);
+      }
+
+      #notification.no-icon .icon {
+        display: none;
+      }
+
+      .text {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+        line-height: 18px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .body {
+        font-size: 14px;
+        color: var(--superlight-gray);
+        line-height: 18px;
+        width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .actions {
+        display: none;
+        align-items: center;
+        gap: 6px;
+        margin-top: 2px;
+      }
+
+      #notification.has-actions .actions {
+        display: flex;
+      }
+
+      .action {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 28px;
+        padding: 0 12px;
+        border-radius: var(--border-radius);
+        border: none;
+        background: var(--green);
+        color: var(--text);
+        font-size: 14px;
+        cursor: pointer;
+      }
+
+      .action.secondary {
+        background: transparent;
+        border: 1px solid var(--muted-gray);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="notification">
+      <div class="icon-container">
+        <img class="icon" src="{{icon}}" />
+      </div>
+      <div class="text">
+        <div class="title">{{title}}</div>
+        <div class="body">{{body}}</div>
+        <div class="actions">{{actions}}</div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,7 +1,16 @@
+use std::sync::Mutex;
+
 use freya::prelude::*;
+use winit::window::WindowId;
+
+pub static WINDOW_ID: Mutex<Option<WindowId>> = Mutex::new(None);
 
 pub fn set_clickable(clickable: bool) {
-  Platform::get().with_window(None, move |w| {
+  let Some(window_id) = *WINDOW_ID.lock().unwrap() else {
+    return;
+  };
+
+  Platform::get().with_window(window_id, move |w| {
     let _ = w.set_cursor_hittest(clickable);
 
     // On X11/KDE, set_cursor_hittest is not enough for click-through

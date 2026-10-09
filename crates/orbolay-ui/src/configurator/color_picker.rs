@@ -20,7 +20,7 @@ impl Component for ColorPickerControl {
     let input_focus = use_focus(input_id);
     let on_change = self.on_change.clone();
     let value = use_state(|| self.initial);
-    let hex_value = use_state(|| color_to_hex(self.initial));
+    let hex_value = use_state(|| theme::to_hex(self.initial));
 
     let apply_color = {
       let mut value = value;
@@ -28,7 +28,7 @@ impl Component for ColorPickerControl {
       let on_change = on_change.clone();
       move |color: Color| {
         value.set(color);
-        hex_value.set(color_to_hex(color));
+        hex_value.set(theme::to_hex(color));
         on_change.call(SettingChange::Color(color));
       }
     };
@@ -42,7 +42,7 @@ impl Component for ColorPickerControl {
 
         let parsed_color = {
           let hex = hex_value.read().clone();
-          parse_hex_color(&hex)
+          theme::from_hex(&hex)
         };
         let current_color = *value.read();
 
@@ -74,22 +74,4 @@ impl Component for ColorPickerControl {
           .child(Input::new(hex_value).a11y_id(input_id)),
       )
   }
-}
-
-fn color_to_hex(color: Color) -> String {
-  let (r, g, b) = theme::to_tuple(color);
-  format!("#{r:02X}{g:02X}{b:02X}")
-}
-
-fn parse_hex_color(value: &str) -> Option<Color> {
-  let hex = value.trim().trim_start_matches('#');
-  if hex.len() != 6 {
-    return None;
-  }
-
-  let r = u8::from_str_radix(&hex[0..2], 16).ok()?;
-  let g = u8::from_str_radix(&hex[2..4], 16).ok()?;
-  let b = u8::from_str_radix(&hex[4..6], 16).ok()?;
-
-  Some(Color::from_rgb(r, g, b))
 }

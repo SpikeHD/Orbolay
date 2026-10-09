@@ -5,6 +5,8 @@ use winit::dpi::{PhysicalPosition, PhysicalSize};
 use orbolay_core::config::load_config;
 use orbolay_logging::warn;
 
+use crate::window::WINDOW_ID;
+
 pub fn specific_monitor_or_primary() -> DisplayInfo {
   let config = load_config().unwrap_or_default();
   let displays = DisplayInfo::all().unwrap_or_default();
@@ -51,7 +53,10 @@ pub fn update_monitor() {
 
   let new_size = window_size_for_display(&display);
 
-  Platform::get().with_window(None, move |w| {
+  let Some(window_id) = *WINDOW_ID.lock().unwrap() else {
+    return;
+  };
+  Platform::get().with_window(window_id, move |w| {
     w.set_outer_position(PhysicalPosition::new(
       monitor_position.0,
       monitor_position.1,
