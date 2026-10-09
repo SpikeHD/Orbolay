@@ -80,6 +80,7 @@
   * [With Official Clients](#with-official-clients)
   * [With Modded Clients](#with-modded-clients)
 * [Using as a Wrapper Process](#using-as-a-wrapper-process)
+* [Custom Templates](#custom-templates)
 * [Configuration](#configuration)
 * [Other Notes](#other-notes)
   * [Hyprland](#hyprland)
@@ -179,6 +180,10 @@ On first run, Orbolay should open the configurator automatically. In the future,
 1. Open the overlay, then press "C"
 2. Run `orbolay --config` in any terminal
 
+# Custom Templates
+
+Components within Orbolay can be customized with HTML and CSS! See [./TEMPLATES.md](./TEMPLATES.md) for more information.
+
 # Other Notes
 
 ## Hyprland
@@ -203,10 +208,6 @@ hl.window_rule({
     size = {"monitor_w - 5", "monitor_h - 5"}
 })
 ```
-
-# Custom Templates
-
-Components within Orbolay can be customized with HTML and CSS! See [./TEMPLATES.md] for more information.
 
 # Building
 
