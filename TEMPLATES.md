@@ -4,7 +4,7 @@
 > Templates are experimental! They may not support fancy animations or filters... yet.
 
 > [!NOTE]
-> You can find the default templates (to use as an example or base) in `templates/` and `templates/default-notification` in this repository!
+> You can find the default templates (to use as an example or base) in `templates/` in this repository!
 
 Orbolay contains a HTML/CSS renderer used for rendering certain components. This makes it easy to change and modify
 the look and feel however you'd like! The template can be changed at any time in the settings menu.
