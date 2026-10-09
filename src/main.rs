@@ -24,10 +24,10 @@ use orbolay_ui::{
   open_configurator, open_configurator_standalone,
   util::{scale::UiScale, theme},
 };
-use winit::{dpi::PhysicalPosition, window::WindowLevel};
+use winit::window::WindowLevel;
 
 use crate::{
-  display::{specific_monitor_or_primary, update_monitor, window_size_for_display},
+  display::{populate_monitor_cache, select_monitor, update_monitor, window_size_for_display},
   manager::OverlayManager,
   notifications::create_notification_thread,
 };
@@ -122,12 +122,6 @@ fn main() {
     unsafe { std::env::set_var("WAYLAND_DISPLAY", "") };
   }
 
-  let display = specific_monitor_or_primary();
-  let monitor_position = (display.x, display.y);
-
-  // Compute the initial window size for the chosen display.
-  let window_size = window_size_for_display(&display);
-
   #[cfg(target_os = "linux")]
   {
     let session_type = std::env::var("XDG_SESSION_TYPE").unwrap_or_default();
@@ -156,15 +150,20 @@ fn main() {
           .with_window_handle(|w| {
             *window::WINDOW_ID.lock().unwrap() = Some(w.id());
           })
-          .with_window_attributes(move |mut w, _event_loop| {
-            w = w
-              .with_inner_size(window_size)
-              .with_resizable(false)
-              .with_window_level(WindowLevel::AlwaysOnTop)
-              .with_position(PhysicalPosition::new(
-                monitor_position.0,
-                monitor_position.1,
-              ));
+          .with_window_attributes(move |mut w, event_loop| {
+            let monitors: Vec<_> = event_loop.available_monitors().collect();
+            let primary = event_loop.primary_monitor();
+
+            populate_monitor_cache(primary.as_ref(), &monitors);
+
+            if let Some(monitor) = select_monitor(primary.as_ref(), &monitors) {
+              // Compute the initial window size for the chosen display.
+              w = w
+                .with_inner_size(window_size_for_display(monitor))
+                .with_resizable(false)
+                .with_window_level(WindowLevel::AlwaysOnTop)
+                .with_position(monitor.position());
+            }
 
             #[cfg(target_os = "windows")]
             {

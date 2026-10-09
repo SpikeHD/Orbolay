@@ -5,6 +5,7 @@ use orbolay_core::{
   app_state::{AppHandle, SharedAppState},
   config::{Config, TransportMode, config_dir, load_config, save_config},
   dirs::{TEMPLATES_DIR, ensure_config_dirs},
+  monitors::{MonitorInfo, monitors_list},
   payloads::Notification,
 };
 use orbolay_logging::warn;
@@ -181,10 +182,26 @@ fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
     .clone()
     .unwrap_or_else(|| "Default".to_string());
 
-  let all_displays = DisplayInfo::all().unwrap_or_default();
+  let all_displays = {
+    let cached = monitors_list();
+    if !cached.is_empty() {
+      cached
+    } else {
+      DisplayInfo::all()
+        .unwrap_or_default()
+        .into_iter()
+        .map(|d| MonitorInfo {
+          name: d.friendly_name,
+          is_primary: d.is_primary,
+          width: d.width,
+          height: d.height,
+        })
+        .collect()
+    }
+  };
   let display_names: Vec<String> = all_displays
     .iter()
-    .map(|d| format!("{} ({}x{})", d.friendly_name.clone(), d.width, d.height))
+    .map(|d| format!("{} ({}x{})", d.name, d.width, d.height))
     .collect();
   let display_names_for_update = display_names.clone();
 

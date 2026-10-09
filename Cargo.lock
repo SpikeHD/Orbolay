@@ -4068,7 +4068,6 @@ name = "orbolay"
 version = "4.0.0"
 dependencies = [
  "chrono",
- "display-info",
  "flume",
  "freya",
  "gumdrop",
