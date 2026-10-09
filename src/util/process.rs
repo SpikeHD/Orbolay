@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, path::Path};
 
 use sysinfo::{Pid, ProcessRefreshKind, RefreshKind, System};
 
@@ -25,9 +25,22 @@ fn self_and_ancestor_pids() -> HashSet<Pid> {
   pids
 }
 
+// The basename of an on-disk executable but lowercase
+fn exe_basename(exe: &Path) -> String {
+  exe
+    .file_name()
+    .map(|n| n.to_string_lossy().to_ascii_lowercase())
+    .unwrap_or_default()
+}
+
 // Check if there is already an orbolay process running
 pub fn is_already_running() -> bool {
   let ours = self_and_ancestor_pids();
+
+  let our_name = std::env::current_exe()
+    .ok()
+    .map(|exe| exe_basename(&exe))
+    .unwrap_or_else(|| "orbolay".to_string());
 
   let sys = System::new_with_specifics(
     RefreshKind::nothing().with_processes(ProcessRefreshKind::everything()),
@@ -35,14 +48,14 @@ pub fn is_already_running() -> bool {
   let procs = sys.processes();
 
   for proc in procs.values() {
-    if proc
-      .name()
-      .to_ascii_lowercase()
-      .to_str()
-      .unwrap_or("")
-      .contains("orbolay")
-      && !ours.contains(&proc.pid())
-    {
+    if ours.contains(&proc.pid()) {
+      continue;
+    }
+
+    let Some(exe) = proc.exe() else {
+      continue;
+    };
+    if exe_basename(exe) == our_name {
       return true;
     }
   }
