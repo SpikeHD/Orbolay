@@ -1,0 +1,70 @@
+app-id: dev.spikehd.orbolay
+runtime: org.freedesktop.Platform
+runtime-version: '25.08'
+sdk: org.freedesktop.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
+  # Provides libclang, required by bindgen
+  - org.freedesktop.Sdk.Extension.llvm20
+command: orbolay
+
+finish-args:
+  # We need both websocket and IPC depending on the client type
+  - --share=network
+  - --share=ipc
+  - --socket=x11
+  - --socket=wayland
+  # For global keybinds
+  - --device=input
+  # Discord's IPC socket
+  - --filesystem=xdg-run/app/com.discordapp.Discord:create
+  - --filesystem=xdg-run/app/dev.vencord.Vesktop:create
+
+build-options:
+  append-path: /usr/lib/sdk/rust-stable/bin:/usr/lib/sdk/llvm20/bin
+  env:
+    CARGO_HOME: /run/build/orbolay/cargo
+    CARGO_NET_OFFLINE: 'true'
+    LIBCLANG_PATH: /usr/lib/sdk/llvm20/lib
+    LD_LIBRARY_PATH: /usr/lib/sdk/llvm20/lib
+  secret-env:
+    - GIT_HASH
+  arch:
+    aarch64:
+      env:
+        # Use a prebuilt Skia archive
+        SKIA_BINARIES_URL: file:///run/build/orbolay/skia-binaries-aarch64.tar.gz
+    x86_64:
+      env:
+        # Use a prebuilt Skia archive
+        SKIA_BINARIES_URL: file:///run/build/orbolay/skia-binaries.tar.gz
+
+modules:
+  - name: orbolay
+    buildsystem: simple
+    build-commands:
+      - cargo build --offline --release --locked
+      - install -Dm0755 target/release/orbolay ${FLATPAK_DEST}/bin/orbolay
+      - install -Dm0644 flatpak/dev.spikehd.orbolay.desktop ${FLATPAK_DEST}/share/applications/dev.spikehd.orbolay.desktop
+      - install -Dm0644 flatpak/dev.spikehd.orbolay.metainfo.xml ${FLATPAK_DEST}/share/metainfo/dev.spikehd.orbolay.metainfo.xml
+      - install -Dm0644 assets/orbolay.png ${FLATPAK_DEST}/share/icons/hicolor/128x128/apps/dev.spikehd.orbolay.png
+      - install -Dm0644 assets/orbolay.png ${FLATPAK_DEST}/share/icons/hicolor/512x512/apps/dev.spikehd.orbolay.png
+    sources:
+      - type: dir
+        path: ..
+        skip:
+          - target
+          - .git
+      - type: file
+        url: https://github.com/marc2332/rust-skia/releases/download/0.100.0-beta.1/skia-binaries-c31b06a7031231446314-x86_64-unknown-linux-gnu-egl-ganesh-gl-jpegd-jpege-svg-textlayout-vulkan-wayland-webpd-webpe-x11.tar.gz
+        sha256: 76b21b8aa2c3a907429ea28121450247d2af3c291ae4a2e29ff0c35cfb9198ed
+        dest-filename: skia-binaries.tar.gz
+        only-arches:
+          - x86_64
+      - type: file
+        url: https://github.com/marc2332/rust-skia/releases/download/0.100.0-beta.1/skia-binaries-c31b06a7031231446314-aarch64-unknown-linux-gnu-egl-ganesh-gl-jpegd-jpege-svg-textlayout-vulkan-wayland-webpd-webpe-x11.tar.gz
+        sha256: 9c588cdcf319a48056caaffb63f797c9e5a4ef70cfca21337f592487cebe7b78
+        dest-filename: skia-binaries-aarch64.tar.gz
+        only-arches:
+          - aarch64
+      - cargo-sources.json

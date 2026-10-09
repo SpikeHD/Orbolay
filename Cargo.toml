@@ -44,6 +44,7 @@ panic = "abort"
 [package.metadata.bundle]
 name = "Orbolay"
 identifier = "dev.spikehd.orbolay"
+icon = ["assets/orbolay.png", "assets/orbolay.ico", "assets/orbolay.icns"]
 
 [dependencies]
 chrono = { workspace = true }

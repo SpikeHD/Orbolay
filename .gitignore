@@ -2,3 +2,6 @@
 /bins
 
 .DS_Store
+
+# Generated in CI (build.yml generate-sources job)
+/flatpak/cargo-sources.json

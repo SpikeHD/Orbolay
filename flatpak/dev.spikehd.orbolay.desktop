@@ -1,0 +1,15 @@
+[Desktop Entry]
+Name=Orbolay
+Comment=Quick, small, native, multi-platform Discord overlay alternative
+Exec=orbolay
+Icon=dev.spikehd.orbolay
+Terminal=false
+Type=Application
+Categories=Network;
+Keywords=discord;overlay;voice;streamkit;message;utility;
+StartupNotify=false
+Actions=Config;
+
+[Desktop Action Config]
+Name=Open Configurator
+Exec=orbolay --config

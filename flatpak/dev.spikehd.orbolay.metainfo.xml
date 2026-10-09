@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>dev.spikehd.orbolay</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>Orbolay</name>
+  <summary>Quick, small, native, multi-platform Discord overlay alternative</summary>
+
+  <description>
+    <p>
+      Quick, small, native, multi-platform Discord overlay alternative.
+    </p>
+    <ul>
+      <li>Voice channel member list and status (who is speaking/muted/deafened/etc)</li>
+      <li>Custom notifications</li>
+      <li>Mute/deafen/disconnect controls</li>
+      <li>User volume control</li>
+      <li>Soundboard</li>
+      <li>Customizable layout, colors, border radius, etc.</li>
+      <li>Works with any official or modded client (including web!)</li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">dev.spikehd.orbolay.desktop</launchable>
+
+  <url type="homepage">https://github.com/SpikeHD/Orbolay</url>
+  <url type="bugtracker">https://github.com/SpikeHD/Orbolay/issues</url>
+
+  <developer id="dev.spikehd">
+    <name>SpikeHD</name>
+  </developer>
+
+  <categories>
+    <category>Network</category>
+    <category>InstantMessaging</category>
+    <category>Utility</category>
+  </categories>
+
+  <keywords>
+    <keyword>discord</keyword>
+    <keyword>overlay</keyword>
+    <keyword>voice</keyword>
+  </keywords>
+
+  <content_rating type="oars-1.1" />
+
+  <releases>
+    <release version="4.0.0" date="2026-10-09"/>
+  </releases>
+</component>

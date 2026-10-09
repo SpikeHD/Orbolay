@@ -7,6 +7,7 @@ on:
       - '.github/workflows/build.yml'
       - 'Cargo.toml'
       - 'src/**/*'
+      - 'flatpak/**'
   pull_request:
     branches:
       - main
@@ -14,6 +15,7 @@ on:
       - '.github/workflows/build.yml'
       - 'Cargo.toml'
       - 'src/**/*'
+      - 'flatpak/**'
 
 concurrency:
   group: ${{ github.ref }}-${{ github.workflow }}
@@ -167,3 +169,61 @@ jobs:
         with:
           name: orbolay-${{ matrix.config.target }}.app
           path: target/${{ matrix.config.target }}/release/bundle/osx/Orbolay-${{ matrix.config.target }}.app.zip
+
+  generate-sources:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download cargo source generator
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/flatpak/flatpak-builder-tools/74697c75b630d7330e77250fc13cb5ea688d9479/cargo/flatpak-cargo-generator.py -o /tmp/flatpak-cargo-generator.py
+
+      - name: Generate cargo sources
+        run: |
+          uv run --script /tmp/flatpak-cargo-generator.py Cargo.lock -o flatpak/cargo-sources.json
+
+      - name: Disable git submodules in generated sources
+        run: |
+          python3 - <<'PY'
+          import json
+          path = 'flatpak/cargo-sources.json'
+          with open(path) as f:
+              sources = json.load(f)
+          for source in sources:
+              if isinstance(source, dict) and source.get('type') == 'git':
+                  source['disable-submodules'] = True
+          with open(path, 'w') as f:
+              json.dump(sources, f, indent=2)
+          PY
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: cargo-sources
+          path: flatpak/cargo-sources.json
+          if-no-files-found: error
+
+  flatpak:
+    needs: generate-sources
+    runs-on: ubuntu-24.04
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-25.08
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v7
+        with:
+          name: cargo-sources
+          path: flatpak/
+
+      - name: Set GIT_HASH
+        run: echo "GIT_HASH=$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
+
+      - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          bundle: dev.spikehd.orbolay.flatpak
+          manifest-path: flatpak/dev.spikehd.orbolay.yml
+          cache: true
+          cache-key: flatpak-builder-${{ hashFiles('flatpak/**', 'Cargo.toml', 'Cargo.lock') }}
+          upload-artifact: true
+          artifact-name: orbolay-x86_64-unknown-linux-gnu.flatpak
