@@ -179,6 +179,9 @@ jobs:
         run: |
           curl -fsSL https://raw.githubusercontent.com/flatpak/flatpak-builder-tools/74697c75b630d7330e77250fc13cb5ea688d9479/cargo/flatpak-cargo-generator.py -o /tmp/flatpak-cargo-generator.py
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.3.0
+
       - name: Generate cargo sources
         run: |
           uv run --script /tmp/flatpak-cargo-generator.py Cargo.lock -o flatpak/cargo-sources.json
