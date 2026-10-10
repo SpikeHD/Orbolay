@@ -73,7 +73,7 @@ impl Component for UserRow {
       .cross_align(Alignment::Center)
       .width(Size::px(width))
       .height(Size::px(height))
-      .margin(Gaps::new_all(6.).scaled(scale.factor()))
+      .margin(Gaps::new_all(0.))
       .opacity(opacity)
       .child(
         rect()

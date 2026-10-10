@@ -367,7 +367,7 @@ fn app() -> impl IntoElement {
       display_voice_members: config.display_voice_members.clone().unwrap_or_default(),
       theme,
       ui_scale,
-      user_template_size: (320, 56),
+      user_template_size: (320, 62),
       user_template: config.user_template.clone(),
     })
     // Messages
