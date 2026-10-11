@@ -47,8 +47,8 @@ modules:
       - install -Dm0755 target/release/orbolay ${FLATPAK_DEST}/bin/orbolay
       - install -Dm0644 flatpak/dev.spikehd.orbolay.desktop ${FLATPAK_DEST}/share/applications/dev.spikehd.orbolay.desktop
       - install -Dm0644 flatpak/dev.spikehd.orbolay.metainfo.xml ${FLATPAK_DEST}/share/metainfo/dev.spikehd.orbolay.metainfo.xml
-      - install -Dm0644 assets/orbolay.png ${FLATPAK_DEST}/share/icons/hicolor/128x128/apps/dev.spikehd.orbolay.png
-      - install -Dm0644 assets/orbolay.png ${FLATPAK_DEST}/share/icons/hicolor/512x512/apps/dev.spikehd.orbolay.png
+      - install -Dm0644 assets/icons/orbolay.png ${FLATPAK_DEST}/share/icons/hicolor/128x128/apps/dev.spikehd.orbolay.png
+      - install -Dm0644 assets/icons/orbolay.png ${FLATPAK_DEST}/share/icons/hicolor/512x512/apps/dev.spikehd.orbolay.png
     sources:
       - type: dir
         path: ..
