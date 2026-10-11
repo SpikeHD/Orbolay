@@ -43,6 +43,5 @@ pub fn default_keybinds() -> Vec<Keybind> {
       strings_to_keys(DEFAULT_OVERLAY_TOGGLE.get().map(String::from).to_vec()),
       KeyEvent::ToggleOverlay,
     ),
-    Keybind::new(vec![Key::KeyC], KeyEvent::OpenConfigurator),
   ]
 }

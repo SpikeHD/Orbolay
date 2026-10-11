@@ -295,7 +295,6 @@ fn app() -> impl IntoElement {
     maybe_notify_update(app.clone());
 
     #[cfg(not(target_os = "macos"))]
-    let keybind_app = app.clone();
     spawn_forever(async move {
       while let Ok(event) = keybind_rx.recv_async().await {
         match event {
@@ -303,11 +302,6 @@ fn app() -> impl IntoElement {
             let mut state = app_state.write();
             state.is_open = !state.is_open;
           }
-          keys::KeyEvent::OpenConfigurator if app_state.read().is_open => {
-            open_configurator(keybind_app.clone());
-            app_state.write().is_open = false;
-          }
-          keys::KeyEvent::OpenConfigurator => {}
         }
       }
     });

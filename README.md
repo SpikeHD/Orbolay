@@ -175,10 +175,8 @@ orbolay -- %command%
 
 # Configuration
 
-On first run, Orbolay should open the configurator automatically. In the future, it can be opened in two ways:
-
-1. Open the overlay, then press "C"
-2. Run `orbolay --config` in any terminal
+On first run, Orbolay should open the configurator automatically. In the future, it can be opened by clicking the settings cog in the
+overlay, or by running `orbolay --config` in any terminal.
 
 # Custom Templates
 
