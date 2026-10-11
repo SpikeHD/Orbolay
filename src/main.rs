@@ -118,6 +118,8 @@ fn main() {
     unsafe { std::env::set_var("FREYA_RENDERER", "software") };
   }
 
+  let wayland_display = std::env::var("WAYLAND_DISPLAY");
+
   if config.xwayland {
     unsafe { std::env::set_var("WAYLAND_DISPLAY", "") };
   }
@@ -134,7 +136,7 @@ fn main() {
 
   if !args.target.is_empty() {
     log!("Launching child process: {:?}", args.target);
-    target::launch_target(args.target);
+    target::launch_target(args.target, wayland_display);
   }
 
   launch(
