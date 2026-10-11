@@ -5,6 +5,7 @@
 #![allow(clippy::borrow_interior_mutable_const)]
 #![allow(clippy::declare_interior_mutable_const)]
 
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use freya::prelude::*;
@@ -118,6 +119,8 @@ fn main() {
     unsafe { std::env::set_var("FREYA_RENDERER", "software") };
   }
 
+  let wayland_display = std::env::var("WAYLAND_DISPLAY");
+
   if config.xwayland {
     unsafe { std::env::set_var("WAYLAND_DISPLAY", "") };
   }
@@ -133,8 +136,11 @@ fn main() {
   }
 
   if !args.target.is_empty() {
+    let env = HashMap::from([("WAYLAND_DISPLAY".to_string(), wayland_display.ok())]);
+
     log!("Launching child process: {:?}", args.target);
-    target::launch_target(args.target);
+
+    target::launch_target(args.target, Some(env));
   }
 
   launch(
