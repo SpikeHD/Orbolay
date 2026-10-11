@@ -1,5 +1,6 @@
 mod message_row;
 mod messages_section;
+mod settings_button;
 mod soundboard;
 mod user_context_menu_item;
 mod user_row;
@@ -8,6 +9,7 @@ mod voice_section;
 
 pub use message_row::MessageRow;
 pub use messages_section::MessagesSection;
+pub use settings_button::SettingsButton;
 pub use soundboard::Soundboard;
 pub use user_row::UserRow;
 pub use voice_controls::VoiceControls;

@@ -1,6 +1,6 @@
 use std::{fmt::Display, str::FromStr};
 
-use freya::prelude::{Alignment, Gaps};
+use freya::prelude::{Alignment, Gaps, Position};
 use serde::Deserialize;
 
 #[derive(Debug, Clone, Deserialize, PartialEq)]
@@ -97,5 +97,33 @@ impl CornerAlignment {
       AxisAlignment::Center => (0., 0.),
     };
     Gaps::new(top, right, bottom, left)
+  }
+
+  pub fn unused_corner(occupied_corners: &[String]) -> Option<Self> {
+    const CORNERS: [&str; 4] = ["bottomright", "bottomleft", "topright", "topleft"];
+
+    CORNERS
+      .iter()
+      .copied()
+      .find(|corner| !occupied_corners.iter().any(|occupied| occupied == corner))
+      .map(|corner| corner.parse().unwrap())
+  }
+
+  pub fn to_position(&self) -> Position {
+    let mut position = Position::new_absolute();
+
+    match self.x {
+      AxisAlignment::Start => position = position.left(0.),
+      AxisAlignment::Center => {}
+      AxisAlignment::End => position = position.right(0.),
+    };
+
+    match self.y {
+      AxisAlignment::Start => position = position.top(0.),
+      AxisAlignment::Center => {}
+      AxisAlignment::End => position = position.bottom(0.),
+    };
+
+    position
   }
 }

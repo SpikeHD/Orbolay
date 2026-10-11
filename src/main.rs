@@ -21,7 +21,8 @@ use orbolay_core::{
 use orbolay_logging::{log, warn};
 use orbolay_transport::{create_transport_thread, maybe_notify_update, start_config_watcher};
 use orbolay_ui::{
-  components::{MessagesSection, Soundboard, VoiceControls, VoiceSection},
+  components::{MessagesSection, SettingsButton, Soundboard, VoiceControls, VoiceSection},
+  config::CornerAlignment,
   open_configurator, open_configurator_standalone,
   util::{scale::UiScale, theme},
 };
@@ -200,7 +201,7 @@ fn app() -> impl IntoElement {
   let mut app_state = use_state(AppState::new);
   let mut soundboard_open = use_state(|| false);
 
-  use_hook(move || {
+  let app_handle = use_hook(move || {
     let (transport_sender, transport_recv) = flume::unbounded::<BridgeMessage>();
     let (redraw_tx, redraw_rx) = flume::unbounded::<()>();
     #[cfg(not(target_os = "macos"))]
@@ -301,14 +302,11 @@ fn app() -> impl IntoElement {
             let mut state = app_state.write();
             state.is_open = !state.is_open;
           }
-          keys::KeyEvent::OpenConfigurator if app_state.read().is_open => {
-            open_configurator(app.clone());
-            app_state.write().is_open = false;
-          }
-          keys::KeyEvent::OpenConfigurator => {}
         }
       }
     });
+
+    app
   });
 
   // Sync is_open -> cursor hit-test, and close soundboard when overlay closes
@@ -339,6 +337,21 @@ fn app() -> impl IntoElement {
     .find(|u| u.id == state.user_id)
     .cloned();
   drop(state);
+
+  let occupied_corners = [
+    config.user_alignment.clone(),
+    config.message_alignment.clone(),
+  ]
+  .into_iter()
+  .flatten()
+  .collect::<Vec<_>>();
+  let settings_alignment = CornerAlignment::unused_corner(&occupied_corners)
+    .unwrap_or_else(|| "bottomleft".parse().unwrap());
+  let open_settings: EventHandler<()> = (move |()| {
+    app_state.write().is_open = false;
+    open_configurator(app_handle.clone());
+  })
+  .into();
 
   rect()
     .width(Size::fill())
@@ -430,5 +443,13 @@ fn app() -> impl IntoElement {
               ui_scale,
             })
         }))
+    })
+    // Settings button
+    .maybe(is_open, |el| {
+      el.child(SettingsButton {
+        on_click: open_settings.clone(),
+        alignment: settings_alignment.clone(),
+        ui_scale,
+      })
     })
 }
