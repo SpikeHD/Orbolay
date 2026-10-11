@@ -18,6 +18,7 @@ impl Component for SettingsButton {
   fn render(&self) -> impl IntoElement {
     let scale = UiScale::new(self.ui_scale);
     let on_click = self.on_click.clone();
+    let mut hovered = use_state(|| false);
 
     rect()
       .position(self.alignment.to_position())
@@ -29,7 +30,13 @@ impl Component for SettingsButton {
         SvgViewer::new(SETTINGS_SVG)
           .width(Size::px(scale.px(32.0)))
           .height(Size::px(scale.px(32.0)))
-          .opacity(0.4),
+          .opacity(if *hovered.read() { 0.6_f32 } else { 0.4_f32 }),
       )
+      .on_pointer_enter(move |_| {
+        *hovered.write() = true;
+      })
+      .on_pointer_leave(move |_| {
+        *hovered.write() = false;
+      })
   }
 }
