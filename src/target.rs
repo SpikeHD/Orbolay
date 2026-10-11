@@ -1,6 +1,7 @@
 use std::process::Command;
+use std::collections::HashMap;
 
-pub fn launch_target(cmd: Vec<String>, wayland_display: Result<String, std::env::VarError>) {
+pub fn launch_target(cmd: Vec<String>, extra_env: Option<HashMap<String, Option<String>>>) {
   std::thread::spawn(move || {
     let args = cmd.get(1..);
     let mut proc = Command::new(cmd[0].clone());
@@ -9,13 +10,11 @@ pub fn launch_target(cmd: Vec<String>, wayland_display: Result<String, std::env:
       proc.args(args);
     }
 
-    match wayland_display {
-      Ok(val) => {
-        proc.env("WAYLAND_DISPLAY", val);
-      }
-      Err(_) => {
-        proc.env_remove("WAYLAND_DISPLAY");
-      }
+    for (key, value) in extra_env.unwrap_or_default() {
+      match value {
+        Some(val) => proc.env(key, val),
+        None => proc.env_remove(&key),
+      };
     }
 
     let _ = proc.status();

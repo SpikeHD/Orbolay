@@ -5,6 +5,7 @@
 #![allow(clippy::borrow_interior_mutable_const)]
 #![allow(clippy::declare_interior_mutable_const)]
 
+use std::collections::HashMap;
 use std::sync::Arc;
 
 use freya::prelude::*;
@@ -135,8 +136,13 @@ fn main() {
   }
 
   if !args.target.is_empty() {
+    let env = HashMap::from([
+      ("WAYLAND_DISPLAY".to_string(), wayland_display.ok()),
+    ]);
+
     log!("Launching child process: {:?}", args.target);
-    target::launch_target(args.target, wayland_display);
+
+    target::launch_target(args.target, Some(env));
   }
 
   launch(
