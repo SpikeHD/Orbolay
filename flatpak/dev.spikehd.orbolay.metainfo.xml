@@ -46,5 +46,6 @@
 
   <releases>
     <release version="4.0.0" date="2026-10-09"/>
+    <release version="4.1.0" date="2026-10-11"/>
   </releases>
 </component>
