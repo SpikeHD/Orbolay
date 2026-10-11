@@ -136,9 +136,7 @@ fn main() {
   }
 
   if !args.target.is_empty() {
-    let env = HashMap::from([
-      ("WAYLAND_DISPLAY".to_string(), wayland_display.ok()),
-    ]);
+    let env = HashMap::from([("WAYLAND_DISPLAY".to_string(), wayland_display.ok())]);
 
     log!("Launching child process: {:?}", args.target);
 

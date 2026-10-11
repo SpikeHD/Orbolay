@@ -1,5 +1,5 @@
-use std::process::Command;
 use std::collections::HashMap;
+use std::process::Command;
 
 pub fn launch_target(cmd: Vec<String>, extra_env: Option<HashMap<String, Option<String>>>) {
   std::thread::spawn(move || {
