@@ -59,6 +59,8 @@
         <a href="https://github.com/SpikeHD/Orbolay/releases/latest/download/orbolay-x86_64-unknown-linux-gnu">x86_64</a>
         <span>|</span>
         <a href="https://github.com/SpikeHD/Orbolay/releases/latest/download/orbolay-x86_64-unknown-linux-gnu.AppImage">AppImage (x86_64)</a>
+        <span>|</span>
+        <a href="https://github.com/SpikeHD/Orbolay/releases/latest/download/orbolay-x86_64-unknown-linux-gnu.flatpak">Flatpak (x86_64)</a>
       </div>
     </td>
   </tr>
