@@ -81,6 +81,7 @@
 * [How to Use](#how-to-use)
   * [With Official Clients](#with-official-clients)
   * [With Modded Clients](#with-modded-clients)
+* [Command-line Controls](#command-line-controls) 
 * [Using as a Wrapper Process](#using-as-a-wrapper-process)
 * [Custom Templates](#custom-templates)
 * [Configuration](#configuration)
@@ -164,6 +165,22 @@ With your client open:
 2. Run the executable
 3. In the [configuration menu](#configuration), change "Connection Mode" to `websocket`
 4. Press <kbd>Ctrl</kbd> + <kbd>`</kbd> to open the overlay and interact with voice controls
+
+# Command-line Controls
+
+Instead of using the built-in keybind watcher, you are more than welcome to use your system's built-in shortcut manager instead! Simply create shortcuts for any of the following,
+and they will communicate with the main Orbolay process:
+
+> [!NOTE]
+> If using shortcuts to toggle the overlay, disable the "Enable Keybind" option in the config menu!
+
+```sh
+orbolay --toggle-overlay
+orbolay --mute
+orbolay --deafen
+```
+
+\* *As a bonus, this can serve as a watered-down custom keybind provider for those of you on clients that do not support such a feature!*
 
 # Using as a Wrapper Process
 
