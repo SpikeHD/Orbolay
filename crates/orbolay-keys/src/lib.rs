@@ -5,14 +5,21 @@ thread_local! {
     const { Cell::new(["ControlLeft", "BackQuote"]) };
 }
 
+#[derive(Debug, Clone)]
+pub enum KeyEvent {
+  ToggleOverlay,
+}
+
 #[cfg(not(target_os = "macos"))]
 use rdev::Key;
 
+#[cfg(not(target_os = "macos"))]
 pub mod keybind;
 
 #[cfg(not(target_os = "macos"))]
-pub use keybind::{KeyEvent, KeyState, Keybind, process};
+pub use keybind::{KeyState, Keybind, process};
 
+#[cfg(not(target_os = "macos"))]
 pub fn string_to_key(string: impl AsRef<str>) -> Option<Key> {
   let s = string.as_ref();
   serde_json::from_str::<Key>(s)
@@ -20,6 +27,7 @@ pub fn string_to_key(string: impl AsRef<str>) -> Option<Key> {
     .ok()
 }
 
+#[cfg(not(target_os = "macos"))]
 pub fn key_to_string(key: &Key) -> String {
   serde_json::to_string(key)
     .unwrap_or_default()
@@ -27,6 +35,7 @@ pub fn key_to_string(key: &Key) -> String {
     .to_owned()
 }
 
+#[cfg(not(target_os = "macos"))]
 pub fn keys_to_strings(keys: Vec<Key>) -> Vec<String> {
   keys.iter().map(key_to_string).collect()
 }
@@ -45,6 +54,6 @@ pub fn default_keybinds() -> Vec<Keybind> {
         .map(String::from)
         .to_vec(),
     ),
-    crate::keybind::KeyEvent::ToggleOverlay,
+    crate::KeyEvent::ToggleOverlay,
   )]
 }

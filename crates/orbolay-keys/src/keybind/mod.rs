@@ -3,15 +3,10 @@ use std::time::{Duration, Instant};
 
 use rdev::{EventType, Key};
 
-#[cfg(not(target_os = "macos"))]
+use crate::KeyEvent;
 use orbolay_logging::log;
 
 const STALE_TIMEOUT: Duration = Duration::from_secs(5);
-
-#[derive(Debug, Clone)]
-pub enum KeyEvent {
-  ToggleOverlay,
-}
 
 pub struct Keybind {
   pub keys: Vec<Key>,
