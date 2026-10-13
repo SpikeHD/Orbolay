@@ -1,5 +1,5 @@
 [workspace]
-members = [".", "crates/orbolay-core", "crates/orbolay-keys", "crates/orbolay-logging", "crates/orbolay-transport", "crates/orbolay-ui"]
+members = [".", "crates/orbolay-core", "crates/orbolay-keys", "crates/orbolay-logging", "crates/orbolay-transport", "crates/orbolay-ui", "crates/orbolay-control"]
 resolver = "3"
 
 [workspace.dependencies]
@@ -58,6 +58,8 @@ orbolay-keys = { path = "crates/orbolay-keys" }
 orbolay-logging = { path = "crates/orbolay-logging" }
 orbolay-transport = { path = "crates/orbolay-transport" }
 orbolay-ui = { path = "crates/orbolay-ui" }
+orbolay-control = { path = "crates/orbolay-control" }
+serde_json = { workspace = true }
 sysinfo = { workspace = true }
 winit = { workspace = true }
 
