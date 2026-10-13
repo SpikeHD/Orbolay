@@ -5,8 +5,8 @@
 #![allow(clippy::borrow_interior_mutable_const)]
 #![allow(clippy::declare_interior_mutable_const)]
 
-use std::{collections::HashMap, sync::atomic::Ordering};
 use std::sync::Arc;
+use std::{collections::HashMap, sync::atomic::Ordering};
 
 use freya::prelude::*;
 use gumdrop::Options;
@@ -119,12 +119,14 @@ fn main() {
     };
 
     let commands = [
-      args.toggle_overlay.then_some(orbolay_control::Command::ToggleOverlay),
+      args
+        .toggle_overlay
+        .then_some(orbolay_control::Command::ToggleOverlay),
       args.mute.then_some(orbolay_control::Command::Mute),
       args.deafen.then_some(orbolay_control::Command::Deafen),
     ]
-      .into_iter()
-      .flatten();
+    .into_iter()
+    .flatten();
 
     for cmd in commands {
       if let Err(e) = client.send(&cmd) {
