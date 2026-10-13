@@ -5,12 +5,13 @@
 #![allow(clippy::borrow_interior_mutable_const)]
 #![allow(clippy::declare_interior_mutable_const)]
 
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::atomic::Ordering};
 use std::sync::Arc;
 
 use freya::prelude::*;
 use gumdrop::Options;
 use native_dialog::{MessageDialogBuilder, MessageLevel};
+use orbolay_control::Command;
 use orbolay_core::{
   app_state::{AppHandle, AppState, SharedAppState},
   config::{TransportMode, is_first_run, load_config, save_config},
@@ -18,6 +19,7 @@ use orbolay_core::{
   payloads::{Notification, NotificationAction, NotificationKind},
   util::bridge::BridgeMessage,
 };
+use orbolay_keys::KeyEvent;
 use orbolay_logging::{log, warn};
 use orbolay_transport::{create_transport_thread, maybe_notify_update, start_config_watcher};
 use orbolay_ui::{
@@ -72,6 +74,15 @@ pub struct Args {
   #[options(help = "Open the configuration window")]
   config: bool,
 
+  #[options(help = "Toggle overlay visibility, then exit")]
+  toggle_overlay: bool,
+
+  #[options(help = "Toggle mute, then exit")]
+  mute: bool,
+
+  #[options(help = "Toggle deafen, then exit")]
+  deafen: bool,
+
   #[options(help = "Target application to launch (if any)", free)]
   target: Vec<String>,
 }
@@ -98,6 +109,30 @@ fn main() {
 
   if args.config {
     open_configurator_standalone();
+    std::process::exit(0);
+  }
+
+  if args.toggle_overlay || args.mute || args.deafen {
+    let Ok(mut client) = orbolay_control::Client::connect() else {
+      eprintln!("Could not connect to Orbolay. Is it running?");
+      std::process::exit(1);
+    };
+
+    let commands = [
+      args.toggle_overlay.then_some(orbolay_control::Command::ToggleOverlay),
+      args.mute.then_some(orbolay_control::Command::Mute),
+      args.deafen.then_some(orbolay_control::Command::Deafen),
+    ]
+      .into_iter()
+      .flatten();
+
+    for cmd in commands {
+      if let Err(e) = client.send(&cmd) {
+        eprintln!("Failed to send command: {}", e);
+        std::process::exit(1);
+      }
+    }
+
     std::process::exit(0);
   }
 
@@ -205,7 +240,7 @@ fn app() -> impl IntoElement {
     let (transport_sender, transport_recv) = flume::unbounded::<BridgeMessage>();
     let (redraw_tx, redraw_rx) = flume::unbounded::<()>();
     #[cfg(not(target_os = "macos"))]
-    let (keybind_tx, keybind_rx) = flume::unbounded::<keys::KeyEvent>();
+    let (keybind_tx, keybind_rx) = flume::unbounded::<orbolay_keys::KeyEvent>();
 
     app_state.write().transport_sender = Some(transport_sender.clone());
 
@@ -225,7 +260,25 @@ fn app() -> impl IntoElement {
     }
 
     #[cfg(not(target_os = "macos"))]
-    keys::watch_keybinds(shared.clone(), keybind_tx);
+    keys::watch_keybinds(shared.clone(), keybind_tx.clone());
+
+    let ctrl_app = app.clone();
+
+    orbolay_control::start(move |cmd| match cmd {
+      Command::ToggleOverlay => {
+        if !ctrl_app.read(|state| state.recording_keybind.load(Ordering::Relaxed)) {
+          let _ = keybind_tx.send(KeyEvent::ToggleOverlay);
+        }
+      }
+      Command::Mute => ctrl_app.send(BridgeMessage {
+        cmd: "TOGGLE_MUTE".to_string(),
+        data: serde_json::Value::Null,
+      }),
+      Command::Deafen => ctrl_app.send(BridgeMessage {
+        cmd: "TOGGLE_DEAF".to_string(),
+        data: serde_json::Value::Null,
+      }),
+    });
 
     let force_transport = if args.websocket {
       Some(TransportMode::Websocket)
@@ -298,7 +351,7 @@ fn app() -> impl IntoElement {
     spawn_forever(async move {
       while let Ok(event) = keybind_rx.recv_async().await {
         match event {
-          keys::KeyEvent::ToggleOverlay => {
+          orbolay_keys::KeyEvent::ToggleOverlay => {
             let mut state = app_state.write();
             state.is_open = !state.is_open;
           }

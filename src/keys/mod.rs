@@ -1,10 +1,3 @@
-mod state;
-
-pub mod bind;
-pub mod event;
-
-pub use event::KeyEvent;
-
 use std::cell::RefCell;
 use std::sync::{
   Arc, RwLock,
@@ -18,9 +11,9 @@ use rdev::{Event, grab, listen};
 use orbolay_core::app_state::SharedAppState;
 use orbolay_logging::warn;
 
-use bind::{Keybind, default_keybinds};
-use orbolay_keys::{DEFAULT_OVERLAY_TOGGLE, strings_to_keys};
-use state::{KeyState, process};
+use orbolay_keys::{
+  DEFAULT_OVERLAY_TOGGLE, KeyEvent, KeyState, Keybind, default_keybinds, strings_to_keys,
+};
 
 pub fn watch_keybinds(shared: SharedAppState, keybind_tx: flume::Sender<KeyEvent>) {
   let enabled = Arc::new(AtomicBool::new(true));
@@ -51,13 +44,13 @@ pub fn watch_keybinds(shared: SharedAppState, keybind_tx: flume::Sender<KeyEvent
 
         {
           let mut kbs = keybinds.write().unwrap();
-          for kb in kbs.iter_mut() {
-            if matches!(kb.event, KeyEvent::ToggleOverlay) && kb.keys != overlay_keys {
+          if let Some(kb) = kbs
+            .iter_mut()
+            .find(|kb| matches!(kb.event, KeyEvent::ToggleOverlay))
+            && kb.keys != overlay_keys {
               kb.keys = overlay_keys.clone();
               kb.reset();
-              break;
             }
-          }
         }
 
         thread::sleep(Duration::from_secs(1));
@@ -76,12 +69,11 @@ pub fn watch_keybinds(shared: SharedAppState, keybind_tx: flume::Sender<KeyEvent
     let grab_result = grab(move |event: Event| {
       if !recording_grab.load(Ordering::Relaxed) && enabled_grab.load(Ordering::Relaxed) {
         let kbs = keybinds_grab.read().unwrap();
-        process(
-          &event.event_type,
-          &mut key_state_grab.borrow_mut(),
-          &kbs,
-          &keybind_tx_grab,
-        );
+        for event in
+          orbolay_keys::process(&event.event_type, &mut key_state_grab.borrow_mut(), &kbs)
+        {
+          let _ = keybind_tx_grab.send(event);
+        }
       }
       Some(event)
     });
@@ -93,12 +85,11 @@ pub fn watch_keybinds(shared: SharedAppState, keybind_tx: flume::Sender<KeyEvent
       if let Err(e) = listen(move |event: Event| {
         if !recording.load(Ordering::Relaxed) && enabled.load(Ordering::Relaxed) {
           let kbs = keybinds.read().unwrap();
-          process(
-            &event.event_type,
-            &mut key_state_listen.borrow_mut(),
-            &kbs,
-            &keybind_tx,
-          );
+          for event in
+            orbolay_keys::process(&event.event_type, &mut key_state_listen.borrow_mut(), &kbs)
+          {
+            let _ = keybind_tx.send(event);
+          }
         }
       }) {
         warn!("Failed to listen for global hotkeys: {:?}", e);

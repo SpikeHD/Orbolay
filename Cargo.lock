@@ -4073,16 +4073,29 @@ dependencies = [
  "gumdrop",
  "native-dialog",
  "open",
+ "orbolay-control",
  "orbolay-core",
  "orbolay-keys",
  "orbolay-logging",
  "orbolay-transport",
  "orbolay-ui",
  "rdev",
+ "serde_json",
  "sysinfo",
  "windows",
  "winit",
  "x11rb",
+]
+
+[[package]]
+name = "orbolay-control"
+version = "0.1.0"
+dependencies = [
+ "dirs",
+ "interprocess",
+ "orbolay-logging",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -4100,6 +4113,7 @@ dependencies = [
 name = "orbolay-keys"
 version = "0.1.0"
 dependencies = [
+ "orbolay-logging",
  "rdev",
  "serde_json",
 ]

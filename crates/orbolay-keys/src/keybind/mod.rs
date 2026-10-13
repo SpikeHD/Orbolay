@@ -1,23 +1,68 @@
-use orbolay_logging::log;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
 use rdev::{EventType, Key};
 
-use super::{bind::Keybind, event::KeyEvent};
+#[cfg(not(target_os = "macos"))]
+use orbolay_logging::log;
 
 const STALE_TIMEOUT: Duration = Duration::from_secs(5);
 
+#[derive(Debug, Clone)]
+pub enum KeyEvent {
+  ToggleOverlay,
+}
+
+pub struct Keybind {
+  pub keys: Vec<Key>,
+  pub event: KeyEvent,
+  active: AtomicBool,
+}
+
+impl Keybind {
+  pub fn new(keys: Vec<Key>, event: KeyEvent) -> Self {
+    Self {
+      keys,
+      event,
+      active: AtomicBool::new(false),
+    }
+  }
+
+  pub fn matches(&self, pressed: &[Key]) -> bool {
+    pressed.len() == self.keys.len() && self.keys.iter().all(|k| pressed.contains(k))
+  }
+
+  pub fn active(&self) -> bool {
+    self.active.load(Ordering::Relaxed)
+  }
+
+  pub fn set_active(&self, val: bool) {
+    self.active.store(val, Ordering::Relaxed);
+  }
+
+  pub fn reset(&self) {
+    self.active.store(false, Ordering::Relaxed);
+  }
+}
+
+#[non_exhaustive]
 pub struct KeyState {
   pub pressed: Vec<Key>,
   last_update: Instant,
 }
 
-impl KeyState {
-  pub fn new() -> Self {
+impl Default for KeyState {
+  fn default() -> Self {
     Self {
       pressed: Vec::new(),
       last_update: Instant::now(),
     }
+  }
+}
+
+impl KeyState {
+  pub fn new() -> Self {
+    Self::default()
   }
 
   fn press(&mut self, key: Key) {
@@ -42,8 +87,7 @@ pub fn process(
   event_type: &EventType,
   key_state: &mut KeyState,
   keybinds: &[Keybind],
-  tx: &flume::Sender<KeyEvent>,
-) {
+) -> Vec<KeyEvent> {
   if key_state.last_update.elapsed() > STALE_TIMEOUT {
     key_state.clear();
     for bind in keybinds {
@@ -54,8 +98,10 @@ pub fn process(
   match event_type {
     EventType::KeyPress(k) => key_state.press(*k),
     EventType::KeyRelease(k) => key_state.release(*k),
-    _ => return,
+    _ => return vec![],
   }
+
+  let mut fired = vec![];
 
   for bind in keybinds {
     let matches = bind.matches(&key_state.pressed);
@@ -64,9 +110,11 @@ pub fn process(
     if matches && !was_active {
       bind.set_active(true);
       log!("Key event: {:?}", bind.event);
-      let _ = tx.send(bind.event.clone());
+      fired.push(bind.event.clone());
     } else if !matches && was_active {
       bind.set_active(false);
     }
   }
+
+  fired
 }
