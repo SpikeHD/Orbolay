@@ -13,6 +13,11 @@ impl OverlayManager {
     Self::set_state(app_state, false);
   }
 
+  pub fn toggle(mut app_state: State<AppState>) {
+    let mut state = app_state.write();
+    state.is_open = !state.is_open;
+  }
+
   #[allow(dead_code)]
   pub fn open(app_state: State<AppState>) {
     Self::set_state(app_state, true);

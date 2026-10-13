@@ -241,8 +241,7 @@ fn app() -> impl IntoElement {
   let app_handle = use_hook(move || {
     let (transport_sender, transport_recv) = flume::unbounded::<BridgeMessage>();
     let (redraw_tx, redraw_rx) = flume::unbounded::<()>();
-    #[cfg(not(target_os = "macos"))]
-    let (keybind_tx, keybind_rx) = flume::unbounded::<orbolay_keys::KeyEvent>();
+    let (action_tx, action_rx) = flume::unbounded::<KeyEvent>();
 
     app_state.write().transport_sender = Some(transport_sender.clone());
 
@@ -262,14 +261,14 @@ fn app() -> impl IntoElement {
     }
 
     #[cfg(not(target_os = "macos"))]
-    keys::watch_keybinds(shared.clone(), keybind_tx.clone());
+    keys::watch_keybinds(shared.clone(), action_tx.clone());
 
     let ctrl_app = app.clone();
 
     orbolay_control::start(move |cmd| match cmd {
       Command::ToggleOverlay => {
         if !ctrl_app.read(|state| state.recording_keybind.load(Ordering::Relaxed)) {
-          let _ = keybind_tx.send(KeyEvent::ToggleOverlay);
+          let _ = action_tx.send(KeyEvent::ToggleOverlay);
         }
       }
       Command::Mute => ctrl_app.send(BridgeMessage {
@@ -349,14 +348,10 @@ fn app() -> impl IntoElement {
     });
     maybe_notify_update(app.clone());
 
-    #[cfg(not(target_os = "macos"))]
     spawn_forever(async move {
-      while let Ok(event) = keybind_rx.recv_async().await {
+      while let Ok(event) = action_rx.recv_async().await {
         match event {
-          orbolay_keys::KeyEvent::ToggleOverlay => {
-            let mut state = app_state.write();
-            state.is_open = !state.is_open;
-          }
+          KeyEvent::ToggleOverlay => OverlayManager::toggle(app_state),
         }
       }
     });
