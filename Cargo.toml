@@ -52,7 +52,6 @@ flume = { workspace = true }
 freya = { workspace = true }
 gumdrop = { workspace = true }
 native-dialog = { workspace = true }
-open = { workspace = true }
 orbolay-core = { path = "crates/orbolay-core" }
 orbolay-keys = { path = "crates/orbolay-keys" }
 orbolay-logging = { path = "crates/orbolay-logging" }

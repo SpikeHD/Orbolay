@@ -37,6 +37,9 @@ pub struct Notification {
   pub timeout_secs: i64,
   #[serde(skip)]
   pub actions: Option<Vec<NotificationAction>>,
+  /// Clicking the notification opens this URL instead of navigating to the source message
+  #[serde(default, skip_deserializing)]
+  pub url: Option<String>,
 }
 
 impl PartialEq for Notification {
@@ -48,6 +51,7 @@ impl PartialEq for Notification {
       && self.channel_id == other.channel_id
       && self.message_id == other.message_id
       && self.timestamp == other.timestamp
+      && self.url == other.url
     // Actions are not compared as they are functions
   }
 }
@@ -62,6 +66,7 @@ impl std::fmt::Debug for Notification {
       .field("channel_id", &self.channel_id)
       .field("message_id", &self.message_id)
       .field("timestamp", &self.timestamp)
+      .field("url", &self.url)
       .field("actions", &self.actions.is_some())
       .finish()
   }
@@ -79,6 +84,7 @@ impl Default for Notification {
       timestamp: Some(chrono::Utc::now().timestamp()),
       timeout_secs: 5,
       actions: None,
+      url: None,
     }
   }
 }

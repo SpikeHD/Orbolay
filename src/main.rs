@@ -5,7 +5,6 @@
 #![allow(clippy::borrow_interior_mutable_const)]
 #![allow(clippy::declare_interior_mutable_const)]
 
-use std::sync::Arc;
 use std::{collections::HashMap, sync::atomic::Ordering};
 
 use freya::prelude::*;
@@ -16,7 +15,7 @@ use orbolay_core::{
   app_state::{AppHandle, AppState, SharedAppState},
   config::{TransportMode, is_first_run, load_config, save_config},
   dirs::ensure_config_dirs,
-  payloads::{Notification, NotificationAction, NotificationKind},
+  payloads::Notification,
   util::bridge::BridgeMessage,
 };
 use orbolay_keys::KeyEvent;
@@ -299,19 +298,9 @@ fn app() -> impl IntoElement {
         GIT_HASH.unwrap_or("unknown")
       ),
       body: "by SpikeHD".to_string(),
-      timestamp: Some(chrono::Utc::now().timestamp()),
-      timeout_secs: 5,
       icon: "https://avatars.githubusercontent.com/u/25207995?v=4".to_string(),
-      guild_id: None,
-      channel_id: None,
-      message_id: None,
-      actions: Some(vec![NotificationAction {
-        label: "GitHub".into(),
-        action: Arc::new(|| {
-          let _ = open::that("https://github.com/SpikeHD/Orbolay");
-        }),
-        kind: NotificationKind::Primary,
-      }]),
+      url: Some("https://github.com/SpikeHD/Orbolay".to_string()),
+      ..Default::default()
     });
 
     // sync SharedAppState -> AppState on every redraw signal

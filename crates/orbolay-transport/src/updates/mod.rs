@@ -1,11 +1,6 @@
-use std::sync::Arc;
-
 use serde_json::Value;
 
-use orbolay_core::{
-  app_state::AppHandle,
-  payloads::{Notification, NotificationAction, NotificationKind},
-};
+use orbolay_core::{app_state::AppHandle, payloads::Notification};
 use orbolay_logging::warn;
 
 pub fn maybe_notify_update(app: AppHandle) {
@@ -26,21 +21,18 @@ pub fn maybe_notify_update(app: AppHandle) {
     };
 
     if let Some(latest_version) = json.get("tag_name").and_then(|v| v.as_str()) {
+      let release_url = json
+        .get("html_url")
+        .and_then(|v| v.as_str())
+        .unwrap_or("https://github.com/SpikeHD/Orbolay/releases/latest");
       let current_version = format!("v{}", env!("CARGO_PKG_VERSION"));
+
       if latest_version != current_version {
         app.notify(Notification {
           title: "Update Available!".into(),
-          body:
-            "An new update of Orbolay is available and can be downloaded via the GitHub releases"
-              .into(),
+          body: format!("Orbolay {} is now available!", latest_version),
           icon: "https://avatars.githubusercontent.com/u/25207995?v=4".to_string(),
-          actions: Some(vec![NotificationAction {
-            label: "View on GitHub".into(),
-            action: Arc::new(|| {
-              let _ = open::that("https://github.com/SpikeHD/Orbolay/releases/latest");
-            }),
-            kind: NotificationKind::Primary,
-          }]),
+          url: Some(release_url.to_string()),
           ..Default::default()
         });
       }

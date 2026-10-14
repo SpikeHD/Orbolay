@@ -284,6 +284,7 @@ pub fn handle_ipc_message(
           .clone()
           .unwrap_or_default()
           .replace(".webp", ".png"),
+        url: None,
         actions,
       };
       state.notify(notification);

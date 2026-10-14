@@ -6,6 +6,7 @@ use freya::{
 use orbolay_core::{app_state::AppState, payloads::Notification, util::bridge::BridgeMessage};
 
 use crate::util::{
+  html_template::is_network_url,
   notification_template::{self, load_notification_template},
   scale::{GapsScaleExt, UiScale},
   theme::Theme,
@@ -88,6 +89,13 @@ impl Component for MessageRow {
             (action.action)();
             return;
           }
+        }
+
+        if let Some(url) = &message.url
+          && is_network_url(url)
+        {
+          let _ = open::that(url);
+          return;
         }
 
         app_state.write().send(BridgeMessage {

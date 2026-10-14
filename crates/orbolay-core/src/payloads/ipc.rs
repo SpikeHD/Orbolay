@@ -136,4 +136,6 @@ pub struct NotificationCreatePayload {
   pub icon_url: Option<String>,
   pub title: String,
   pub body: String,
+  #[serde(default)]
+  pub url: Option<String>,
 }

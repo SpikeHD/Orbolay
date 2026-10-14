@@ -90,3 +90,4 @@ required `id` attribute.
 
 * `no-icon` - the notification has no icon to display
 * `has-actions` - the notification has clickable action buttons
+* `has-url` - clicking the notification opens a URL instead of navigating to the source message

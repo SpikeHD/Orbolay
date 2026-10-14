@@ -9,7 +9,6 @@ chrono = { workspace = true }
 flume = { workspace = true }
 interprocess = { workspace = true }
 notify = { workspace = true }
-open = { workspace = true }
 orbolay-core = { path = "../orbolay-core" }
 orbolay-logging = { path = "../orbolay-logging" }
 serde_json = { workspace = true }
