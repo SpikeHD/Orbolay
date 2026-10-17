@@ -4065,7 +4065,7 @@ dependencies = [
 
 [[package]]
 name = "orbolay"
-version = "4.1.0"
+version = "4.2.0"
 dependencies = [
  "chrono",
  "flume",
@@ -4099,7 +4099,7 @@ dependencies = [
 
 [[package]]
 name = "orbolay-core"
-version = "4.1.0"
+version = "4.2.0"
 dependencies = [
  "chrono",
  "dirs",
@@ -4110,7 +4110,7 @@ dependencies = [
 
 [[package]]
 name = "orbolay-keys"
-version = "4.1.0"
+version = "4.2.0"
 dependencies = [
  "orbolay-logging",
  "rdev",
@@ -4119,7 +4119,7 @@ dependencies = [
 
 [[package]]
 name = "orbolay-logging"
-version = "4.1.0"
+version = "4.2.0"
 dependencies = [
  "chrono",
  "colored",
@@ -4127,7 +4127,7 @@ dependencies = [
 
 [[package]]
 name = "orbolay-transport"
-version = "4.1.0"
+version = "4.2.0"
 dependencies = [
  "chrono",
  "flume",
@@ -4143,7 +4143,7 @@ dependencies = [
 
 [[package]]
 name = "orbolay-ui"
-version = "4.1.0"
+version = "4.2.0"
 dependencies = [
  "bytes",
  "display-info",
