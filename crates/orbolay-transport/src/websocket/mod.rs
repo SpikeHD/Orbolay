@@ -155,21 +155,32 @@ pub fn handle_ws_message(
           state
             .voice_users
             .retain(|user| user.id != data.state.user_id);
-        } else {
-          let user = state
-            .voice_users
-            .iter_mut()
-            .find(|user| user.id == data.state.user_id);
 
-          if let Some(user) = user {
-            if data.state.streaming.is_none() {
-              data.state.streaming = Some(user.streaming);
-            }
-            user.voice_state = data.state.clone().into();
-            user.streaming = data.state.streaming.unwrap_or_default();
-          } else {
-            state.voice_users.push(data.state.into());
+          return;
+        }
+
+        let existing = state
+          .voice_users
+          .iter_mut()
+          .find(|user| user.id == data.state.user_id);
+
+        if let Some(user) = existing {
+          // Update existing data whenever possible
+          if let Some(username) = data.state.username.as_ref() {
+            user.name = username.to_string();
           }
+          if let Some(avatar) = data.state.avatar_url.as_ref() {
+            user.avatar = avatar.to_string();
+          }
+
+          if data.state.streaming.is_none() {
+            data.state.streaming = Some(user.streaming);
+          }
+          user.voice_state = data.state.clone().into();
+          user.streaming = data.state.streaming.unwrap_or_default();
+        } else if data.state.channel_id.is_some() && data.state.username.is_some() {
+          // Only add new user if everything is present
+          state.voice_users.push(data.state.into());
         }
       });
     }
