@@ -19,7 +19,8 @@ Describe what needs to happen in order for the bug to appear.
 
 ### System Info:
  - **OS Version**: 
- - **Orbolay Version**: 
+ - **Orbolay Version**:
+ - **Client Mod Plugin Source (eg. Vencord/Equicord/Shelter)**: 
  - **Any other relevant info**: 
 
 ### Additional context/Screenshots
