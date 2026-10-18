@@ -72,7 +72,17 @@ fn ws_stream(
             error!("Failed to handle websocket message: {}", e);
           }
         }
-        Err(_) => break,
+        Err(tungstenite::Error::Io(ref e))
+          if e.kind() == std::io::ErrorKind::WouldBlock =>
+        {
+          break
+        }
+        Err(e) => {
+          // socket is dead, exit so this thread stops draining messages.
+          error!("Websocket read error: {}", e);
+          app.update(|state| state.voice_users = vec![]);
+          break 'outer;
+        }
       }
     }
 
