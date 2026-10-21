@@ -305,7 +305,7 @@ fn app() -> impl IntoElement {
 
     // sync SharedAppState -> AppState on every redraw signal
     let shared_sync = shared.clone();
-    spawn_forever(async move {
+    spawn_in_window(async move {
       while let Ok(()) = redraw_rx.recv_async().await {
         let synced = shared_sync.read().unwrap().clone();
         let transport_sender = app_state.read().transport_sender.clone();
@@ -337,7 +337,7 @@ fn app() -> impl IntoElement {
     });
     maybe_notify_update(app.clone());
 
-    spawn_forever(async move {
+    spawn_in_window(async move {
       while let Ok(event) = action_rx.recv_async().await {
         match event {
           KeyEvent::ToggleOverlay => OverlayManager::toggle(app_state),

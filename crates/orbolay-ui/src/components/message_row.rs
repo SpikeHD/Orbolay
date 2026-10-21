@@ -72,7 +72,7 @@ impl Component for MessageRow {
         let (mouse_x, mouse_y) = match &*event {
           PressEventData::Mouse(m) => (m.element_location.x, m.element_location.y),
           PressEventData::Touch(t) => (t.element_location.x, t.element_location.y),
-          PressEventData::Keyboard(_) => return,
+          PressEventData::Keyboard(_) | PressEventData::Accessibility(_) => return,
         };
         let local_x = (mouse_x as f32) / ui_scale;
         let local_y = (mouse_y as f32) / ui_scale;
