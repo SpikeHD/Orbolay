@@ -50,7 +50,7 @@ impl Component for MessageRow {
       let (message, theme, notification_template) = deps.clone();
       let template = load_notification_template(notification_template.as_deref());
       let mut handle = handle;
-      handle.load_html(template.render(&message, &theme));
+      handle.replace_html(template.render(&message, &theme));
     });
 
     rect()

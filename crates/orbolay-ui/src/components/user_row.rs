@@ -64,7 +64,7 @@ impl Component for UserRow {
       let (user, is_self, theme, user_template, is_right_aligned) = deps.clone();
       let template = load_user_template(user_template.as_deref());
       let mut handle = handle;
-      handle.load_html(template.render(&user, is_self, &theme, is_right_aligned));
+      handle.replace_html(template.render(&user, is_self, &theme, is_right_aligned));
     });
 
     rect()

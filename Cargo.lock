@@ -1933,8 +1933,8 @@ checksum = "d8866fac38f53fc87fa3ae1b09ddd723e0482f8fa74323518b4c59df2c55a00a"
 
 [[package]]
 name = "freya"
-version = "0.5.0-beta.12"
-source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#d001aee06e56d9e98894f77e64c10d253b1dd889"
+version = "0.5.0-rc.13"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#4643ae925ec2dbbba3492b13ecafad584bffb634"
 dependencies = [
  "cfg-if",
  "freya-android",
@@ -1952,8 +1952,8 @@ dependencies = [
 
 [[package]]
 name = "freya-android"
-version = "0.5.0-beta.12"
-source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#d001aee06e56d9e98894f77e64c10d253b1dd889"
+version = "0.5.0-rc.13"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#4643ae925ec2dbbba3492b13ecafad584bffb634"
 dependencies = [
  "freya-components",
  "freya-core",
@@ -1965,8 +1965,8 @@ dependencies = [
 
 [[package]]
 name = "freya-animation"
-version = "0.5.0-beta.12"
-source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#d001aee06e56d9e98894f77e64c10d253b1dd889"
+version = "0.5.0-rc.13"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#4643ae925ec2dbbba3492b13ecafad584bffb634"
 dependencies = [
  "easer",
  "freya-core",
@@ -1974,8 +1974,8 @@ dependencies = [
 
 [[package]]
 name = "freya-clipboard"
-version = "0.5.0-beta.12"
-source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#d001aee06e56d9e98894f77e64c10d253b1dd889"
+version = "0.5.0-rc.13"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#4643ae925ec2dbbba3492b13ecafad584bffb634"
 dependencies = [
  "copypasta",
  "freya-core",
@@ -1983,8 +1983,8 @@ dependencies = [
 
 [[package]]
 name = "freya-components"
-version = "0.5.0-beta.12"
-source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#d001aee06e56d9e98894f77e64c10d253b1dd889"
+version = "0.5.0-rc.13"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#4643ae925ec2dbbba3492b13ecafad584bffb634"
 dependencies = [
  "accesskit",
  "anyhow",
@@ -2007,8 +2007,8 @@ dependencies = [
 
 [[package]]
 name = "freya-core"
-version = "0.5.0-beta.12"
-source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#d001aee06e56d9e98894f77e64c10d253b1dd889"
+version = "0.5.0-rc.13"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#4643ae925ec2dbbba3492b13ecafad584bffb634"
 dependencies = [
  "accesskit",
  "async-io",
@@ -2030,6 +2030,7 @@ dependencies = [
  "ragnarok",
  "rustc-hash",
  "tiny-cache",
+ "tiny-diff",
  "tiny-notify",
  "torin",
  "tracing",
@@ -2038,8 +2039,8 @@ dependencies = [
 
 [[package]]
 name = "freya-edit"
-version = "0.5.0-beta.12"
-source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#d001aee06e56d9e98894f77e64c10d253b1dd889"
+version = "0.5.0-rc.13"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#4643ae925ec2dbbba3492b13ecafad584bffb634"
 dependencies = [
  "bitflags 2.13.2",
  "freya-clipboard",
@@ -2052,16 +2053,16 @@ dependencies = [
 
 [[package]]
 name = "freya-engine"
-version = "0.5.0-beta.12"
-source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#d001aee06e56d9e98894f77e64c10d253b1dd889"
+version = "0.5.0-rc.13"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#4643ae925ec2dbbba3492b13ecafad584bffb634"
 dependencies = [
  "freya-skia-safe",
 ]
 
 [[package]]
 name = "freya-html"
-version = "0.5.0-beta.12"
-source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#d001aee06e56d9e98894f77e64c10d253b1dd889"
+version = "0.5.0-rc.13"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#4643ae925ec2dbbba3492b13ecafad584bffb634"
 dependencies = [
  "anyrender",
  "atomic_refcell",
@@ -2088,8 +2089,8 @@ dependencies = [
 
 [[package]]
 name = "freya-metrics-plugin"
-version = "0.5.0-beta.12"
-source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#d001aee06e56d9e98894f77e64c10d253b1dd889"
+version = "0.5.0-rc.13"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#4643ae925ec2dbbba3492b13ecafad584bffb634"
 dependencies = [
  "freya-core",
  "freya-engine",
@@ -2099,8 +2100,8 @@ dependencies = [
 
 [[package]]
 name = "freya-sdk"
-version = "0.5.0-beta.12"
-source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#d001aee06e56d9e98894f77e64c10d253b1dd889"
+version = "0.5.0-rc.13"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#4643ae925ec2dbbba3492b13ecafad584bffb634"
 dependencies = [
  "freya-core",
 ]
@@ -2148,8 +2149,8 @@ dependencies = [
 
 [[package]]
 name = "freya-winit"
-version = "0.5.0-beta.12"
-source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#d001aee06e56d9e98894f77e64c10d253b1dd889"
+version = "0.5.0-rc.13"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#4643ae925ec2dbbba3492b13ecafad584bffb634"
 dependencies = [
  "accesskit",
  "accesskit_winit",
@@ -2168,6 +2169,7 @@ dependencies = [
  "hotpath",
  "image",
  "keyboard-types 0.8.3",
+ "libc",
  "mundy",
  "objc2 0.6.5",
  "objc2-app-kit 0.3.2",
@@ -2182,6 +2184,8 @@ dependencies = [
  "softbuffer",
  "torin",
  "tracing",
+ "wayland-client",
+ "wayland-protocols",
  "windows-sys 0.60.2",
  "winit",
 ]
@@ -2548,18 +2552,18 @@ checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "hotpath"
-version = "0.28.3"
+version = "0.30.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d553ab03dfbae1d1104652719199823728bf30fb5511afc0764fb02d65a5656b"
+checksum = "502dc37a7c218b9b1d3a0ccfb904da81d10d6dda0e899c722c503092d55576ea"
 dependencies = [
  "hotpath-macros",
 ]
 
 [[package]]
 name = "hotpath-macros"
-version = "0.28.3"
+version = "0.30.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "05dde24c0cc623819d9466bce63175212d0ecbf450278404a33ab54290e35ed8"
+checksum = "a76e0af911930fc97abc766b393b48cdca77fea9f5f6b388cf2123a6d9c30deb"
 
 [[package]]
 name = "html-escape"
@@ -4342,8 +4346,8 @@ checksum = "35fb2e5f958ec131621fdd531e9fc186ed768cbe395337403ae56c17a74c68ec"
 
 [[package]]
 name = "pathgraph"
-version = "0.5.0-beta.12"
-source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#d001aee06e56d9e98894f77e64c10d253b1dd889"
+version = "0.5.0-rc.13"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#4643ae925ec2dbbba3492b13ecafad584bffb634"
 
 [[package]]
 name = "peniko"
@@ -4771,8 +4775,8 @@ checksum = "f8dcc9c7d52a811697d2151c701e0d08956f92b0e24136cf4cf27b57a6a0d9bf"
 
 [[package]]
 name = "ragnarok"
-version = "0.5.0-beta.12"
-source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#d001aee06e56d9e98894f77e64c10d253b1dd889"
+version = "0.5.0-rc.13"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#4643ae925ec2dbbba3492b13ecafad584bffb634"
 dependencies = [
  "euclid",
  "hashbrown 0.16.1",
@@ -6129,17 +6133,26 @@ dependencies = [
 
 [[package]]
 name = "tiny-cache"
-version = "0.5.0-beta.12"
-source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#d001aee06e56d9e98894f77e64c10d253b1dd889"
+version = "0.5.0-rc.13"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#4643ae925ec2dbbba3492b13ecafad584bffb634"
 dependencies = [
  "rustc-hash",
  "smallvec",
 ]
 
 [[package]]
+name = "tiny-diff"
+version = "0.5.0-rc.13"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#4643ae925ec2dbbba3492b13ecafad584bffb634"
+dependencies = [
+ "hashbrown 0.16.1",
+ "rustc-hash",
+]
+
+[[package]]
 name = "tiny-notify"
-version = "0.5.0-beta.12"
-source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#d001aee06e56d9e98894f77e64c10d253b1dd889"
+version = "0.5.0-rc.13"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#4643ae925ec2dbbba3492b13ecafad584bffb634"
 
 [[package]]
 name = "tiny-skia"
@@ -6325,8 +6338,8 @@ checksum = "7d56353a2a665ad0f41a421187180aab746c8c325620617ad883a99a1cbe66d2"
 
 [[package]]
 name = "torin"
-version = "0.5.0-beta.12"
-source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#d001aee06e56d9e98894f77e64c10d253b1dd889"
+version = "0.5.0-rc.13"
+source = "git+https://github.com/marc2332/freya.git?branch=feat%2Frework-blitz-html-caching#4643ae925ec2dbbba3492b13ecafad584bffb634"
 dependencies = [
  "euclid",
  "hashbrown 0.16.1",
