@@ -320,3 +320,96 @@ fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
       ),
     )
 }
+
+#[cfg(test)]
+mod tests {
+  use freya_testing::prelude::*;
+
+  use super::*;
+
+  fn labels(test: &TestingRunner) -> Vec<String> {
+    test
+      .find_many(|_, element| Label::try_downcast(element))
+      .iter()
+      .map(|label| label.text.to_string())
+      .collect()
+  }
+
+  fn launch(app: AppHandle) -> TestingRunner {
+    let (mut test, _) = TestingRunner::new(
+      move || configurator(app.clone(), true),
+      (WIDTH, HEIGHT).into(),
+      |_| {},
+      1.0,
+    );
+    test.sync_and_update();
+    test
+  }
+
+  fn test_app() -> (AppHandle, flume::Receiver<()>) {
+    let (redraw_tx, redraw_rx) = flume::unbounded();
+    (
+      AppHandle::new(SharedAppState::default(), redraw_tx),
+      redraw_rx,
+    )
+  }
+
+  fn open_section(test: &mut TestingRunner, section: Section) {
+    let center = test
+      .find(|node, element| {
+        Label::try_downcast(element)
+          .filter(|label| label.text == section.title())
+          .map(|_| node.layout().area.center())
+      })
+      .unwrap();
+
+    test.click_cursor((center.x as f64, center.y as f64));
+    test.sync_and_update();
+  }
+
+  #[test]
+  fn sidebar_opens_every_section() {
+    let (app, _redraw) = test_app();
+    let mut test = launch(app);
+
+    for section in Section::ALL {
+      open_section(&mut test, section);
+      assert!(
+        labels(&test)
+          .iter()
+          .any(|text| text == section.description()),
+        "{section:?} did not open"
+      );
+    }
+  }
+
+  #[test]
+  fn sections_only_show_their_own_settings() {
+    let (app, _redraw) = test_app();
+    let mut test = launch(app);
+
+    open_section(&mut test, Section::Connection);
+    let text = labels(&test);
+    assert!(text.iter().any(|t| t == "Websocket Port"));
+    assert!(!text.iter().any(|t| t == "Accent Color"));
+
+    open_section(&mut test, Section::Appearance);
+    let text = labels(&test);
+    assert!(text.iter().any(|t| t == "Accent Color"));
+    assert!(!text.iter().any(|t| t == "Websocket Port"));
+  }
+
+  #[test]
+  fn switching_sections_does_not_save() {
+    let (app, redraw) = test_app();
+    let mut test = launch(app);
+
+    for section in Section::ALL {
+      open_section(&mut test, section);
+    }
+    test.poll_n(std::time::Duration::from_millis(16), 5);
+    test.sync_and_update();
+
+    assert!(redraw.is_empty());
+  }
+}
