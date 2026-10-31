@@ -596,7 +596,7 @@ impl Settings {
   fn connection(&self) -> Vec<Element> {
     let config = &self.config;
 
-    vec![group("Discord", [
+    vec![card([
       self.dropdown(
         "Connection Mode",
         "Set the communication method between Orbolay and Discord. If using an offical client, use \"ipc\", otherwise, use \"websocket\".",
@@ -617,23 +617,20 @@ impl Settings {
   fn advanced(&self) -> Vec<Element> {
     let config = &self.config;
 
-    vec![group(
-      "Rendering",
-      [
-        self.toggle(
-          "Force Software Renderer",
-          "Use software rendering instead of hardware acceleration. Requires restart.",
-          config.software_rendering.unwrap_or(false),
-          |cfg, value| cfg.software_rendering = Some(value),
-        ),
-        #[cfg(target_os = "linux")]
-        self.toggle(
-          "Run with XWayland",
-          "Create the window under XWayland. Requires restart.",
-          config.xwayland,
-          |cfg, value| cfg.xwayland = value,
-        ),
-      ],
-    )]
+    vec![card([
+      self.toggle(
+        "Force Software Renderer",
+        "Use software rendering instead of hardware acceleration. Requires restart.",
+        config.software_rendering.unwrap_or(false),
+        |cfg, value| cfg.software_rendering = Some(value),
+      ),
+      #[cfg(target_os = "linux")]
+      self.toggle(
+        "Run with XWayland",
+        "Create the window under XWayland. Requires restart.",
+        config.xwayland,
+        |cfg, value| cfg.xwayland = value,
+      ),
+    ])]
   }
 }
