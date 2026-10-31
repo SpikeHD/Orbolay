@@ -65,32 +65,31 @@ impl Component for SettingRow {
     let description = self.description.clone();
 
     rect()
-      .direction(Direction::Vertical)
+      .direction(Direction::Horizontal)
+      .content(Content::Flex)
+      .cross_align(Alignment::Center)
+      .spacing(16.)
       .width(Size::fill())
-      .padding(Gaps::new(10., 12., 10., 12.))
+      .padding(Gaps::new_symmetric(10., 12.))
       .opacity(if self.disabled { 0.4_f32 } else { 1.0_f32 })
       .child(
         rect()
-          .direction(Direction::Horizontal)
-          .main_align(Alignment::SpaceBetween)
-          .cross_align(Alignment::Center)
-          .width(Size::fill())
+          .width(Size::flex(1.))
           .child(label().text(name).color(Color::WHITE).font_size(14.))
-          .child(
-            self
-              .kind
-              .clone()
-              .element(self.on_change.clone(), !self.disabled),
-          ),
+          .map(description, |el, desc| {
+            el.child(
+              paragraph()
+                .span(Span::new(desc).color(MUTED_GRAY).font_size(12.))
+                .width(Size::fill())
+                .margin(Gaps::new(4., 0., 0., 0.)),
+            )
+          }),
       )
-      .map(description, |el, desc| {
-        el.child(
-          label()
-            .text(desc)
-            .color(MUTED_GRAY)
-            .font_size(12.)
-            .margin(Gaps::new(4., 0., 0., 0.)),
-        )
-      })
+      .child(
+        self
+          .kind
+          .clone()
+          .element(self.on_change.clone(), !self.disabled),
+      )
   }
 }
