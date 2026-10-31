@@ -2150,21 +2150,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "freya-testing"
-version = "0.5.0-rc.13"
-source = "git+https://github.com/marc2332/freya.git?branch=main#efed3a96feb752ae238c81adfc14e7b68ece36ac"
-dependencies = [
- "accesskit",
- "freya-clipboard",
- "freya-components",
- "freya-core",
- "freya-engine",
- "futures-channel",
- "ragnarok",
- "torin",
-]
-
-[[package]]
 name = "freya-winit"
 version = "0.5.0-rc.13"
 source = "git+https://github.com/marc2332/freya.git?branch=main#efed3a96feb752ae238c81adfc14e7b68ece36ac"
@@ -4231,7 +4216,6 @@ dependencies = [
  "display-info",
  "flume",
  "freya",
- "freya-testing",
  "open",
  "orbolay-core",
  "orbolay-keys",

@@ -20,9 +20,9 @@ use crate::util::{
 #[cfg(not(target_os = "macos"))]
 use orbolay_keys::{DEFAULT_OVERLAY_TOGGLE, keys_to_strings, strings_to_keys};
 
+use super::buttons::wide_button;
 #[cfg(not(target_os = "macos"))]
 use super::keybind::KeybindControl;
-use super::secondary_button;
 use super::{
   color_picker::ColorPickerControl, dropdown::DropdownControl, input::InputControl,
   setting::SettingRow, toggle::ToggleControl,
@@ -107,17 +107,6 @@ pub fn apply_config(
 
   save_config(&updated);
   local_config.set(updated);
-}
-
-fn wide_button(
-  text: &'static str,
-  on_press: impl Into<EventHandler<Event<PressEventData>>>,
-) -> Element {
-  rect()
-    .width(Size::fill())
-    .padding(Gaps::new_symmetric(8., 12.))
-    .child(secondary_button(text, on_press))
-    .into_element()
 }
 
 fn divider() -> impl IntoElement {

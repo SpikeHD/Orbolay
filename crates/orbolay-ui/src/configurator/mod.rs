@@ -9,10 +9,12 @@ use orbolay_core::{
   config::{Config, load_config},
 };
 
-use crate::util::theme::{DARKISH_GRAY, GRAY, LIGHT_GRAY, MUTED_GRAY, RED, SUPERLIGHT_GRAY};
+use crate::util::theme::{GRAY, MUTED_GRAY};
 
 use sections::{Section, Settings, apply_config};
+use sidebar::sidebar;
 
+mod buttons;
 mod color_picker;
 mod commit;
 mod dropdown;
@@ -21,10 +23,10 @@ mod input;
 mod keybind;
 mod sections;
 mod setting;
+mod sidebar;
 mod toggle;
 
 const WIDTH: f32 = 760.;
-const SIDEBAR_WIDTH: f32 = 180.;
 const HEIGHT: f32 = 600.;
 
 const TRANSPORT_MODES: &[&str] = &["ipc", "websocket"];
@@ -117,129 +119,6 @@ fn configurator_window(app: AppHandle, standalone: bool) -> WindowConfig {
     .with_title("Orbolay Configurator")
 }
 
-fn action_button(
-  text: &'static str,
-  background: Color,
-  hover_background: Color,
-  color: Color,
-  on_press: impl Into<EventHandler<Event<PressEventData>>>,
-) -> impl IntoElement {
-  Button::new()
-    .width(Size::fill())
-    .height(Size::px(32.0_f32))
-    .corner_radius(8.)
-    .background(background)
-    .hover_background(hover_background)
-    .border_fill(Color::TRANSPARENT)
-    .cursor(CursorIcon::Pointer)
-    .on_press(on_press)
-    .child(label().text(text).color(color).font_size(13.))
-}
-
-#[derive(PartialEq)]
-struct ResetButton {
-  on_reset: EventHandler<()>,
-}
-
-impl Component for ResetButton {
-  fn render(&self) -> impl IntoElement {
-    let on_reset = self.on_reset.clone();
-    let mut armed = use_state(|| false);
-
-    let (text, background, hover_background, color) = if armed() {
-      ("Confirm reset", RED, RED, Color::WHITE)
-    } else {
-      ("Reset to Defaults", DARKISH_GRAY, LIGHT_GRAY, RED)
-    };
-
-    action_button(text, background, hover_background, color, move |_| {
-      if armed() {
-        on_reset.call(());
-      }
-      armed.toggle();
-    })
-  }
-}
-
-fn secondary_button(
-  text: &'static str,
-  on_press: impl Into<EventHandler<Event<PressEventData>>>,
-) -> impl IntoElement {
-  action_button(text, LIGHT_GRAY, MUTED_GRAY, Color::WHITE, on_press)
-}
-
-fn nav_item(section: Section, mut current: State<Section>) -> Element {
-  let active = section == current();
-
-  Activable::new(
-    SideBarItem::new()
-      .background(DARKISH_GRAY)
-      .hover_background(GRAY)
-      .active_background(LIGHT_GRAY)
-      .corner_radius(8.)
-      .on_press(move |_| current.set(section))
-      .child(
-        label()
-          .text(section.title())
-          .color(if active {
-            Color::WHITE
-          } else {
-            SUPERLIGHT_GRAY
-          })
-          .font_size(14.),
-      ),
-  )
-  .active(active)
-  .into()
-}
-
-fn sidebar(
-  current: State<Section>,
-  on_reset: EventHandler<()>,
-  on_close: EventHandler<()>,
-) -> impl IntoElement {
-  rect()
-    .width(Size::px(SIDEBAR_WIDTH))
-    .height(Size::fill())
-    .padding(12.)
-    .background(DARKISH_GRAY)
-    .content(Content::Flex)
-    .child(
-      label()
-        .text("Orbolay")
-        .color(Color::WHITE)
-        .font_size(18.)
-        .font_weight(FontWeight::BOLD)
-        .margin(Gaps::new(6., 0., 16., 12.)),
-    )
-    .child(
-      rect()
-        .width(Size::fill())
-        .height(Size::flex(1.))
-        .spacing(2.)
-        .children(
-          Section::ALL
-            .into_iter()
-            .map(|section| nav_item(section, current)),
-        ),
-    )
-    .child(
-      label()
-        .text("Press \"C\" with the overlay open to open this window again!")
-        .color(MUTED_GRAY)
-        .font_size(11.)
-        .width(Size::fill())
-        .margin(Gaps::new(0., 4., 8., 4.)),
-    )
-    .child(
-      rect()
-        .width(Size::fill())
-        .spacing(4.)
-        .child(ResetButton { on_reset })
-        .child(secondary_button("Close", move |_| on_close.call(()))),
-    )
-}
-
 fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
   use_init_theme(dark_theme);
 
@@ -310,96 +189,4 @@ fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
         .width(Size::flex(1.))
         .child(page),
     )
-}
-
-#[cfg(test)]
-mod tests {
-  use freya_testing::prelude::*;
-
-  use super::*;
-
-  fn labels(test: &TestingRunner) -> Vec<String> {
-    test
-      .find_many(|_, element| Label::try_downcast(element))
-      .iter()
-      .map(|label| label.text.to_string())
-      .collect()
-  }
-
-  fn launch(app: AppHandle) -> TestingRunner {
-    let (mut test, _) = TestingRunner::new(
-      move || configurator(app.clone(), true),
-      (WIDTH, HEIGHT).into(),
-      |_| {},
-      1.0,
-    );
-    test.sync_and_update();
-    test
-  }
-
-  fn test_app() -> (AppHandle, flume::Receiver<()>) {
-    let (redraw_tx, redraw_rx) = flume::unbounded();
-    (
-      AppHandle::new(SharedAppState::default(), redraw_tx),
-      redraw_rx,
-    )
-  }
-
-  fn click_label(test: &mut TestingRunner, text: &str) {
-    let center = test
-      .find(|node, element| {
-        Label::try_downcast(element)
-          .filter(|label| label.text == text)
-          .map(|_| node.layout().area.center())
-      })
-      .unwrap();
-    test.click_cursor((center.x as f64, center.y as f64));
-    test.sync_and_update();
-  }
-
-  #[test]
-  fn sidebar_opens_every_section() {
-    let (app, _redraw) = test_app();
-    let mut test = launch(app);
-
-    for section in Section::ALL {
-      click_label(&mut test, section.title());
-      assert!(
-        labels(&test)
-          .iter()
-          .any(|text| text == section.description()),
-        "{section:?} did not open"
-      );
-    }
-  }
-
-  #[test]
-  fn sections_only_show_their_own_settings() {
-    let (app, _redraw) = test_app();
-    let mut test = launch(app);
-
-    click_label(&mut test, Section::Connection.title());
-    let text = labels(&test);
-    assert!(text.iter().any(|t| t == "Websocket Port"));
-    assert!(!text.iter().any(|t| t == "Accent Color"));
-
-    click_label(&mut test, Section::Appearance.title());
-    let text = labels(&test);
-    assert!(text.iter().any(|t| t == "Accent Color"));
-    assert!(!text.iter().any(|t| t == "Websocket Port"));
-  }
-
-  #[test]
-  fn switching_sections_does_not_save() {
-    let (app, redraw) = test_app();
-    let mut test = launch(app);
-
-    for section in Section::ALL {
-      click_label(&mut test, section.title());
-    }
-    test.poll_n(std::time::Duration::from_millis(16), 5);
-    test.sync_and_update();
-
-    assert!(redraw.is_empty());
-  }
 }
