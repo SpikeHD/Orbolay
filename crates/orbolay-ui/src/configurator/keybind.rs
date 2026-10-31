@@ -23,11 +23,20 @@ pub fn keys_display(keys: &[Key]) -> String {
 pub struct KeybindControl {
   initial: Option<Vec<Key>>,
   on_change: EventHandler<SettingChange>,
+  enabled: bool,
 }
 
 impl KeybindControl {
-  pub fn new(initial: Option<Vec<Key>>, on_change: EventHandler<SettingChange>) -> Self {
-    Self { initial, on_change }
+  pub fn new(
+    initial: Option<Vec<Key>>,
+    on_change: EventHandler<SettingChange>,
+    enabled: bool,
+  ) -> Self {
+    Self {
+      initial,
+      on_change,
+      enabled,
+    }
   }
 }
 
@@ -149,9 +158,10 @@ impl Component for KeybindControl {
 
     rect()
       .a11y_id(id)
-      .a11y_focusable(true)
-      .on_press(on_press)
-      .cursor(CursorIcon::Pointer)
+      .a11y_focusable(self.enabled)
+      .maybe(self.enabled, |el| {
+        el.on_press(on_press).cursor(CursorIcon::Pointer)
+      })
       .on_global_pointer_down(on_global_press)
       .on_global_key_down(on_key_down)
       .on_global_key_up(on_key_up)

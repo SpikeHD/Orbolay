@@ -6,11 +6,20 @@ use crate::configurator::{commit::use_commit_on_blur, setting::SettingChange};
 pub struct InputControl {
   initial: Option<String>,
   on_change: EventHandler<SettingChange>,
+  enabled: bool,
 }
 
 impl InputControl {
-  pub fn new(initial: Option<String>, on_change: EventHandler<SettingChange>) -> Self {
-    Self { initial, on_change }
+  pub fn new(
+    initial: Option<String>,
+    on_change: EventHandler<SettingChange>,
+    enabled: bool,
+  ) -> Self {
+    Self {
+      initial,
+      on_change,
+      enabled,
+    }
   }
 }
 
@@ -24,6 +33,6 @@ impl Component for InputControl {
       on_change.call(SettingChange::Value(text));
     });
 
-    Input::new(value).a11y_id(id)
+    Input::new(value).a11y_id(id).enabled(self.enabled)
   }
 }

@@ -43,16 +43,18 @@ pub enum SettingKind {
 }
 
 impl SettingKind {
-  fn element(self, on_change: EventHandler<SettingChange>) -> Element {
+  fn element(self, on_change: EventHandler<SettingChange>, enabled: bool) -> Element {
     match self {
       SettingKind::Dropdown(options, initial) => {
         DropdownControl::new(options, initial, on_change.clone()).into()
       }
-      SettingKind::Input(initial) => InputControl::new(initial, on_change.clone()).into(),
+      SettingKind::Input(initial) => InputControl::new(initial, on_change.clone(), enabled).into(),
       SettingKind::Toggle(initial) => ToggleControl::new(initial, on_change.clone()).into(),
       SettingKind::Color(initial) => ColorPickerControl::new(initial, on_change.clone()).into(),
       #[cfg(not(target_os = "macos"))]
-      SettingKind::Keybind(initial) => KeybindControl::new(initial, on_change.clone()).into(),
+      SettingKind::Keybind(initial) => {
+        KeybindControl::new(initial, on_change.clone(), enabled).into()
+      }
     }
   }
 }
@@ -74,7 +76,12 @@ impl Component for SettingRow {
           .cross_align(Alignment::Center)
           .width(Size::fill())
           .child(label().text(name).color(Color::WHITE).font_size(14.))
-          .child(self.kind.clone().element(self.on_change.clone())),
+          .child(
+            self
+              .kind
+              .clone()
+              .element(self.on_change.clone(), !self.disabled),
+          ),
       )
       .map(description, |el, desc| {
         el.child(
