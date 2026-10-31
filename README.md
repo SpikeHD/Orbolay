@@ -155,7 +155,8 @@ cargo install --locked --git https://github.com/SpikeHD/Orbolay.git
 With Discord open:
 
 1. Run the executable
-2. Press <kbd>Ctrl</kbd> + <kbd>`</kbd> to open the overlay and interact with voice controls
+2. In the [configuration menu](#configuration), change "Connection Mode" to `ipc` (under "Connection")
+3. Press <kbd>Ctrl</kbd> + <kbd>`</kbd> to open the overlay and interact with voice controls
 
 ## With Modded Clients
 
@@ -163,7 +164,7 @@ With your client open:
 
 1. Install a compatible bridge plugin ([Shelter](https://github.com/SpikeHD/shelter-plugins?tab=readme-ov-file#orbolay-bridge) / [Vencord](https://github.com/SpikeHD/vc-orbolay-bridge), also available on [Equicord](https://github.com/Equicord/Equicord))
 2. Run the executable
-3. In the [configuration menu](#configuration), change "Connection Mode" to `websocket`
+3. In the [configuration menu](#configuration), change "Connection Mode" to `websocket` (under "Connection")
 4. Press <kbd>Ctrl</kbd> + <kbd>`</kbd> to open the overlay and interact with voice controls
 
 # Command-line Controls
