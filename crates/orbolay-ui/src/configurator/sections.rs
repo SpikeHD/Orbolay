@@ -588,7 +588,7 @@ impl Settings {
     vec![card([
       self.dropdown(
         "Connection Mode",
-        "Set the communication method between Orbolay and Discord. If using an offical client, use \"ipc\", otherwise, use \"websocket\".",
+        "Set the communication method between Orbolay and Discord. If using an official client, use \"ipc\", otherwise, use \"websocket\".",
         to_options(TRANSPORT_MODES),
         option_index(TRANSPORT_MODES, &config.transport_mode.to_string()),
         |cfg, idx| cfg.transport_mode = TRANSPORT_MODES[idx].to_string().into(),
