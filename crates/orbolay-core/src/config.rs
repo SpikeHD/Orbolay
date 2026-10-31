@@ -185,6 +185,5 @@ pub fn load_config() -> Option<Config> {
 }
 
 pub fn is_first_run() -> bool {
-  // Only a missing file counts. A config that fails to parse must not be overwritten
   config_dir().is_none_or(|dir| !dir.join("config.json").exists())
 }
