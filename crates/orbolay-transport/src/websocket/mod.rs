@@ -229,6 +229,7 @@ pub fn handle_ws_message(
         }
       });
     }
+    "OPEN_CONFIG" => app.open_config()?,
     _ => {
       warn!("Unknown command: {}", msg.cmd);
     }

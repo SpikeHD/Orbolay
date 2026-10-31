@@ -241,6 +241,7 @@ fn app() -> impl IntoElement {
     let (transport_sender, transport_recv) = flume::unbounded::<BridgeMessage>();
     let (redraw_tx, redraw_rx) = flume::unbounded::<()>();
     let (action_tx, action_rx) = flume::unbounded::<KeyEvent>();
+    let (open_config_tx, open_config_rx) = flume::unbounded::<()>();
 
     app_state.write().transport_sender = Some(transport_sender.clone());
 
@@ -253,7 +254,7 @@ fn app() -> impl IntoElement {
     }
 
     let shared: SharedAppState = std::sync::Arc::new(std::sync::RwLock::new(initial));
-    let app = AppHandle::new(shared.clone(), redraw_tx.clone());
+    let app = AppHandle::new(shared.clone(), redraw_tx.clone(), open_config_tx);
 
     if !args.debug {
       window::set_clickable(false);
@@ -319,7 +320,7 @@ fn app() -> impl IntoElement {
     });
 
     if is_first_run() {
-      open_configurator(app.clone());
+      let _ = app.open_config();
       app.redraw();
 
       // Write the config regardless so we don't trigger this in the future
@@ -344,6 +345,14 @@ fn app() -> impl IntoElement {
         match event {
           KeyEvent::ToggleOverlay => OverlayManager::toggle(app_state),
         }
+      }
+    });
+
+    let config_app = app.clone();
+    spawn_in_window(async move {
+      while let Ok(()) = open_config_rx.recv_async().await {
+        OverlayManager::close(app_state);
+        open_configurator(&config_app);
       }
     });
 
@@ -389,8 +398,7 @@ fn app() -> impl IntoElement {
   let settings_alignment = CornerAlignment::unused_corner(&occupied_corners)
     .unwrap_or_else(|| "bottomleft".parse().unwrap());
   let open_settings: EventHandler<()> = (move |()| {
-    app_state.write().is_open = false;
-    open_configurator(app_handle.clone());
+    let _ = app_handle.open_config();
   })
   .into();
 

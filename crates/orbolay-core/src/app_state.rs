@@ -17,11 +17,20 @@ pub type SharedAppState = Arc<RwLock<AppState>>;
 pub struct AppHandle {
   shared: SharedAppState,
   redraw_tx: flume::Sender<()>,
+  open_config_tx: flume::Sender<()>,
 }
 
 impl AppHandle {
-  pub fn new(shared: SharedAppState, redraw_tx: flume::Sender<()>) -> Self {
-    Self { shared, redraw_tx }
+  pub fn new(
+    shared: SharedAppState,
+    redraw_tx: flume::Sender<()>,
+    open_config_tx: flume::Sender<()>,
+  ) -> Self {
+    Self {
+      shared,
+      redraw_tx,
+      open_config_tx,
+    }
   }
 
   pub fn shared(&self) -> &SharedAppState {
@@ -63,6 +72,10 @@ impl AppHandle {
 
   pub fn redraw(&self) {
     let _ = self.redraw_tx.send(());
+  }
+
+  pub fn open_config(&self) -> Result<(), flume::SendError<()>> {
+    self.open_config_tx.send(())
   }
 }
 

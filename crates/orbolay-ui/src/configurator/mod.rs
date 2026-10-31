@@ -1,5 +1,7 @@
+use std::cell::Cell;
+
 use display_info::DisplayInfo;
-use freya::prelude::*;
+use freya::{prelude::*, winit::window::WindowId};
 
 use orbolay_core::{
   app_state::{AppHandle, SharedAppState},
@@ -58,11 +60,44 @@ fn parse_ui_scale_label(value: &str) -> Option<f32> {
   Some(percent / 100.0)
 }
 
-pub fn open_configurator(app: AppHandle) {
-  spawn(async move {
-    let _ = Platform::get()
-      .launch_window(configurator_window(app, false))
-      .await;
+#[derive(Clone, Copy)]
+enum ConfiguratorWindow {
+  Opening,
+  Open(WindowId),
+}
+
+thread_local! {
+  static CONFIGURATOR: Cell<Option<ConfiguratorWindow>> = const { Cell::new(None) };
+}
+
+pub fn open_configurator(app: &AppHandle) {
+  match CONFIGURATOR.get() {
+    Some(ConfiguratorWindow::Open(id)) => show_window(id),
+    Some(ConfiguratorWindow::Opening) => {}
+    None => {
+      CONFIGURATOR.set(Some(ConfiguratorWindow::Opening));
+
+      let window = configurator_window(app.clone(), false).with_on_close(|_, _| {
+        CONFIGURATOR.set(None);
+        CloseDecision::Close
+      });
+
+      spawn_global(async move {
+        let id = Platform::get().launch_window(window).await;
+
+        if let Some(ConfiguratorWindow::Opening) = CONFIGURATOR.get() {
+          CONFIGURATOR.set(Some(ConfiguratorWindow::Open(id)));
+          show_window(id);
+        }
+      });
+    }
+  }
+}
+
+fn show_window(id: WindowId) {
+  Platform::get().with_window(id, |window| {
+    window.set_minimized(false);
+    window.focus_window();
   });
 }
 
@@ -70,7 +105,8 @@ pub fn open_configurator_standalone() {
   // Basically a blocking, standalone version of open_configurator
   let shared = SharedAppState::default();
   let (redraw_tx, _) = flume::unbounded();
-  let app = AppHandle::new(shared, redraw_tx);
+  let (open_config_tx, _) = flume::unbounded();
+  let app = AppHandle::new(shared, redraw_tx, open_config_tx);
 
   if let Some(saved) = load_config() {
     app.update(|state| state.config = saved);
