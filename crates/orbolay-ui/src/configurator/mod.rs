@@ -345,15 +345,14 @@ mod tests {
     )
   }
 
-  fn open_section(test: &mut TestingRunner, section: Section) {
+  fn click_label(test: &mut TestingRunner, text: &str) {
     let center = test
       .find(|node, element| {
         Label::try_downcast(element)
-          .filter(|label| label.text == section.title())
+          .filter(|label| label.text == text)
           .map(|_| node.layout().area.center())
       })
       .unwrap();
-
     test.click_cursor((center.x as f64, center.y as f64));
     test.sync_and_update();
   }
@@ -364,7 +363,7 @@ mod tests {
     let mut test = launch(app);
 
     for section in Section::ALL {
-      open_section(&mut test, section);
+      click_label(&mut test, section.title());
       assert!(
         labels(&test)
           .iter()
@@ -379,12 +378,12 @@ mod tests {
     let (app, _redraw) = test_app();
     let mut test = launch(app);
 
-    open_section(&mut test, Section::Connection);
+    click_label(&mut test, Section::Connection.title());
     let text = labels(&test);
     assert!(text.iter().any(|t| t == "Websocket Port"));
     assert!(!text.iter().any(|t| t == "Accent Color"));
 
-    open_section(&mut test, Section::Appearance);
+    click_label(&mut test, Section::Appearance.title());
     let text = labels(&test);
     assert!(text.iter().any(|t| t == "Accent Color"));
     assert!(!text.iter().any(|t| t == "Websocket Port"));
@@ -396,7 +395,7 @@ mod tests {
     let mut test = launch(app);
 
     for section in Section::ALL {
-      open_section(&mut test, section);
+      click_label(&mut test, section.title());
     }
     test.poll_n(std::time::Duration::from_millis(16), 5);
     test.sync_and_update();
