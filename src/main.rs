@@ -327,6 +327,8 @@ fn app() -> impl IntoElement {
         let config = app.read(|state| state.config.clone());
         save_config(&config);
       }
+    } else if load_config().is_none() {
+      warn!("config.json could not be parsed, using the default config without overwriting it");
     }
 
     start_config_watcher(app.clone(), |old_config, new_config| {

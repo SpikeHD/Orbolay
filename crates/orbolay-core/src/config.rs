@@ -185,5 +185,5 @@ pub fn load_config() -> Option<Config> {
 }
 
 pub fn is_first_run() -> bool {
-  load_config().is_none()
+  config_dir().is_none_or(|dir| !dir.join("config.json").exists())
 }
