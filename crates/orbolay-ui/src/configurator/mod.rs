@@ -135,6 +135,31 @@ fn action_button(
     .child(label().text(text).color(color).font_size(13.))
 }
 
+#[derive(PartialEq)]
+struct ResetButton {
+  on_reset: EventHandler<()>,
+}
+
+impl Component for ResetButton {
+  fn render(&self) -> impl IntoElement {
+    let on_reset = self.on_reset.clone();
+    let mut armed = use_state(|| false);
+
+    let (text, background, hover_background, color) = if armed() {
+      ("Confirm reset", RED, RED, Color::WHITE)
+    } else {
+      ("Reset to Defaults", DARKISH_GRAY, LIGHT_GRAY, RED)
+    };
+
+    action_button(text, background, hover_background, color, move |_| {
+      if armed() {
+        on_reset.call(());
+      }
+      armed.set(!armed());
+    })
+  }
+}
+
 fn nav_item(section: Section, mut current: State<Section>) -> Element {
   let active = section == current();
 
@@ -194,13 +219,12 @@ fn sidebar(current: State<Section>, on_reset: EventHandler<()>) -> impl IntoElem
         .width(Size::fill())
         .margin(Gaps::new(0., 4., 8., 4.)),
     )
-    .child(rect().width(Size::fill()).spacing(4.).child(action_button(
-      "Reset to Defaults",
-      DARKISH_GRAY,
-      LIGHT_GRAY,
-      RED,
-      move |_| on_reset.call(()),
-    )))
+    .child(
+      rect()
+        .width(Size::fill())
+        .spacing(4.)
+        .child(ResetButton { on_reset }),
+    )
 }
 
 fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
