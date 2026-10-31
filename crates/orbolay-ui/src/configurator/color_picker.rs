@@ -1,18 +1,15 @@
 use freya::prelude::*;
 
-use crate::{
-  configurator::{commit::use_commit_on_blur, setting::SettingChange},
-  util::theme,
-};
+use crate::{configurator::commit::use_commit_on_blur, util::theme};
 
 #[derive(PartialEq, Clone)]
 pub struct ColorPickerControl {
   initial: Color,
-  on_change: EventHandler<SettingChange>,
+  on_change: EventHandler<Color>,
 }
 
 impl ColorPickerControl {
-  pub fn new(initial: Color, on_change: EventHandler<SettingChange>) -> Self {
+  pub fn new(initial: Color, on_change: EventHandler<Color>) -> Self {
     Self { initial, on_change }
   }
 }
@@ -21,18 +18,13 @@ impl Component for ColorPickerControl {
   fn render(&self) -> impl IntoElement {
     let input_id = use_a11y();
     let on_change = self.on_change.clone();
-    let value = use_state(|| self.initial);
-    let hex_value = use_state(|| theme::to_hex(self.initial));
+    let mut value = use_state(|| self.initial);
+    let mut hex_value = use_state(|| theme::to_hex(self.initial));
 
-    let apply_color = {
-      let mut value = value;
-      let mut hex_value = hex_value;
-      let on_change = on_change.clone();
-      move |color: Color| {
-        value.set(color);
-        hex_value.set(theme::to_hex(color));
-        on_change.call(SettingChange::Color(color));
-      }
+    let apply_color = move |color: Color| {
+      value.set(color);
+      hex_value.set(theme::to_hex(color));
+      on_change.call(color);
     };
 
     use_commit_on_blur(input_id, hex_value, {

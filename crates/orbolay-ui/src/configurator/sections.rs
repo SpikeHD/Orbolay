@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use display_info::DisplayInfo;
 use freya::prelude::*;
 
@@ -10,9 +12,7 @@ use orbolay_core::{
 };
 use orbolay_logging::warn;
 
-use crate::util::theme::{
-  DARKISH_GRAY, LIGHT_GRAY, MUTED_GRAY, SUPERLIGHT_GRAY, from_tuple, to_tuple,
-};
+use crate::util::theme::{DARKISH_GRAY, LIGHT_GRAY, SUPERLIGHT_GRAY, from_tuple, to_tuple};
 use crate::util::{
   notification_template::list_notification_templates, user_template::list_user_templates,
 };
@@ -20,8 +20,13 @@ use crate::util::{
 #[cfg(not(target_os = "macos"))]
 use orbolay_keys::{DEFAULT_OVERLAY_TOGGLE, keys_to_strings, strings_to_keys};
 
-use super::action_button;
-use super::setting::{SettingChange, SettingKind, SettingRow};
+#[cfg(not(target_os = "macos"))]
+use super::keybind::KeybindControl;
+use super::secondary_button;
+use super::{
+  color_picker::ColorPickerControl, dropdown::DropdownControl, input::InputControl,
+  setting::SettingRow, toggle::ToggleControl,
+};
 
 const TRANSPORT_MODES: &[&str] = &["ipc", "websocket"];
 
@@ -47,13 +52,15 @@ fn ui_scale_label(scale: f32) -> String {
   format!("{:.0}%", scale * 100.0)
 }
 
-fn parse_ui_scale_label(value: &str) -> Option<f32> {
-  let percent = value.strip_suffix('%')?.trim().parse::<f32>().ok()?;
-  Some(percent / 100.0)
-}
-
 fn to_options(values: &[&str]) -> Vec<String> {
   values.iter().map(|s| s.to_string()).collect()
+}
+
+fn option_index(options: &[&str], value: &str) -> usize {
+  options
+    .iter()
+    .position(|option| *option == value)
+    .unwrap_or(0)
 }
 
 fn open_templates_folder() {
@@ -88,38 +95,19 @@ fn available_displays() -> Vec<MonitorInfo> {
     .collect()
 }
 
-macro_rules! make_updater {
-  (
-    $name:ident,
-    $variant:ident,
-    $ty:ty
-  ) => {
-    fn $name(
-      app: AppHandle,
-      mut local_config: State<Config>,
-      update_fn: impl Fn(&mut Config, $ty) + 'static,
-    ) -> EventHandler<SettingChange> {
-      EventHandler::new(move |change| {
-        if let SettingChange::$variant(value) = change {
-          let updated = app.update(|state| {
-            update_fn(&mut state.config, value);
-            state.config.clone()
-          });
+pub fn apply_config(
+  app: &AppHandle,
+  mut local_config: State<Config>,
+  update: impl FnOnce(&mut Config),
+) {
+  let updated = app.update(|state| {
+    update(&mut state.config);
+    state.config.clone()
+  });
 
-          save_config(&updated);
-          local_config.set(updated);
-        }
-      })
-    }
-  };
+  save_config(&updated);
+  local_config.set(updated);
 }
-
-make_updater!(make_updater, Value, String);
-make_updater!(make_bool_updater, Bool, bool);
-make_updater!(make_color_updater, Color, Color);
-
-#[cfg(not(target_os = "macos"))]
-make_updater!(make_keybind_updater, Keys, Vec<rdev::Key>);
 
 fn wide_button(
   text: &'static str,
@@ -128,13 +116,7 @@ fn wide_button(
   rect()
     .width(Size::fill())
     .padding(Gaps::new_symmetric(8., 12.))
-    .child(action_button(
-      text,
-      LIGHT_GRAY,
-      MUTED_GRAY,
-      Color::WHITE,
-      on_press,
-    ))
+    .child(secondary_button(text, on_press))
     .into_element()
 }
 
@@ -145,9 +127,10 @@ fn divider() -> impl IntoElement {
     .background(LIGHT_GRAY)
 }
 
-fn group(title: &str, rows: impl IntoIterator<Item = Element>) -> Element {
+fn card(rows: impl IntoIterator<Item = Element>) -> Element {
   let mut body = rect()
     .width(Size::fill())
+    .margin(Gaps::new(0., 0., 20., 0.))
     .corner_radius(10.)
     .background(DARKISH_GRAY);
 
@@ -158,19 +141,37 @@ fn group(title: &str, rows: impl IntoIterator<Item = Element>) -> Element {
     body = body.child(row);
   }
 
+  body.into_element()
+}
+
+fn group(title: &'static str, rows: impl IntoIterator<Item = Element>) -> Element {
   rect()
     .width(Size::fill())
-    .margin(Gaps::new(0., 0., 20., 0.))
     .child(
       label()
-        .text(title.to_string())
+        .text(title)
         .color(SUPERLIGHT_GRAY)
         .font_size(12.)
         .font_weight(FontWeight::BOLD)
         .margin(Gaps::new(0., 0., 8., 4.)),
     )
-    .child(body)
+    .child(card(rows))
     .into_element()
+}
+
+fn row(
+  name: &str,
+  description: Option<&str>,
+  control: impl Into<Element>,
+  disabled: bool,
+) -> Element {
+  SettingRow {
+    name: name.into(),
+    description: description.map(Into::into),
+    control: control.into(),
+    disabled,
+  }
+  .into()
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Hash)]
@@ -235,22 +236,13 @@ impl Settings {
     }
   }
 
-  fn row(
-    &self,
-    name: &str,
-    description: Option<&str>,
-    kind: SettingKind,
-    on_change: EventHandler<SettingChange>,
-    disabled: bool,
-  ) -> Element {
-    SettingRow {
-      name: name.into(),
-      description: description.map(Into::into),
-      kind,
-      on_change,
-      disabled,
-    }
-    .into()
+  fn updater<T: 'static>(&self, update: impl Fn(&mut Config, T) + 'static) -> EventHandler<T> {
+    let app = self.app.clone();
+    let local_config = self.local_config;
+
+    EventHandler::new(move |value| {
+      apply_config(&app, local_config, |cfg| update(cfg, value));
+    })
   }
 
   fn toggle(
@@ -260,11 +252,10 @@ impl Settings {
     value: bool,
     update: impl Fn(&mut Config, bool) + 'static,
   ) -> Element {
-    self.row(
+    row(
       name,
       Some(description),
-      SettingKind::Toggle(value),
-      make_bool_updater(self.app.clone(), self.local_config, update),
+      ToggleControl::new(value, self.updater(update)),
       false,
     )
   }
@@ -274,31 +265,37 @@ impl Settings {
     name: &str,
     description: &str,
     options: Vec<String>,
-    value: Option<String>,
-    update: impl Fn(&mut Config, String) + 'static,
+    selected: usize,
+    update: impl Fn(&mut Config, usize) + 'static,
   ) -> Element {
-    self.row(
+    row(
       name,
       Some(description),
-      SettingKind::Dropdown(options, value),
-      make_updater(self.app.clone(), self.local_config, update),
+      DropdownControl::new(options, selected, self.updater(update)),
       false,
     )
   }
 
-  fn input(
+  fn number<T: FromStr + ToString + 'static>(
     &self,
     name: &str,
     description: Option<&str>,
-    value: Option<String>,
+    value: T,
     disabled: bool,
-    update: impl Fn(&mut Config, String) + 'static,
+    update: impl Fn(&mut Config, T) + 'static,
   ) -> Element {
-    self.row(
+    row(
       name,
       description,
-      SettingKind::Input(value),
-      make_updater(self.app.clone(), self.local_config, update),
+      InputControl::new(
+        value.to_string(),
+        self.updater(move |cfg, text: String| {
+          if let Ok(n) = text.trim().parse::<T>() {
+            update(cfg, n);
+          }
+        }),
+        !disabled,
+      ),
       disabled,
     )
   }
@@ -310,31 +307,28 @@ impl Settings {
     value: (u8, u8, u8),
     update: impl Fn(&mut Config, Color) + 'static,
   ) -> Element {
-    self.row(
+    row(
       name,
       Some(description),
-      SettingKind::Color(from_tuple(value)),
-      make_color_updater(self.app.clone(), self.local_config, update),
+      ColorPickerControl::new(from_tuple(value), self.updater(update)),
       false,
     )
-  }
-
-  fn offset(&self, name: &str, value: i32, update: impl Fn(&mut Config, i32) + 'static) -> Element {
-    self.input(name, None, Some(value.to_string()), false, move |cfg, v| {
-      if let Ok(n) = v.trim().parse::<i32>() {
-        update(cfg, n);
-      }
-    })
   }
 
   fn alignment(
     &self,
     name: &str,
     description: &str,
-    value: Option<String>,
+    value: &str,
     update: impl Fn(&mut Config, String) + 'static,
   ) -> Element {
-    self.dropdown(name, description, to_options(ALIGNMENTS), value, update)
+    self.dropdown(
+      name,
+      description,
+      to_options(ALIGNMENTS),
+      option_index(ALIGNMENTS, value),
+      move |cfg, idx| update(cfg, ALIGNMENTS[idx].to_string()),
+    )
   }
 
   fn template(
@@ -342,25 +336,31 @@ impl Settings {
     name: &str,
     description: &str,
     templates: Vec<String>,
-    value: Option<String>,
+    value: Option<&str>,
     update: impl Fn(&mut Config, Option<String>) + 'static,
   ) -> Element {
-    let mut options = vec![DEFAULT_TEMPLATE.to_string()];
-    options.extend(templates);
+    let selected = value
+      .and_then(|value| templates.iter().position(|t| t == value))
+      .map_or(0, |idx| idx + 1);
+    let options = std::iter::once(DEFAULT_TEMPLATE.to_string())
+      .chain(templates.iter().cloned())
+      .collect();
 
-    self.dropdown(
-      name,
-      description,
-      options,
-      value.or_else(|| Some(DEFAULT_TEMPLATE.to_string())),
-      move |cfg, v| update(cfg, (v != DEFAULT_TEMPLATE).then_some(v)),
-    )
+    self.dropdown(name, description, options, selected, move |cfg, idx| {
+      update(cfg, idx.checked_sub(1).map(|idx| templates[idx].clone()));
+    })
   }
 
   #[cfg(not(target_os = "macos"))]
   fn keybind_group(&self) -> Element {
     let config = &self.config;
     let enabled = config.is_keybind_enabled.unwrap_or(true);
+    let keys = strings_to_keys(
+      config
+        .overlay_keybind
+        .clone()
+        .unwrap_or_else(|| DEFAULT_OVERLAY_TOGGLE.get().map(String::from).to_vec()),
+    );
 
     group(
       "Keybind",
@@ -371,18 +371,14 @@ impl Settings {
           enabled,
           |cfg, value| cfg.is_keybind_enabled = Some(value),
         ),
-        self.row(
+        row(
           "Overlay Keybind",
           Some("The keybind used to open the overlay"),
-          SettingKind::Keybind(Some(strings_to_keys(
-            config
-              .overlay_keybind
-              .clone()
-              .unwrap_or_else(|| DEFAULT_OVERLAY_TOGGLE.get().map(String::from).to_vec()),
-          ))),
-          make_keybind_updater(self.app.clone(), self.local_config, |cfg, keys| {
-            cfg.overlay_keybind = Some(keys_to_strings(keys));
-          }),
+          KeybindControl::new(
+            keys,
+            self.updater(|cfg, keys| cfg.overlay_keybind = Some(keys_to_strings(keys))),
+            enabled,
+          ),
           !enabled,
         ),
       ],
@@ -398,8 +394,13 @@ impl Settings {
       .collect();
     let selected_display = config
       .display_idx
-      .and_then(|i| display_names.get(i).cloned());
-    let display_names_for_update = display_names.clone();
+      .filter(|idx| *idx < display_names.len())
+      .unwrap_or(0);
+    let scale_label = ui_scale_label(config.ui_scale.clamp(0.5, 2.0));
+    let selected_scale = UI_SCALE_OPTIONS
+      .iter()
+      .position(|scale| ui_scale_label(*scale) == scale_label)
+      .unwrap_or(0);
 
     Vec::from([
       #[cfg(not(target_os = "macos"))]
@@ -412,11 +413,7 @@ impl Settings {
             "The display to show the overlay on",
             display_names,
             selected_display,
-            move |cfg, v| {
-              if let Some(idx) = display_names_for_update.iter().position(|name| name == &v) {
-                cfg.display_idx = Some(idx);
-              }
-            },
+            |cfg, idx| cfg.display_idx = Some(idx),
           ),
           self.dropdown(
             "UI Scale",
@@ -425,12 +422,8 @@ impl Settings {
               .iter()
               .map(|scale| ui_scale_label(*scale))
               .collect(),
-            Some(ui_scale_label(config.ui_scale.clamp(0.5, 2.0))),
-            |cfg, v| {
-              if let Some(scale) = parse_ui_scale_label(&v) {
-                cfg.ui_scale = scale.clamp(0.5, 2.0);
-              }
-            },
+            selected_scale,
+            |cfg, idx| cfg.ui_scale = UI_SCALE_OPTIONS[idx],
           ),
         ],
       ),
@@ -439,6 +432,11 @@ impl Settings {
 
   fn voice(&self) -> Vec<Element> {
     let config = &self.config;
+    let visibility = config
+      .display_voice_members
+      .clone()
+      .unwrap_or_default()
+      .to_string();
 
     vec![
       group(
@@ -447,14 +445,10 @@ impl Settings {
           "Display Voice Members",
           "Control when and how voice users are visible",
           to_options(VOICE_DISPLAY_OPTIONS),
-          Some(
-            config
-              .display_voice_members
-              .clone()
-              .unwrap_or_default()
-              .to_string(),
-          ),
-          |cfg, v| cfg.display_voice_members = Some(v.into()),
+          option_index(VOICE_DISPLAY_OPTIONS, &visibility),
+          |cfg, idx| {
+            cfg.display_voice_members = Some(VOICE_DISPLAY_OPTIONS[idx].to_string().into());
+          },
         )],
       ),
       group(
@@ -463,18 +457,23 @@ impl Settings {
           self.alignment(
             "Voice Alignment",
             "Screen position for voice users",
-            config
-              .user_alignment
-              .clone()
-              .or_else(|| Some("topleft".into())),
+            config.user_alignment.as_deref().unwrap_or("topleft"),
             |cfg, v| cfg.user_alignment = Some(v),
           ),
-          self.offset("X Offset (px)", config.user_offset_x, |cfg, n| {
-            cfg.user_offset_x = n;
-          }),
-          self.offset("Y Offset (px)", config.user_offset_y, |cfg, n| {
-            cfg.user_offset_y = n;
-          }),
+          self.number(
+            "X Offset (px)",
+            None,
+            config.user_offset_x,
+            false,
+            |cfg, n| cfg.user_offset_x = n,
+          ),
+          self.number(
+            "Y Offset (px)",
+            None,
+            config.user_offset_y,
+            false,
+            |cfg, n| cfg.user_offset_y = n,
+          ),
         ],
       ),
     ]
@@ -519,18 +518,23 @@ impl Settings {
           self.alignment(
             "Notification Alignment",
             "Screen position for notifications",
-            config
-              .message_alignment
-              .clone()
-              .or_else(|| Some("topright".into())),
+            config.message_alignment.as_deref().unwrap_or("topright"),
             |cfg, v| cfg.message_alignment = Some(v),
           ),
-          self.offset("X Offset (px)", config.message_offset_x, |cfg, n| {
-            cfg.message_offset_x = n;
-          }),
-          self.offset("Y Offset (px)", config.message_offset_y, |cfg, n| {
-            cfg.message_offset_y = n;
-          }),
+          self.number(
+            "X Offset (px)",
+            None,
+            config.message_offset_x,
+            false,
+            |cfg, n| cfg.message_offset_x = n,
+          ),
+          self.number(
+            "Y Offset (px)",
+            None,
+            config.message_offset_y,
+            false,
+            |cfg, n| cfg.message_offset_y = n,
+          ),
         ],
       ),
     ]
@@ -555,16 +559,12 @@ impl Settings {
             config.text_color,
             |cfg, v| cfg.text_color = to_tuple(v),
           ),
-          self.input(
+          self.number(
             "Border Radius (px)",
             Some("Corner radius used by panels and buttons"),
-            Some(config.border_radius.to_string()),
+            config.border_radius,
             false,
-            |cfg, v| {
-              if let Ok(n) = v.trim().parse::<f32>() {
-                cfg.border_radius = n.max(0.);
-              }
-            },
+            |cfg, n: f32| cfg.border_radius = n.max(0.),
           ),
         ],
       ),
@@ -575,14 +575,14 @@ impl Settings {
             "User Template",
             "Template used to render voice users.",
             list_user_templates(),
-            config.user_template.clone(),
+            config.user_template.as_deref(),
             |cfg, v| cfg.user_template = v,
           ),
           self.template(
             "Notification Template",
             "Template used to render notifications.",
             list_notification_templates(),
-            config.notification_template.clone(),
+            config.notification_template.as_deref(),
             |cfg, v| cfg.notification_template = v,
           ),
           wide_button("Open Templates Folder", |_| {
@@ -596,31 +596,22 @@ impl Settings {
   fn connection(&self) -> Vec<Element> {
     let config = &self.config;
 
-    vec![
-      group(
-        "Discord",
-        [
-          self.dropdown(
-            "Connection Mode",
-            "Set the communication method between Orbolay and Discord. If using an offical client, use \"ipc\", otherwise, use \"websocket\".",
-            to_options(TRANSPORT_MODES),
-            Some(config.transport_mode.to_string()),
-            |cfg, v| cfg.transport_mode = v.into(),
-          ),
-          self.input(
-            "Websocket Port",
-            Some("Port the websocket server listens on (websocket mode only). Requires Restart."),
-            Some(config.port.unwrap_or(6888).to_string()),
-            config.transport_mode != TransportMode::Websocket,
-            |cfg, v| {
-              if let Ok(n) = v.trim().parse::<u16>() {
-                cfg.port = Some(n);
-              }
-            },
-          ),
-        ],
+    vec![group("Discord", [
+      self.dropdown(
+        "Connection Mode",
+        "Set the communication method between Orbolay and Discord. If using an offical client, use \"ipc\", otherwise, use \"websocket\".",
+        to_options(TRANSPORT_MODES),
+        option_index(TRANSPORT_MODES, &config.transport_mode.to_string()),
+        |cfg, idx| cfg.transport_mode = TRANSPORT_MODES[idx].to_string().into(),
       ),
-    ]
+      self.number(
+        "Websocket Port",
+        Some("Port the websocket server listens on (websocket mode only). Requires Restart."),
+        config.port.unwrap_or(6888),
+        config.transport_mode != TransportMode::Websocket,
+        |cfg, n: u16| cfg.port = Some(n),
+      ),
+    ])]
   }
 
   fn advanced(&self) -> Vec<Element> {
@@ -628,7 +619,7 @@ impl Settings {
 
     vec![group(
       "Rendering",
-      Vec::from([
+      [
         self.toggle(
           "Force Software Renderer",
           "Use software rendering instead of hardware acceleration. Requires restart.",
@@ -642,7 +633,7 @@ impl Settings {
           config.xwayland,
           |cfg, value| cfg.xwayland = value,
         ),
-      ]),
+      ],
     )]
   }
 }

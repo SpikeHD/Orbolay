@@ -1,62 +1,13 @@
 use freya::prelude::*;
 
-#[cfg(not(target_os = "macos"))]
-use rdev::Key;
-
-use crate::{
-  configurator::{
-    color_picker::ColorPickerControl, dropdown::DropdownControl, input::InputControl,
-    toggle::ToggleControl,
-  },
-  util::theme::MUTED_GRAY,
-};
-
-#[cfg(not(target_os = "macos"))]
-use crate::configurator::keybind::KeybindControl;
-
-#[derive(PartialEq)]
-pub enum SettingChange {
-  Value(String),
-  Bool(bool),
-  Color(Color),
-  #[cfg(not(target_os = "macos"))]
-  Keys(Vec<Key>),
-}
+use crate::util::theme::MUTED_GRAY;
 
 #[derive(PartialEq)]
 pub struct SettingRow {
   pub name: String,
   pub description: Option<String>,
-  pub kind: SettingKind,
-  pub on_change: EventHandler<SettingChange>,
+  pub control: Element,
   pub disabled: bool,
-}
-
-#[derive(PartialEq, Clone)]
-pub enum SettingKind {
-  Toggle(bool),
-  Dropdown(Vec<String>, Option<String>),
-  Input(Option<String>),
-  Color(Color),
-  #[cfg(not(target_os = "macos"))]
-  Keybind(Option<Vec<Key>>),
-}
-
-impl SettingKind {
-  fn element(self, on_change: EventHandler<SettingChange>, enabled: bool) -> Element {
-    match self {
-      SettingKind::Dropdown(options, initial) => {
-        DropdownControl::new(options, initial, on_change.clone()).into()
-      }
-      SettingKind::Input(initial) => InputControl::new(initial, on_change.clone(), enabled).into(),
-      SettingKind::Toggle(initial) => ToggleControl::new(initial, on_change.clone()).into(),
-      SettingKind::Color(initial) => ColorPickerControl::new(initial, on_change.clone()).into(),
-      #[cfg(not(target_os = "macos"))]
-      SettingKind::Keybind(initial) => {
-        KeybindControl::new(initial, on_change.clone(), enabled).into()
-      }
-    }
-  }
 }
 
 impl Component for SettingRow {
@@ -85,11 +36,6 @@ impl Component for SettingRow {
             )
           }),
       )
-      .child(
-        self
-          .kind
-          .clone()
-          .element(self.on_change.clone(), !self.disabled),
-      )
+      .child(self.control.clone())
   }
 }

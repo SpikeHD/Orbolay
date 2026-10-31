@@ -6,12 +6,12 @@ use freya::{prelude::*, winit::window::WindowId};
 
 use orbolay_core::{
   app_state::{AppHandle, SharedAppState},
-  config::{Config, load_config, save_config},
+  config::{Config, load_config},
 };
 
 use crate::util::theme::{DARKISH_GRAY, GRAY, LIGHT_GRAY, MUTED_GRAY, RED, SUPERLIGHT_GRAY};
 
-use sections::{Section, Settings};
+use sections::{Section, Settings, apply_config};
 
 mod color_picker;
 mod commit;
@@ -156,9 +156,16 @@ impl Component for ResetButton {
       if armed() {
         on_reset.call(());
       }
-      armed.set(!armed());
+      armed.toggle();
     })
   }
+}
+
+fn secondary_button(
+  text: &'static str,
+  on_press: impl Into<EventHandler<Event<PressEventData>>>,
+) -> impl IntoElement {
+  action_button(text, LIGHT_GRAY, MUTED_GRAY, Color::WHITE, on_press)
 }
 
 fn nav_item(section: Section, mut current: State<Section>) -> Element {
@@ -229,13 +236,7 @@ fn sidebar(
         .width(Size::fill())
         .spacing(4.)
         .child(ResetButton { on_reset })
-        .child(action_button(
-          "Close",
-          LIGHT_GRAY,
-          MUTED_GRAY,
-          Color::WHITE,
-          move |_| on_close.call(()),
-        )),
+        .child(secondary_button("Close", move |_| on_close.call(()))),
     )
 }
 
@@ -247,7 +248,7 @@ fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
   let recording = recording_flag.clone();
   use_provide_context(move || recording_flag);
 
-  let mut local_config = use_state(|| app.read(|state| state.config.clone()));
+  let local_config = use_state(|| app.read(|state| state.config.clone()));
   let mut reset_version = use_state(|| 0usize);
   let section = use_state(|| Section::General);
   let window_id = use_hook(Platform::window_id);
@@ -258,12 +259,7 @@ fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
   let on_reset = EventHandler::new({
     let app = app.clone();
     move |()| {
-      let updated = app.update(|state| {
-        state.config = Config::default();
-        state.config.clone()
-      });
-      save_config(&updated);
-      local_config.set(updated);
+      apply_config(&app, local_config, |cfg| *cfg = Config::default());
       reset_version.set(reset_version() + 1);
     }
   });

@@ -7,7 +7,6 @@ use freya::animation::*;
 use freya::prelude::*;
 use rdev::Key;
 
-use crate::configurator::setting::SettingChange;
 use crate::key_support::code_to_rdev;
 use orbolay_keys::key_to_string;
 
@@ -21,17 +20,13 @@ pub fn keys_display(keys: &[Key]) -> String {
 
 #[derive(PartialEq, Clone)]
 pub struct KeybindControl {
-  initial: Option<Vec<Key>>,
-  on_change: EventHandler<SettingChange>,
+  initial: Vec<Key>,
+  on_change: EventHandler<Vec<Key>>,
   enabled: bool,
 }
 
 impl KeybindControl {
-  pub fn new(
-    initial: Option<Vec<Key>>,
-    on_change: EventHandler<SettingChange>,
-    enabled: bool,
-  ) -> Self {
+  pub fn new(initial: Vec<Key>, on_change: EventHandler<Vec<Key>>, enabled: bool) -> Self {
     Self {
       initial,
       on_change,
@@ -72,7 +67,7 @@ impl Component for KeybindControl {
     let mut pressing = use_state(Vec::<Key>::new);
     // All keys pressed in the current recording session
     let mut candidate = use_state(Vec::<Key>::new);
-    let mut recorded = use_state(|| self.initial.clone().unwrap_or_default());
+    let mut recorded = use_state(|| self.initial.clone());
 
     let on_change = self.on_change.clone();
 
@@ -125,7 +120,7 @@ impl Component for KeybindControl {
         if !keys.is_empty() {
           *recorded.write() = keys.clone();
           *candidate.write() = vec![];
-          on_change.call(SettingChange::Keys(keys));
+          on_change.call(keys);
         }
       }
     };
