@@ -1,12 +1,13 @@
 use std::{
   collections::HashMap,
   sync::{Arc, RwLock, atomic::AtomicBool},
+  time::{Duration, Instant},
 };
 
 use crate::{
   config::{Config, TransportMode},
   payloads::{Notification, SoundboardSoundPayload},
-  user::{PremiumType, User},
+  user::{PremiumType, User, UserVoiceState},
   util::bridge::BridgeMessage,
 };
 
@@ -76,6 +77,40 @@ impl AppHandle {
 
   pub fn open_config(&self) -> Result<(), flume::SendError<()>> {
     self.open_config_tx.send(())
+  }
+
+  pub fn start_grace(&self, user: &mut User, grace_ms: u32) {
+    if grace_ms == 0 {
+      user.voice_state = UserVoiceState::NotSpeaking;
+      return;
+    }
+    if user.grace_until.is_some() {
+      return;
+    }
+
+    let grace = Duration::from_millis(u64::from(grace_ms));
+    let until = Instant::now() + grace;
+    user.grace_until = Some(until);
+
+    let user_id = user.id.clone();
+    let app = self.clone();
+    std::thread::spawn(move || {
+      std::thread::sleep(grace);
+      app.update_if_changed(|state| {
+        let Some(user) = state
+          .voice_users
+          .iter_mut()
+          .find(|user| user.id == user_id && user.grace_until == Some(until))
+        else {
+          return false;
+        };
+        user.grace_until = None;
+        if user.voice_state == UserVoiceState::Speaking {
+          user.voice_state = UserVoiceState::NotSpeaking;
+        }
+        true
+      });
+    });
   }
 }
 

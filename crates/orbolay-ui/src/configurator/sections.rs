@@ -5,7 +5,7 @@ use freya::prelude::*;
 
 use orbolay_core::{
   app_state::AppHandle,
-  config::{Config, TransportMode, config_dir, save_config},
+  config::{Config, DisplayVoiceMembers, TransportMode, config_dir, save_config},
   dirs::{TEMPLATES_DIR, ensure_config_dirs},
   monitors::{MonitorInfo, monitors_list},
   payloads::Notification,
@@ -43,6 +43,8 @@ const ALIGNMENTS: &[&str] = &[
 
 const VOICE_DISPLAY_OPTIONS: &[&str] =
   &["always", "always (semi-transparent)", "only when speaking"];
+
+const GRACE_STYLE_OPTIONS: &[&str] = &["as speaking", "dimmed"];
 
 const UI_SCALE_OPTIONS: &[f32] = &[0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
 
@@ -430,15 +432,41 @@ impl Settings {
     vec![
       group(
         "Visibility",
-        [self.dropdown(
-          "Display Voice Members",
-          "Control when and how voice users are visible",
-          to_options(VOICE_DISPLAY_OPTIONS),
-          option_index(VOICE_DISPLAY_OPTIONS, &visibility),
-          |cfg, idx| {
-            cfg.display_voice_members = Some(VOICE_DISPLAY_OPTIONS[idx].to_string().into());
-          },
-        )],
+        [
+          self.dropdown(
+            "Display Voice Members",
+            "Control when and how voice users are visible",
+            to_options(VOICE_DISPLAY_OPTIONS),
+            option_index(VOICE_DISPLAY_OPTIONS, &visibility),
+            |cfg, idx| {
+              cfg.display_voice_members = Some(VOICE_DISPLAY_OPTIONS[idx].to_string().into());
+            },
+          ),
+          self.number(
+            "Speaking Grace Period (ms)",
+            Some(
+              "How long users keep showing after they stop talking, up to 5000. Values below 300 may flicker",
+            ),
+            config.speaking_grace_ms,
+            false,
+            |cfg, n: u32| cfg.speaking_grace_ms = n.min(5000),
+          ),
+          row(
+            "Grace Period Style",
+            Some("How users look during the grace period. Only applies to \"only when speaking\""),
+            DropdownControl::new(
+              to_options(GRACE_STYLE_OPTIONS),
+              option_index(
+                GRACE_STYLE_OPTIONS,
+                &config.speaking_grace_style.to_string(),
+              ),
+              self.updater(|cfg, idx: usize| {
+                cfg.speaking_grace_style = GRACE_STYLE_OPTIONS[idx].to_string().into();
+              }),
+            ),
+            config.display_voice_members != Some(DisplayVoiceMembers::WhenSpeaking),
+          ),
+        ],
       ),
       group(
         "Position",

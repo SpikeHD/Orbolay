@@ -91,7 +91,12 @@ pub fn handle_ipc_message(
           .cloned()
           .unwrap_or_else(|| data.user.username.clone());
         user.avatar = data.user.avatar.clone().unwrap_or_default();
-        user.voice_state = UserVoiceState::from(&data);
+        let voice_state = UserVoiceState::from(&data);
+        if !(voice_state == UserVoiceState::NotSpeaking
+          && user.voice_state == UserVoiceState::Speaking)
+        {
+          user.voice_state = voice_state;
+        }
         user.streaming = false;
         user.volume = data.volume;
       } else {
@@ -129,33 +134,20 @@ pub fn handle_ipc_message(
         .iter_mut()
         .find(|user| user.id == data.user_id)
       {
-        user.speaking_epoch += 1;
+        user.grace_until = None;
         user.voice_state = UserVoiceState::Speaking;
       }
     }
     "SPEAKING_STOP" => {
       let data = serde_json::from_value::<SpeakingPayload>(data)?;
+      let grace_ms = state.config.speaking_grace_ms;
       if let Some(user) = state
         .voice_users
         .iter_mut()
         .find(|user| user.id == data.user_id)
+        && user.voice_state == UserVoiceState::Speaking
       {
-        let epoch = user.speaking_epoch;
-        let user_id = user.id.clone();
-        let app = app.clone();
-
-        // Set NotSpeaking after a short delay
-        std::thread::spawn(move || {
-          std::thread::sleep(std::time::Duration::from_millis(300));
-          app.update(|state| {
-            if let Some(user) = state.voice_users.iter_mut().find(|user| user.id == user_id)
-              && user.speaking_epoch == epoch
-              && user.voice_state == UserVoiceState::Speaking
-            {
-              user.voice_state = UserVoiceState::NotSpeaking;
-            }
-          });
-        });
+        app.start_grace(user, grace_ms);
       }
     }
     "VOICE_STATE_DELETE" => {
@@ -174,6 +166,8 @@ pub fn handle_ipc_message(
           UserVoiceState::Deafened
         } else if data.mute {
           UserVoiceState::Muted
+        } else if user.voice_state == UserVoiceState::Speaking {
+          UserVoiceState::Speaking
         } else {
           UserVoiceState::NotSpeaking
         };

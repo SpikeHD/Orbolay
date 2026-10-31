@@ -7,6 +7,7 @@ use tungstenite::{Message, Utf8Bytes, accept};
 use orbolay_core::{
   app_state::AppHandle,
   payloads::{ChannelJoinPayload, NotificationPayload, SoundboardSoundPayload, UpdatePayload},
+  user::UserVoiceState,
   util::bridge::BridgeMessage,
 };
 
@@ -165,6 +166,7 @@ pub fn handle_ws_message(
           return;
         }
 
+        let grace_ms = state.config.speaking_grace_ms;
         let existing = state
           .voice_users
           .iter_mut()
@@ -182,7 +184,18 @@ pub fn handle_ws_message(
           if data.state.streaming.is_none() {
             data.state.streaming = Some(user.streaming);
           }
-          user.voice_state = data.state.clone().into();
+          let voice_state = UserVoiceState::from(data.state.clone());
+          let is_speaking_update = data.state.mute.is_none() && data.state.deaf.is_none();
+          let keep_speaking = voice_state == UserVoiceState::NotSpeaking
+            && user.voice_state == UserVoiceState::Speaking;
+          if voice_state == UserVoiceState::Speaking {
+            user.grace_until = None;
+          }
+          if keep_speaking && is_speaking_update {
+            app.start_grace(user, grace_ms);
+          } else if !keep_speaking {
+            user.voice_state = voice_state;
+          }
           user.streaming = data.state.streaming.unwrap_or_default();
         } else if data.state.channel_id.is_some() && data.state.username.is_some() {
           // Only add new user if everything is present

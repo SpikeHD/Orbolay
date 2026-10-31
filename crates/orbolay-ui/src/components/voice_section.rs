@@ -1,10 +1,10 @@
-use std::str::FromStr;
+use std::{str::FromStr, time::Instant};
 
 use freya::prelude::*;
 
 use orbolay_core::{
   app_state::AppState,
-  config::{DisplayVoiceMembers, TransportMode},
+  config::{DisplayVoiceMembers, SpeakingGraceStyle, TransportMode},
   user::{User, UserVoiceState},
   util::text::censor,
 };
@@ -25,6 +25,7 @@ pub struct VoiceSection {
   pub user_offset_x: i32,
   pub user_offset_y: i32,
   pub display_voice_members: DisplayVoiceMembers,
+  pub speaking_grace_style: SpeakingGraceStyle,
   pub theme: Theme,
   pub ui_scale: f32,
   pub user_template_size: (u32, u32),
@@ -54,6 +55,8 @@ impl Component for VoiceSection {
       })
       .collect();
 
+    let now = Instant::now();
+
     rect().child(ContextMenuViewer::new()).child(
       filtered_users.iter().fold(
         rect()
@@ -67,6 +70,13 @@ impl Component for VoiceSection {
           .padding(gaps),
         |el, user| {
           let mut u = user.clone();
+          let dimmed = self.display_voice_members == DisplayVoiceMembers::WhenSpeaking
+            && self.speaking_grace_style == SpeakingGraceStyle::Dimmed
+            && u.voice_state == UserVoiceState::Speaking
+            && u.grace_until.is_some_and(|until| until > now);
+          if dimmed {
+            u.voice_state = UserVoiceState::NotSpeaking;
+          }
 
           if self.is_censor {
             u.name = censor(&u.name);
@@ -76,10 +86,11 @@ impl Component for VoiceSection {
           // TODO websocket cannot change user volume yet
           let can_context_menu =
             !is_self && self.app_state.read().config.transport_mode == TransportMode::Ipc;
-          let is_voice_semitransparent = matches!(
-            self.display_voice_members,
-            DisplayVoiceMembers::AlwaysSemiTransparent
-          );
+          let is_voice_semitransparent = dimmed
+            || matches!(
+              self.display_voice_members,
+              DisplayVoiceMembers::AlwaysSemiTransparent
+            );
 
           let row: Element = UserRow {
             app_state: self.app_state,

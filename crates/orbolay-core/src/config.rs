@@ -21,6 +21,14 @@ pub enum DisplayVoiceMembers {
   WhenSpeaking,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[serde(rename_all = "camelCase")]
+pub enum SpeakingGraceStyle {
+  #[default]
+  AsSpeaking,
+  Dimmed,
+}
+
 impl Display for TransportMode {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     match self {
@@ -61,8 +69,30 @@ impl From<String> for DisplayVoiceMembers {
   }
 }
 
+impl Display for SpeakingGraceStyle {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    match self {
+      SpeakingGraceStyle::AsSpeaking => write!(f, "as speaking"),
+      SpeakingGraceStyle::Dimmed => write!(f, "dimmed"),
+    }
+  }
+}
+
+impl From<String> for SpeakingGraceStyle {
+  fn from(value: String) -> Self {
+    match value.as_ref() {
+      "dimmed" => SpeakingGraceStyle::Dimmed,
+      _ => SpeakingGraceStyle::AsSpeaking,
+    }
+  }
+}
+
 fn default_overlay_keybind() -> Option<Vec<String>> {
   Some(vec!["ControlLeft".into(), "BackQuote".into()])
+}
+
+fn default_speaking_grace_ms() -> u32 {
+  300
 }
 
 fn default_accent() -> (u8, u8, u8) {
@@ -111,6 +141,10 @@ pub struct Config {
   pub user_offset_y: i32,
   #[serde(default)]
   pub display_voice_members: Option<DisplayVoiceMembers>,
+  #[serde(default = "default_speaking_grace_ms")]
+  pub speaking_grace_ms: u32,
+  #[serde(default)]
+  pub speaking_grace_style: SpeakingGraceStyle,
   #[serde(default)]
   pub messages_semitransparent: bool,
   #[serde(default)]
@@ -150,6 +184,8 @@ impl Default for Config {
       user_offset_x: 0,
       user_offset_y: 0,
       display_voice_members: Some(DisplayVoiceMembers::AlwaysSemiTransparent),
+      speaking_grace_ms: default_speaking_grace_ms(),
+      speaking_grace_style: SpeakingGraceStyle::AsSpeaking,
       messages_semitransparent: false,
       is_keybind_enabled: None,
       transport_mode: TransportMode::Ipc,

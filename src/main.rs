@@ -433,6 +433,7 @@ fn app() -> impl IntoElement {
       user_offset_x: config.user_offset_x,
       user_offset_y: config.user_offset_y,
       display_voice_members: config.display_voice_members.clone().unwrap_or_default(),
+      speaking_grace_style: config.speaking_grace_style.clone(),
       theme,
       ui_scale,
       user_template_size: (320, 62),
