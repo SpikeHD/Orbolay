@@ -346,7 +346,6 @@ fn app() -> impl IntoElement {
       }
     });
 
-    // Windows have to be opened from the UI thread
     let config_app = app.clone();
     spawn_in_window(async move {
       while let Ok(()) = open_config_rx.recv_async().await {

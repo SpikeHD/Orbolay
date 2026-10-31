@@ -74,7 +74,6 @@ impl AppHandle {
     let _ = self.redraw_tx.send(());
   }
 
-  /// Ask the UI thread to open the configurator
   pub fn open_config(&self) -> Result<(), flume::SendError<()>> {
     self.open_config_tx.send(())
   }

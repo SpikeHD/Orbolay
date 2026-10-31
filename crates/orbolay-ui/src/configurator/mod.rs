@@ -70,7 +70,6 @@ thread_local! {
   static CONFIGURATOR: Cell<Option<ConfiguratorWindow>> = const { Cell::new(None) };
 }
 
-// Only one configurator at a time, an already open one gets focused instead
 pub fn open_configurator(app: &AppHandle) {
   match CONFIGURATOR.get() {
     Some(ConfiguratorWindow::Open(id)) => show_window(id),
@@ -86,7 +85,6 @@ pub fn open_configurator(app: &AppHandle) {
       spawn_global(async move {
         let id = Platform::get().launch_window(window).await;
 
-        // It may have been closed before we got here
         if let Some(ConfiguratorWindow::Opening) = CONFIGURATOR.get() {
           CONFIGURATOR.set(Some(ConfiguratorWindow::Open(id)));
           show_window(id);
@@ -96,7 +94,6 @@ pub fn open_configurator(app: &AppHandle) {
   }
 }
 
-// Requests usually come from another app (e.g. Discord) that has focus
 fn show_window(id: WindowId) {
   Platform::get().with_window(id, |window| {
     window.set_minimized(false);
