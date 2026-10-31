@@ -9,7 +9,6 @@ pub const SUPERLIGHT_GRAY: Color = Color::new(0xFFB4B4B4);
 pub const MUTED_GRAY: Color = Color::new(0xFF6B6B70);
 
 pub const GREEN: Color = Color::new(0xFF01863B);
-pub const TRANSPARENT: Color = Color::new(0x00000000);
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Theme {

@@ -7,7 +7,6 @@ use freya::animation::*;
 use freya::prelude::*;
 use rdev::Key;
 
-use crate::configurator::setting::SettingChange;
 use crate::key_support::code_to_rdev;
 use orbolay_keys::key_to_string;
 
@@ -21,13 +20,18 @@ pub fn keys_display(keys: &[Key]) -> String {
 
 #[derive(PartialEq, Clone)]
 pub struct KeybindControl {
-  initial: Option<Vec<Key>>,
-  on_change: EventHandler<SettingChange>,
+  initial: Vec<Key>,
+  on_change: EventHandler<Vec<Key>>,
+  enabled: bool,
 }
 
 impl KeybindControl {
-  pub fn new(initial: Option<Vec<Key>>, on_change: EventHandler<SettingChange>) -> Self {
-    Self { initial, on_change }
+  pub fn new(initial: Vec<Key>, on_change: EventHandler<Vec<Key>>, enabled: bool) -> Self {
+    Self {
+      initial,
+      on_change,
+      enabled,
+    }
   }
 }
 
@@ -63,7 +67,7 @@ impl Component for KeybindControl {
     let mut pressing = use_state(Vec::<Key>::new);
     // All keys pressed in the current recording session
     let mut candidate = use_state(Vec::<Key>::new);
-    let mut recorded = use_state(|| self.initial.clone().unwrap_or_default());
+    let mut recorded = use_state(|| self.initial.clone());
 
     let on_change = self.on_change.clone();
 
@@ -116,7 +120,7 @@ impl Component for KeybindControl {
         if !keys.is_empty() {
           *recorded.write() = keys.clone();
           *candidate.write() = vec![];
-          on_change.call(SettingChange::Keys(keys));
+          on_change.call(keys);
         }
       }
     };
@@ -149,9 +153,10 @@ impl Component for KeybindControl {
 
     rect()
       .a11y_id(id)
-      .a11y_focusable(true)
-      .on_press(on_press)
-      .cursor(CursorIcon::Pointer)
+      .a11y_focusable(self.enabled)
+      .maybe(self.enabled, |el| {
+        el.on_press(on_press).cursor(CursorIcon::Pointer)
+      })
       .on_global_pointer_down(on_global_press)
       .on_global_key_down(on_key_down)
       .on_global_key_up(on_key_up)
@@ -159,7 +164,7 @@ impl Component for KeybindControl {
       .border(border)
       .corner_radius(theme_layout.corner_radius)
       .padding(theme_layout.padding)
-      .width(Size::px(300.0_f32))
+      .width(Size::px(220.0_f32))
       .height(Size::px(32.0_f32))
       .main_align(Alignment::Center)
       .cross_align(Alignment::Start)

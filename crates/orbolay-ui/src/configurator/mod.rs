@@ -1,36 +1,32 @@
 use std::cell::Cell;
+use std::sync::atomic::Ordering;
 
 use display_info::DisplayInfo;
 use freya::{prelude::*, winit::window::WindowId};
 
 use orbolay_core::{
   app_state::{AppHandle, SharedAppState},
-  config::{Config, TransportMode, config_dir, load_config, save_config},
-  dirs::{TEMPLATES_DIR, ensure_config_dirs},
-  monitors::{MonitorInfo, monitors_list},
-  payloads::Notification,
-};
-use orbolay_logging::warn;
-
-use crate::util::theme::{GRAY, LIGHT_GRAY, MUTED_GRAY, RED, TRANSPARENT, from_tuple, to_tuple};
-use crate::util::{
-  notification_template::list_notification_templates, user_template::list_user_templates,
+  config::{Config, load_config},
 };
 
-#[cfg(not(target_os = "macos"))]
-use orbolay_keys::{DEFAULT_OVERLAY_TOGGLE, keys_to_strings, strings_to_keys};
+use crate::util::theme::{GRAY, MUTED_GRAY};
 
-use setting::{SettingChange, SettingKind, SettingRow};
+use sections::{Section, Settings, apply_config};
+use sidebar::sidebar;
 
+mod buttons;
 mod color_picker;
+mod commit;
 mod dropdown;
 mod input;
 #[cfg(not(target_os = "macos"))]
 mod keybind;
+mod sections;
 mod setting;
+mod sidebar;
 mod toggle;
 
-const WIDTH: f32 = 600.;
+const WIDTH: f32 = 760.;
 const HEIGHT: f32 = 600.;
 
 const TRANSPORT_MODES: &[&str] = &["ipc", "websocket"];
@@ -119,72 +115,8 @@ fn configurator_window(app: AppHandle, standalone: bool) -> WindowConfig {
   WindowConfig::new(move || configurator(app.clone(), standalone))
     .with_background(GRAY)
     .with_size(WIDTH as f64, HEIGHT as f64)
+    .with_min_size(WIDTH as f64, 400.)
     .with_title("Orbolay Configurator")
-    .with_resizable(false)
-}
-
-macro_rules! make_updater {
-  (
-    $name:ident,
-    $variant:ident,
-    $ty:ty
-  ) => {
-    fn $name(
-      app: AppHandle,
-      mut local_config: State<Config>,
-      update_fn: impl Fn(&mut Config, $ty) + 'static,
-    ) -> EventHandler<SettingChange> {
-      EventHandler::new(move |change| {
-        if let SettingChange::$variant(value) = change {
-          let updated = app.update(|state| {
-            update_fn(&mut state.config, value);
-            state.config.clone()
-          });
-
-          save_config(&updated);
-          local_config.set(updated);
-        }
-      })
-    }
-  };
-}
-
-make_updater!(make_updater, Value, String);
-make_updater!(make_bool_updater, Bool, bool);
-make_updater!(make_color_updater, Color, Color);
-
-#[cfg(not(target_os = "macos"))]
-make_updater!(make_keybind_updater, Keys, Vec<rdev::Key>);
-
-fn wide_button(
-  text: impl Into<String>,
-  color: Color,
-  on_press: impl Into<EventHandler<Event<PressEventData>>>,
-) -> impl IntoElement {
-  rect()
-    .width(Size::fill())
-    .height(Size::px(32.0_f32))
-    .main_align(Alignment::Center)
-    .cross_align(Alignment::Center)
-    .margin(Gaps::new_symmetric(4., 12.))
-    .corner_radius(10.)
-    .background(color)
-    .on_press(on_press)
-    .child(label().text(text.into()).color(Color::WHITE).font_size(14.))
-}
-
-fn open_templates_folder() {
-  let Some(dir) = config_dir() else {
-    warn!("Could not resolve the config directory");
-    return;
-  };
-  let templates_dir = dir.join(TEMPLATES_DIR);
-
-  ensure_config_dirs();
-
-  if let Err(err) = open::that(&templates_dir) {
-    warn!("Failed to open templates folder: {err}");
-  }
 }
 
 fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
@@ -192,424 +124,69 @@ fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
 
   // Make the recording flag available to KeybindControl
   let recording_flag = app.read(|state| state.recording_keybind.clone());
+  let recording = recording_flag.clone();
   use_provide_context(move || recording_flag);
 
-  let mut local_config = use_state(|| app.read(|state| state.config.clone()));
+  let local_config = use_state(|| app.read(|state| state.config.clone()));
   let mut reset_version = use_state(|| 0usize);
-  let config = local_config.read().clone();
+  let section = use_state(|| Section::General);
+  let window_id = use_hook(Platform::window_id);
 
-  let template_options = {
-    let mut options = vec!["Default".to_string()];
-    options.extend(list_user_templates());
-    options
-  };
-  let template_initial = config
-    .user_template
-    .clone()
-    .unwrap_or_else(|| "Default".to_string());
+  let close = EventHandler::new(move |()| Platform::get().close_window(window_id));
+  let close_shortcut = close.clone();
 
-  let notification_template_options = {
-    let mut options = vec!["Default".to_string()];
-    options.extend(list_notification_templates());
-    options
-  };
-  let notification_template_initial = config
-    .notification_template
-    .clone()
-    .unwrap_or_else(|| "Default".to_string());
-
-  let all_displays = {
-    let cached = monitors_list();
-    if !cached.is_empty() {
-      cached
-    } else {
-      DisplayInfo::all()
-        .unwrap_or_default()
-        .into_iter()
-        .map(|d| MonitorInfo {
-          name: d.friendly_name,
-          is_primary: d.is_primary,
-          width: d.width,
-          height: d.height,
-        })
-        .collect()
+  let on_reset = EventHandler::new({
+    let app = app.clone();
+    move |()| {
+      apply_config(&app, local_config, |cfg| *cfg = Config::default());
+      reset_version.set(reset_version() + 1);
     }
-  };
-  let display_names: Vec<String> = all_displays
-    .iter()
-    .map(|d| format!("{} ({}x{})", d.name, d.width, d.height))
-    .collect();
-  let display_names_for_update = display_names.clone();
-
-  let inner = rect()
-    .key(reset_version())
-    .direction(Direction::Vertical)
-    .width(Size::fill())
-    .padding(Gaps::new_symmetric(0., 16.))
-    .child(SettingRow {
-      name: "Connection Mode".into(),
-      description: Some(
-        "Set the communication method between Orbolay and Discord. If using an offical client, use \"ipc\", otherwise, use \"websocket\"."
-          .into(),
-      ),
-      kind: SettingKind::Dropdown(
-        TRANSPORT_MODES.iter().map(|s| s.to_string()).collect(),
-        Some(config.transport_mode.to_string()),
-      ),
-      on_change: make_updater(app.clone(), local_config, |cfg, v| {
-        cfg.transport_mode = v.into();
-      }),
-      disabled: false,
-    })
-    .child(divider())
-    .child(SettingRow {
-      name: "Websocket Port".into(),
-      description: Some("Port the websocket server listens on (websocket mode only). Requires Restart.".into()),
-      kind: SettingKind::Input(Some(config.port.unwrap_or(6888).to_string())),
-      on_change: make_updater(app.clone(), local_config, |cfg, v| {
-        if let Ok(n) = v.trim().parse::<u16>() {
-          cfg.port = Some(n);
-        }
-      }),
-      disabled: config.transport_mode != TransportMode::Websocket,
-    })
-    .child(divider())
-    .child(
-      SettingRow {
-        name: "Enable Notifications".into(),
-        description: Some("Show notifications for incoming messages, calls, etc.".into()),
-        kind: SettingKind::Toggle(config.enable_message_notifications),
-        on_change: make_bool_updater(app.clone(), local_config, |cfg, value| {
-          cfg.enable_message_notifications = value;
-        }),
-        disabled: false,
-      }
-    )
-    .child(divider());
-
-  #[cfg(not(target_os = "macos"))]
-  let inner = inner
-    .child(SettingRow {
-      name: "Enable Keybind".into(),
-      description: Some("Toggle overlay visibility with a keybind".into()),
-      kind: SettingKind::Toggle(config.is_keybind_enabled.unwrap_or(true)),
-      on_change: make_bool_updater(app.clone(), local_config, |cfg, value| {
-        cfg.is_keybind_enabled = Some(value);
-      }),
-      disabled: false,
-    })
-    .child(divider());
-
-  #[cfg(not(target_os = "macos"))]
-  let inner = inner
-    .child(SettingRow {
-      name: "Overlay Keybind".into(),
-      description: Some("The keybind used to open the overlay".into()),
-      kind: SettingKind::Keybind(Some(strings_to_keys(
-        config
-          .overlay_keybind
-          .clone()
-          .unwrap_or_else(|| DEFAULT_OVERLAY_TOGGLE.get().map(String::from).to_vec()),
-      ))),
-      on_change: make_keybind_updater(app.clone(), local_config, |cfg, keys| {
-        cfg.overlay_keybind = Some(keys_to_strings(keys));
-      }),
-      disabled: !config.is_keybind_enabled.unwrap_or(true),
-    })
-    .child(divider());
-
-  let inner = inner
-    .child(SettingRow {
-      name: "Display".into(),
-      description: Some("The display to show the overlay on".into()),
-      kind: SettingKind::Dropdown(
-        display_names.clone(),
-        config
-          .display_idx
-          .and_then(|i| display_names.get(i).cloned()),
-      ),
-      on_change: make_updater(app.clone(), local_config, move |cfg, v| {
-        if let Some(idx) = display_names_for_update.iter().position(|name| name == &v) {
-          cfg.display_idx = Some(idx);
-        }
-      }),
-      disabled: false,
-    })
-    .child(divider())
-    .child(SettingRow {
-      name: "User Template".into(),
-      description: Some("Template used to render voice users.".into()),
-      kind: SettingKind::Dropdown(template_options, Some(template_initial)),
-      on_change: make_updater(app.clone(), local_config, |cfg, v| {
-        cfg.user_template = (v != "Default").then_some(v);
-      }),
-      disabled: false,
-    })
-    .child(divider())
-    .child(SettingRow {
-      name: "Notification Template".into(),
-      description: Some("Template used to render notifications.".into()),
-      kind: SettingKind::Dropdown(
-        notification_template_options,
-        Some(notification_template_initial),
-      ),
-      on_change: make_updater(app.clone(), local_config, |cfg, v| {
-        cfg.notification_template = (v != "Default").then_some(v);
-      }),
-      disabled: false,
-    })
-    .child(divider())
-    .child(wide_button("Open Templates Folder", LIGHT_GRAY, |_| {
-      open_templates_folder();
-    }))
-    .child(divider())
-    .child(SettingRow {
-      name: "Accent Color".into(),
-      description: Some("The accent color for the overlay".into()),
-      kind: SettingKind::Color(from_tuple(config.accent)),
-      on_change: make_color_updater(app.clone(), local_config, |cfg, v| {
-        cfg.accent = to_tuple(v);
-      }),
-      disabled: false,
-    })
-    .child(divider())
-    .child(SettingRow {
-      name: "Text Color".into(),
-      description: Some("The text color for the overlay".into()),
-      kind: SettingKind::Color(from_tuple(config.text_color)),
-      on_change: make_color_updater(app.clone(), local_config, |cfg, v| {
-        cfg.text_color = to_tuple(v);
-      }),
-      disabled: false,
-    })
-    .child(divider())
-    .child(SettingRow {
-      name: "Border Radius (px)".into(),
-      description: Some("Corner radius used by panels and buttons".into()),
-      kind: SettingKind::Input(Some(config.border_radius.to_string())),
-      on_change: make_updater(app.clone(), local_config, |cfg, v| {
-        if let Ok(n) = v.trim().parse::<f32>() {
-          cfg.border_radius = n.max(0.);
-        }
-      }),
-      disabled: false,
-    })
-    .child(divider())
-    .child(SettingRow {
-      name: "UI Scale".into(),
-      description: Some("Scale of the overlay elements".into()),
-      kind: SettingKind::Dropdown(
-        UI_SCALE_OPTIONS
-          .iter()
-          .map(|scale| ui_scale_label(*scale))
-          .collect(),
-        Some(ui_scale_label(config.ui_scale.clamp(0.5, 2.0))),
-      ),
-      on_change: make_updater(app.clone(), local_config, |cfg, v| {
-        if let Some(scale) = parse_ui_scale_label(&v) {
-          cfg.ui_scale = scale.clamp(0.5, 2.0);
-        }
-      }),
-      disabled: false,
-    })
-    .child(divider())
-    .child(SettingRow {
-      name: "Force Software Renderer".into(),
-      description: Some(
-        "Use software rendering instead of hardware acceleration. Requires restart.".into(),
-      ),
-      kind: SettingKind::Toggle(config.software_rendering.unwrap_or(false)),
-      on_change: make_bool_updater(app.clone(), local_config, |cfg, value| {
-        cfg.software_rendering = Some(value);
-      }),
-      disabled: false,
-    });
-
-  #[cfg(target_os = "linux")]
-  let inner = inner.child(divider()).child(SettingRow {
-    name: "Run with XWayland".into(),
-    description: Some("Create the window under XWayland. Requires restart.".into()),
-    kind: SettingKind::Toggle(config.xwayland),
-    on_change: make_bool_updater(app.clone(), local_config, |cfg, value| {
-      cfg.xwayland = value;
-    }),
-    disabled: false,
   });
 
-  let inner = inner
-    .child(divider())
-    .child(SettingRow {
-      name: "Display Voice Members".into(),
-      description: Some("Control when and how voice users are visible".into()),
-      kind: SettingKind::Dropdown(
-        VOICE_DISPLAY_OPTIONS
-          .iter()
-          .map(|s| s.to_string())
-          .collect(),
-        Some(
-          config
-            .display_voice_members
-            .clone()
-            .unwrap_or_default()
-            .to_string(),
-        ),
-      ),
-      on_change: make_updater(app.clone(), local_config, |cfg, v| {
-        cfg.display_voice_members = Some(v.into());
-      }),
-      disabled: false,
-    })
-    .child(divider())
-    .child(SettingRow {
-      name: "Semi-Transparent Notifications".into(),
-      description: Some("Fade notifications when the overlay is closed".into()),
-      kind: SettingKind::Toggle(config.messages_semitransparent),
-      on_change: make_bool_updater(app.clone(), local_config, |cfg, value| {
-        cfg.messages_semitransparent = value;
-      }),
-      disabled: false,
-    })
-    .child(divider());
+  let current = section();
+  let settings = Settings {
+    app,
+    local_config,
+    config: local_config.read().clone(),
+    standalone,
+  };
 
-  let inner = inner
-    .child(SettingRow {
-      name: "Voice Alignment".into(),
-      description: Some("Screen position for voice users".into()),
-      kind: SettingKind::Dropdown(
-        ALIGNMENTS.iter().map(|s| s.to_string()).collect(),
-        config
-          .user_alignment
-          .clone()
-          .or_else(|| Some("topleft".into())),
-      ),
-      on_change: make_updater(app.clone(), local_config, |cfg, v| {
-        cfg.user_alignment = Some(v);
-      }),
-      disabled: false,
-    })
-    .child(divider())
-    .child(SettingRow {
-      name: "Voice X Offset (px)".into(),
-      description: None,
-      kind: SettingKind::Input(Some(config.user_offset_x.to_string())),
-      on_change: make_updater(app.clone(), local_config, |cfg, v| {
-        if let Ok(n) = v.trim().parse::<i32>() {
-          cfg.user_offset_x = n;
-        }
-      }),
-      disabled: false,
-    })
-    .child(divider())
-    .child(SettingRow {
-      name: "Voice Y Offset (px)".into(),
-      description: None,
-      kind: SettingKind::Input(Some(config.user_offset_y.to_string())),
-      on_change: make_updater(app.clone(), local_config, |cfg, v| {
-        if let Ok(n) = v.trim().parse::<i32>() {
-          cfg.user_offset_y = n;
-        }
-      }),
-      disabled: false,
-    })
-    .child(divider())
-    .child(SettingRow {
-      name: "Notification Alignment".into(),
-      description: Some("Screen position for notifications".into()),
-      kind: SettingKind::Dropdown(
-        ALIGNMENTS.iter().map(|s| s.to_string()).collect(),
-        config
-          .message_alignment
-          .clone()
-          .or_else(|| Some("topright".into())),
-      ),
-      on_change: make_updater(app.clone(), local_config, |cfg, v| {
-        cfg.message_alignment = Some(v);
-      }),
-      disabled: false,
-    })
-    .child(divider())
-    .child(SettingRow {
-      name: "Messages X Offset (px)".into(),
-      description: None,
-      kind: SettingKind::Input(Some(config.message_offset_x.to_string())),
-      on_change: make_updater(app.clone(), local_config, |cfg, v| {
-        if let Ok(n) = v.trim().parse::<i32>() {
-          cfg.message_offset_x = n;
-        }
-      }),
-      disabled: false,
-    })
-    .child(divider())
-    .child(SettingRow {
-      name: "Messages Y Offset (px)".into(),
-      description: None,
-      kind: SettingKind::Input(Some(config.message_offset_y.to_string())),
-      on_change: make_updater(app.clone(), local_config, |cfg, v| {
-        if let Ok(n) = v.trim().parse::<i32>() {
-          cfg.message_offset_y = n;
-        }
-      }),
-      disabled: false,
-    })
-    .maybe(!standalone, {
-      let app = app.clone();
-      move |el| {
-        el.child(wide_button(
-          "Send Test Notification",
-          LIGHT_GRAY,
-          move |_| {
-            app.notify(Notification {
-              title: "Test Notification".into(),
-              body:
-                "This is a test notification, triggered manually from the configuration window!"
-                  .into(),
-              icon: "https://avatars.githubusercontent.com/u/25207995?v=4".into(),
-              ..Default::default()
-            });
-          },
-        ))
-      }
-    })
-    .child(wide_button("Reset to Defaults", RED, {
-      let app = app.clone();
-      move |_| {
-        let updated = app.update(|state| {
-          state.config = Config::default();
-          state.config.clone()
-        });
-        save_config(&updated);
-        local_config.set(updated);
-        reset_version.set(reset_version() + 1);
-      }
-    }))
+  let page = rect()
+    .width(Size::fill())
+    .padding(Gaps::new(24., 24., 4., 24.))
     .child(
       label()
-        .text("Press \"C\" with the overlay open to open this window again!")
+        .text(current.title())
+        .color(Color::WHITE)
+        .font_size(22.)
+        .font_weight(FontWeight::BOLD),
+    )
+    .child(
+      label()
+        .text(current.description())
         .color(MUTED_GRAY)
-        .font_size(12.)
-        .margin(16.)
-        .text_align(TextAlign::Center)
-        .width(Size::fill()),
-    );
+        .font_size(13.)
+        .margin(Gaps::new(2., 0., 20., 0.)),
+    )
+    .children(settings.groups(current));
 
   rect()
     .width(Size::fill())
     .height(Size::fill())
     .background(GRAY)
-    .direction(Direction::Vertical)
+    .direction(Direction::Horizontal)
+    .content(Content::Flex)
+    .on_global_key_down(move |e: Event<KeyboardEventData>| {
+      let is_close = e.modifiers.contains(Modifiers::ctrl_or_meta()) && e.code == Code::KeyW;
+      if is_close && !recording.load(Ordering::Relaxed) {
+        close_shortcut.call(());
+      }
+    })
+    .child(sidebar(section, on_reset, close))
     .child(
       ScrollView::new()
-        .height(Size::fill())
-        .width(Size::fill())
-        .direction(Direction::Vertical)
-        .child(inner),
+        .key((current, reset_version()))
+        .width(Size::flex(1.))
+        .child(page),
     )
-}
-
-fn divider() -> impl IntoElement {
-  rect()
-    .width(Size::fill())
-    .height(Size::px(1.0_f32))
-    .padding(16.)
-    .background(TRANSPARENT)
 }
