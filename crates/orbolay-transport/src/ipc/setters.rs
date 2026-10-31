@@ -1,10 +1,9 @@
-use interprocess::local_socket::prelude::*;
 use serde_json::Value;
 
-use crate::ipc::{OP_FRAME, ipc_write};
+use crate::ipc::{OP_FRAME, SharedStream, ipc_write};
 
 pub fn set_muted(
-  stream: &mut LocalSocketStream,
+  stream: &SharedStream,
   muted: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
   let data = serde_json::json!({ "mute": muted });
@@ -21,7 +20,7 @@ pub fn set_muted(
 }
 
 pub fn set_deafened(
-  stream: &mut LocalSocketStream,
+  stream: &SharedStream,
   deafened: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
   let data = serde_json::json!({ "deaf": deafened });
@@ -37,7 +36,7 @@ pub fn set_deafened(
   Ok(())
 }
 
-pub fn stop_streaming(stream: &mut LocalSocketStream) -> Result<(), Box<dyn std::error::Error>> {
+pub fn stop_streaming(stream: &SharedStream) -> Result<(), Box<dyn std::error::Error>> {
   let data = serde_json::json!({ "streaming": false });
   ipc_write(
     stream,
@@ -52,7 +51,7 @@ pub fn stop_streaming(stream: &mut LocalSocketStream) -> Result<(), Box<dyn std:
 }
 
 pub fn play_soundboard_sound(
-  stream: &mut LocalSocketStream,
+  stream: &SharedStream,
   sound_id: &str,
   source_guild_id: Option<&str>,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -73,7 +72,7 @@ pub fn play_soundboard_sound(
 }
 
 pub fn set_user_volume(
-  stream: &mut LocalSocketStream,
+  stream: &SharedStream,
   user_id: &str,
   volume: f64,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -91,7 +90,7 @@ pub fn set_user_volume(
 }
 
 pub fn get_guild(
-  stream: &mut LocalSocketStream,
+  stream: &SharedStream,
   guild_id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
   ipc_write(
@@ -107,7 +106,7 @@ pub fn get_guild(
 }
 
 pub fn get_channel(
-  stream: &mut LocalSocketStream,
+  stream: &SharedStream,
   channel_id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
   ipc_write(
@@ -123,7 +122,7 @@ pub fn get_channel(
 }
 
 pub fn deep_link_channel(
-  stream: &mut LocalSocketStream,
+  stream: &SharedStream,
   channel_id: &str,
   guild_id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -147,7 +146,7 @@ pub fn deep_link_channel(
 }
 
 pub fn select_voice_channel(
-  stream: &mut LocalSocketStream,
+  stream: &SharedStream,
   channel_id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
   ipc_write(
@@ -162,7 +161,7 @@ pub fn select_voice_channel(
   Ok(())
 }
 
-pub fn disconnect(stream: &mut LocalSocketStream) -> Result<(), Box<dyn std::error::Error>> {
+pub fn disconnect(stream: &SharedStream) -> Result<(), Box<dyn std::error::Error>> {
   let payload = serde_json::json!({ "channel_id": Value::Null });
   ipc_write(
     stream,

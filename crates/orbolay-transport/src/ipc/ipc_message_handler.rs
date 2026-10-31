@@ -1,5 +1,3 @@
-use interprocess::local_socket::prelude::*;
-
 use orbolay_core::{
   app_state::AppHandle,
   payloads::{
@@ -15,7 +13,7 @@ use orbolay_core::{
 };
 
 use crate::ipc::{
-  OP_FRAME, ipc_write,
+  OP_FRAME, SharedStream, ipc_write,
   setters::{get_channel, get_guild},
   subscribe_voice_channel, unsubscribe_voice_channel,
 };
@@ -26,7 +24,7 @@ use orbolay_logging::{error, log, success};
 use crate::util::discord_auth::build_rpc_authorize_request;
 
 pub fn handle_ipc_message(
-  stream: &mut LocalSocketStream,
+  stream: &SharedStream,
   msg: &BridgeMessage,
   app: AppHandle,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -42,6 +40,8 @@ pub fn handle_ipc_message(
   log!("Handling event: {} - {:?}", evt, msg);
 
   let mut changed = true;
+  let mut auth_after = false;
+  let mut voice_work: Option<(String, String, String, bool)> = None;
 
   match evt {
     "READY" => {
@@ -52,9 +52,7 @@ pub fn handle_ipc_message(
       }
 
       success!("IPC connected and ready");
-
-      let auth_msg = build_rpc_authorize_request();
-      ipc_write(stream, OP_FRAME, &serde_json::to_string(&auth_msg)?)?;
+      auth_after = true;
     }
     "VOICE_CHANNEL_SELECT" => {
       let data = serde_json::from_value::<VoiceChannelSelectPayload>(data)?;
@@ -62,54 +60,20 @@ pub fn handle_ipc_message(
       let old_channel = state.current_channel.clone();
       let channel_changed = old_channel != new_channel;
 
-      if channel_changed
-        && !old_channel.is_empty()
-        && let Err(e) = unsubscribe_voice_channel(stream, &old_channel)
-      {
-        error!("Failed to unsubscribe from old voice channel events: {}", e);
-      }
-
       if channel_changed {
         state.voice_users.clear();
       }
 
-      state.current_channel = new_channel;
+      state.current_channel = new_channel.clone();
       state.current_guild_id = data.guild_id.unwrap_or_default();
-      let channel_id = state.current_channel.clone();
-      let guild_id = state.current_guild_id.clone();
 
-      if !channel_id.is_empty() {
-        if let Err(e) = subscribe_voice_channel(stream, &channel_id) {
-          error!("Failed to subscribe to voice channel events: {}", e);
-        }
-
-        if channel_changed {
-          let request = serde_json::json!({
-            "cmd": "GET_SELECTED_VOICE_CHANNEL",
-            "nonce": "GET_SELECTED_VOICE_CHANNEL",
-          });
-          if let Err(e) = ipc_write(stream, OP_FRAME, &request.to_string()) {
-            error!("Failed to request selected voice channel: {}", e);
-          }
-        }
-
-        let request = serde_json::json!({
-          "cmd": "GET_SOUNDBOARD_SOUNDS",
-          "args": {},
-          "nonce": "GET_SOUNDBOARD_SOUNDS",
-        });
-
-        if let Err(e) = ipc_write(stream, OP_FRAME, &request.to_string()) {
-          error!("Failed to request soundboard sounds: {}", e);
-        }
-        if let Err(e) = get_channel(stream, &channel_id) {
-          error!("Failed to request channel name: {}", e);
-        }
-        if !guild_id.is_empty()
-          && let Err(e) = get_guild(stream, &guild_id)
-        {
-          error!("Failed to request guild name: {}", e);
-        }
+      if !new_channel.is_empty() {
+        voice_work = Some((
+          old_channel,
+          new_channel,
+          state.current_guild_id.clone(),
+          channel_changed,
+        ));
       } else {
         state.voice_users.clear();
         state.current_channel = String::new();
@@ -296,6 +260,55 @@ pub fn handle_ipc_message(
   }
 
   drop(state);
+
+  if auth_after {
+    let auth_msg = build_rpc_authorize_request();
+    ipc_write(stream, OP_FRAME, &serde_json::to_string(&auth_msg)?)?;
+  }
+
+  if let Some((old_channel, channel_id, guild_id, channel_changed)) = voice_work {
+    if channel_changed
+      && !old_channel.is_empty()
+      && let Err(e) = unsubscribe_voice_channel(stream, &old_channel)
+    {
+      error!("Failed to unsubscribe from old voice channel events: {}", e);
+    }
+
+    if let Err(e) = subscribe_voice_channel(stream, &channel_id) {
+      error!("Failed to subscribe to voice channel events: {}", e);
+    }
+
+    if channel_changed {
+      let request = serde_json::json!({
+        "cmd": "GET_SELECTED_VOICE_CHANNEL",
+        "nonce": "GET_SELECTED_VOICE_CHANNEL",
+      });
+
+      if let Err(e) = ipc_write(stream, OP_FRAME, &request.to_string()) {
+        error!("Failed to request selected voice channel: {}", e);
+      }
+    }
+
+    let request = serde_json::json!({
+      "cmd": "GET_SOUNDBOARD_SOUNDS",
+      "args": {},
+      "nonce": "GET_SOUNDBOARD_SOUNDS",
+    });
+
+    if let Err(e) = ipc_write(stream, OP_FRAME, &request.to_string()) {
+      error!("Failed to request soundboard sounds: {}", e);
+    }
+
+    if let Err(e) = get_channel(stream, &channel_id) {
+      error!("Failed to request channel name: {}", e);
+    }
+
+    if !guild_id.is_empty()
+      && let Err(e) = get_guild(stream, &guild_id)
+    {
+      error!("Failed to request guild name: {}", e);
+    }
+  }
 
   if changed {
     app.redraw();

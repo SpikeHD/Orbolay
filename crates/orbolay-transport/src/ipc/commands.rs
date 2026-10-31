@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use interprocess::TryClone;
@@ -17,7 +18,8 @@ use orbolay_core::{
 };
 
 use crate::ipc::{
-  OP_CLOSE, OP_FRAME, OP_HANDSHAKE, handle_ipc_message, handle_ui_message, ipc_read, ipc_write,
+  OP_CLOSE, OP_FRAME, OP_HANDSHAKE, SharedStream, handle_ipc_message, handle_ui_message, ipc_read,
+  ipc_write,
   setters::{get_channel, get_guild},
   subscribe_voice_channel, subscribe_voice_global,
 };
@@ -68,7 +70,7 @@ fn try_create_stream() -> Result<LocalSocketStream, Box<dyn std::error::Error>> 
 }
 
 fn drain_ui_messages(
-  stream: &mut LocalSocketStream,
+  stream: &SharedStream,
   receiver: &flume::Receiver<BridgeMessage>,
   app: AppHandle,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -98,16 +100,18 @@ pub fn create_ipc_connection(
       }
     };
 
-    ipc_write(&mut stream, OP_HANDSHAKE, &handshake.to_string())?;
+    let shared_stream: SharedStream = Arc::new(Mutex::new(stream.try_clone()?));
+
+    ipc_write(&shared_stream, OP_HANDSHAKE, &handshake.to_string())?;
 
     let ui_receiver = receiver.clone();
-    let mut ui_stream = stream.try_clone()?;
+    let ui_stream = shared_stream.clone();
     let (tx, rx) = flume::unbounded();
     let ui_app = app.clone();
 
     std::thread::spawn(move || {
       loop {
-        if let Err(e) = drain_ui_messages(&mut ui_stream, &ui_receiver, ui_app.clone()) {
+        if let Err(e) = drain_ui_messages(&ui_stream, &ui_receiver, ui_app.clone()) {
           error!("UI message handler failed: {}", e);
           continue;
         }
@@ -124,7 +128,7 @@ pub fn create_ipc_connection(
       match ipc_read(&mut stream) {
         Ok((OP_FRAME, payload)) => {
           if let Ok(msg) = serde_json::from_str::<BridgeMessage>(&payload)
-            && let Err(e) = handle_command(&mut stream, &msg, app.clone())
+            && let Err(e) = handle_command(&shared_stream, &msg, app.clone())
           {
             error!("Error handling IPC command: {}", e);
           }
@@ -160,7 +164,7 @@ pub fn create_ipc_connection(
 }
 
 pub fn handle_command(
-  stream: &mut LocalSocketStream,
+  stream: &SharedStream,
   msg: &BridgeMessage,
   app: AppHandle,
 ) -> Result<(), Box<dyn std::error::Error>> {

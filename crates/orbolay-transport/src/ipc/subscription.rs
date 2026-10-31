@@ -1,10 +1,9 @@
-use interprocess::local_socket::prelude::*;
 use serde_json::Value;
 
-use crate::ipc::{OP_FRAME, ipc_write};
+use crate::ipc::{OP_FRAME, SharedStream, ipc_write};
 
 pub fn subscribe(
-  stream: &mut LocalSocketStream,
+  stream: &SharedStream,
   event: &str,
   data: Option<Value>,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -19,7 +18,7 @@ pub fn subscribe(
 }
 
 pub fn unsubscribe(
-  stream: &mut LocalSocketStream,
+  stream: &SharedStream,
   event: &str,
   data: Option<Value>,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -34,7 +33,7 @@ pub fn unsubscribe(
 }
 
 fn subscribe_channel(
-  stream: &mut LocalSocketStream,
+  stream: &SharedStream,
   event: &str,
   channel_id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -43,7 +42,7 @@ fn subscribe_channel(
 }
 
 fn unsubscribe_channel(
-  stream: &mut LocalSocketStream,
+  stream: &SharedStream,
   event: &str,
   channel_id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -52,7 +51,7 @@ fn unsubscribe_channel(
 }
 
 pub fn subscribe_voice_channel(
-  stream: &mut LocalSocketStream,
+  stream: &SharedStream,
   channel_id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
   subscribe_channel(stream, "VOICE_STATE_CREATE", channel_id)?;
@@ -65,7 +64,7 @@ pub fn subscribe_voice_channel(
 }
 
 pub fn subscribe_voice_global(
-  stream: &mut LocalSocketStream,
+  stream: &SharedStream,
 ) -> Result<(), Box<dyn std::error::Error>> {
   subscribe(stream, "VOICE_CHANNEL_SELECT", None)?;
   subscribe(stream, "VOICE_SETTINGS_UPDATE", None)?;
@@ -75,7 +74,7 @@ pub fn subscribe_voice_global(
 }
 
 pub fn unsubscribe_voice_channel(
-  stream: &mut LocalSocketStream,
+  stream: &SharedStream,
   channel_id: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
   unsubscribe_channel(stream, "VOICE_STATE_CREATE", channel_id)?;

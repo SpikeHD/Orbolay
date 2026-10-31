@@ -1,15 +1,16 @@
-use interprocess::local_socket::prelude::*;
-
 use orbolay_core::{app_state::AppHandle, user::UserVoiceState, util::bridge::BridgeMessage};
 
-use crate::ipc::setters::{
-  deep_link_channel, disconnect, play_soundboard_sound, select_voice_channel, set_deafened,
-  set_muted, set_user_volume, stop_streaming,
+use crate::ipc::{
+  SharedStream,
+  setters::{
+    deep_link_channel, disconnect, play_soundboard_sound, select_voice_channel, set_deafened,
+    set_muted, set_user_volume, stop_streaming,
+  },
 };
 use orbolay_logging::log;
 
 pub fn handle_ui_message(
-  stream: &mut LocalSocketStream,
+  stream: &SharedStream,
   msg: &BridgeMessage,
   app: AppHandle,
 ) -> Result<(), Box<dyn std::error::Error>> {

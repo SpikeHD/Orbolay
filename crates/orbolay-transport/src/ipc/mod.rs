@@ -15,6 +15,10 @@ pub use ui_message_handler::handle_ui_message;
 
 use interprocess::local_socket::prelude::*;
 use std::io::{Read, Write};
+use std::sync::{Arc, Mutex};
+
+/// Stream shared between the read loop and the UI writer
+pub type SharedStream = Arc<Mutex<LocalSocketStream>>;
 
 // IPC opcodes
 pub const OP_HANDSHAKE: u32 = 0;
@@ -22,17 +26,18 @@ pub const OP_FRAME: u32 = 1;
 pub const OP_CLOSE: u32 = 2;
 
 pub fn ipc_write(
-  stream: &mut LocalSocketStream,
+  stream: &SharedStream,
   opcode: u32,
   payload: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
   let payload_bytes = payload.as_bytes();
   let len = payload_bytes.len() as u32;
-  let mut header = [0u8; 8];
-  header[0..4].copy_from_slice(&opcode.to_le_bytes());
-  header[4..8].copy_from_slice(&len.to_le_bytes());
-  stream.write_all(&header)?;
-  stream.write_all(payload_bytes)?;
+  let mut buf = Vec::with_capacity(8 + payload_bytes.len());
+  buf.extend_from_slice(&opcode.to_le_bytes());
+  buf.extend_from_slice(&len.to_le_bytes());
+  buf.extend_from_slice(payload_bytes);
+  // Single write inside the lock so frames never interleave.
+  stream.lock().unwrap().write_all(&buf)?;
   Ok(())
 }
 
