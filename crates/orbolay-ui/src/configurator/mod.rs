@@ -23,6 +23,7 @@ use orbolay_keys::{DEFAULT_OVERLAY_TOGGLE, keys_to_strings, strings_to_keys};
 use setting::{SettingChange, SettingKind, SettingRow};
 
 mod color_picker;
+mod commit;
 mod dropdown;
 mod input;
 #[cfg(not(target_os = "macos"))]
