@@ -1,4 +1,5 @@
 use std::cell::Cell;
+use std::sync::atomic::Ordering;
 
 use display_info::DisplayInfo;
 use freya::{prelude::*, winit::window::WindowId};
@@ -185,7 +186,11 @@ fn nav_item(section: Section, mut current: State<Section>) -> Element {
   .into()
 }
 
-fn sidebar(current: State<Section>, on_reset: EventHandler<()>) -> impl IntoElement {
+fn sidebar(
+  current: State<Section>,
+  on_reset: EventHandler<()>,
+  on_close: EventHandler<()>,
+) -> impl IntoElement {
   rect()
     .width(Size::px(SIDEBAR_WIDTH))
     .height(Size::fill())
@@ -223,7 +228,14 @@ fn sidebar(current: State<Section>, on_reset: EventHandler<()>) -> impl IntoElem
       rect()
         .width(Size::fill())
         .spacing(4.)
-        .child(ResetButton { on_reset }),
+        .child(ResetButton { on_reset })
+        .child(action_button(
+          "Close",
+          LIGHT_GRAY,
+          MUTED_GRAY,
+          Color::WHITE,
+          move |_| on_close.call(()),
+        )),
     )
 }
 
@@ -232,11 +244,16 @@ fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
 
   // Make the recording flag available to KeybindControl
   let recording_flag = app.read(|state| state.recording_keybind.clone());
+  let recording = recording_flag.clone();
   use_provide_context(move || recording_flag);
 
   let mut local_config = use_state(|| app.read(|state| state.config.clone()));
   let mut reset_version = use_state(|| 0usize);
   let section = use_state(|| Section::General);
+  let window_id = use_hook(Platform::window_id);
+
+  let close = EventHandler::new(move |()| Platform::get().close_window(window_id));
+  let close_shortcut = close.clone();
 
   let on_reset = EventHandler::new({
     let app = app.clone();
@@ -285,7 +302,13 @@ fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
     .background(GRAY)
     .direction(Direction::Horizontal)
     .content(Content::Flex)
-    .child(sidebar(section, on_reset))
+    .on_global_key_down(move |e: Event<KeyboardEventData>| {
+      let is_close = e.modifiers.contains(Modifiers::ctrl_or_meta()) && e.code == Code::KeyW;
+      if is_close && !recording.load(Ordering::Relaxed) {
+        close_shortcut.call(());
+      }
+    })
+    .child(sidebar(section, on_reset, close))
     .child(
       rect().width(Size::flex(1.)).height(Size::fill()).child(
         ScrollView::new()
