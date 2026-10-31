@@ -273,7 +273,6 @@ fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
   };
 
   let page = rect()
-    .key(reset_version())
     .width(Size::fill())
     .padding(Gaps::new(24., 24., 4., 24.))
     .child(
@@ -306,14 +305,10 @@ fn configurator(app: AppHandle, standalone: bool) -> impl IntoElement {
     })
     .child(sidebar(section, on_reset, close))
     .child(
-      rect().width(Size::flex(1.)).height(Size::fill()).child(
-        ScrollView::new()
-          .key(current)
-          .height(Size::fill())
-          .width(Size::fill())
-          .direction(Direction::Vertical)
-          .child(page),
-      ),
+      ScrollView::new()
+        .key((current, reset_version()))
+        .width(Size::flex(1.))
+        .child(page),
     )
 }
 
