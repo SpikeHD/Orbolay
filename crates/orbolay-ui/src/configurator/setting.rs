@@ -29,8 +29,10 @@ impl Component for SettingRow {
           .child(label().text(name).color(Color::WHITE).font_size(14.))
           .map(description, |el, desc| {
             el.child(
-              paragraph()
-                .span(Span::new(desc).color(MUTED_GRAY).font_size(12.))
+              label()
+                .text(desc)
+                .color(MUTED_GRAY)
+                .font_size(12.)
                 .width(Size::fill())
                 .margin(Gaps::new(4., 0., 0., 0.)),
             )
