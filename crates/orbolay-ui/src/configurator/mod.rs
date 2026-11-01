@@ -1,7 +1,6 @@
 use std::cell::Cell;
 use std::sync::atomic::Ordering;
 
-use display_info::DisplayInfo;
 use freya::{prelude::*, winit::window::WindowId};
 
 use orbolay_core::{
@@ -28,33 +27,6 @@ mod toggle;
 
 const WIDTH: f32 = 760.;
 const HEIGHT: f32 = 600.;
-
-const TRANSPORT_MODES: &[&str] = &["ipc", "websocket"];
-
-const ALIGNMENTS: &[&str] = &[
-  "topleft",
-  "topright",
-  "bottomleft",
-  "bottomright",
-  "topcenter",
-  "bottomcenter",
-  "centerleft",
-  "centerright",
-];
-
-const VOICE_DISPLAY_OPTIONS: &[&str] =
-  &["always", "always (semi-transparent)", "only when speaking"];
-
-const UI_SCALE_OPTIONS: &[f32] = &[0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
-
-fn ui_scale_label(scale: f32) -> String {
-  format!("{:.0}%", scale * 100.0)
-}
-
-fn parse_ui_scale_label(value: &str) -> Option<f32> {
-  let percent = value.strip_suffix('%')?.trim().parse::<f32>().ok()?;
-  Some(percent / 100.0)
-}
 
 #[derive(Clone, Copy)]
 enum ConfiguratorWindow {
