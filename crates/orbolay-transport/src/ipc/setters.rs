@@ -2,10 +2,7 @@ use serde_json::Value;
 
 use crate::ipc::{OP_FRAME, SharedStream, ipc_write};
 
-pub fn set_muted(
-  stream: &SharedStream,
-  muted: bool,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub fn set_muted(stream: &SharedStream, muted: bool) -> Result<(), Box<dyn std::error::Error>> {
   let data = serde_json::json!({ "mute": muted });
   ipc_write(
     stream,
@@ -89,10 +86,7 @@ pub fn set_user_volume(
   Ok(())
 }
 
-pub fn get_guild(
-  stream: &SharedStream,
-  guild_id: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub fn get_guild(stream: &SharedStream, guild_id: &str) -> Result<(), Box<dyn std::error::Error>> {
   ipc_write(
     stream,
     OP_FRAME,
