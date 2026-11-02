@@ -313,7 +313,8 @@ pub fn user_template_classes(user: &User, is_self: bool) -> Vec<&'static str> {
 
 fn avatar_url(user: &User) -> String {
   if user.avatar.is_empty() {
-    return String::new();
+    let index = user.id.parse::<u64>().map_or(0, |id| (id >> 22) % 6);
+    return format!("https://cdn.discordapp.com/embed/avatars/{index}.png");
   }
 
   format!(
