@@ -40,14 +40,17 @@ impl AppHandle {
     // grow on Windows with the OpenGL renderer. Deadlines arrive in order since they all use the
     // same grace length, so waiting on each one in turn is enough.
     let grace_app = app.clone();
-    std::thread::spawn(move || {
-      for (user_id, until) in grace_rx.iter() {
-        if let Some(wait) = until.checked_duration_since(Instant::now()) {
-          std::thread::sleep(wait);
+    std::thread::Builder::new()
+      .name("orbolay-grace".into())
+      .spawn(move || {
+        for (user_id, until) in grace_rx.iter() {
+          if let Some(wait) = until.checked_duration_since(Instant::now()) {
+            std::thread::sleep(wait);
+          }
+          grace_app.end_grace(&user_id, until);
         }
-        grace_app.end_grace(&user_id, until);
-      }
-    });
+      })
+      .expect("failed to spawn the grace thread");
 
     app
   }
