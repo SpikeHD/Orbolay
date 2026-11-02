@@ -198,10 +198,7 @@ impl UserTemplate {
       CAMERA_ICON_TOKEN,
       &status_icon(user.camera, "camera", CAMERA_ICON),
     );
-    html = html.replace(
-      STREAMING_TOKEN,
-      &live_indicator(user.streaming),
-    );
+    html = html.replace(STREAMING_TOKEN, &live_indicator(user.streaming));
     html
   }
 }
