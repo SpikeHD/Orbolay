@@ -36,9 +36,6 @@ impl AppHandle {
       grace_tx,
     };
 
-    // One long-lived thread ends every grace period. Spawning a thread per period made memory
-    // grow on Windows with the OpenGL renderer. Deadlines arrive in order since they all use the
-    // same grace length, so waiting on each one in turn is enough.
     let grace_app = app.clone();
     std::thread::Builder::new()
       .name("orbolay-grace".into())
