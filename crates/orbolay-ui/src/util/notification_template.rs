@@ -148,8 +148,9 @@ pub fn load_notification_template(name: Option<&str>) -> NotificationTemplate {
 impl NotificationTemplate {
   pub fn render(&self, notification: &Notification, theme: &Theme) -> String {
     let root_tag = render_tag(&self.root_name, &self.root_attrs);
+    let icon = icon_url(&notification.icon);
     let mut classes = Vec::new();
-    if notification.icon.is_empty() {
+    if icon.is_empty() {
       classes.push("no-icon");
     }
     if notification
@@ -169,9 +170,24 @@ impl NotificationTemplate {
     );
     html = html.replace(TITLE_TOKEN, &escape_html(&notification.title));
     html = html.replace(BODY_TOKEN, &escape_html(&strip(&notification.body)));
-    html = html.replace(ICON_TOKEN, &notification.icon);
+    html = html.replace(ICON_TOKEN, &escape_html(&icon));
     html = html.replace(ACTIONS_TOKEN, &actions_html(notification));
     html
+  }
+}
+
+/// Discord hands out default assets as site-relative paths (`/assets/<hash>.png`), and blitz
+/// panics on image URLs it cannot resolve, taking the whole overlay down. Only ever pass it
+/// absolute http(s) URLs; anything else renders without an icon.
+fn icon_url(icon: &str) -> String {
+  if is_network_url(icon) {
+    icon.to_string()
+  } else if icon.starts_with("//") {
+    format!("https:{icon}")
+  } else if icon.starts_with('/') {
+    format!("https://discord.com{icon}")
+  } else {
+    String::new()
   }
 }
 
@@ -260,4 +276,26 @@ fn preprocess(raw: &str) -> Result<NotificationTemplate, String> {
       .collect(),
     generation: 0,
   })
+}
+
+#[cfg(test)]
+mod tests {
+  use super::icon_url;
+
+  #[test]
+  fn icon_urls_are_always_absolute_or_empty() {
+    let ok = "https://cdn.discordapp.com/avatars/1/a.png";
+    assert_eq!(icon_url(ok), ok);
+    assert_eq!(
+      icon_url("/assets/18e336a74a159cfd.png"),
+      "https://discord.com/assets/18e336a74a159cfd.png"
+    );
+    assert_eq!(
+      icon_url("//cdn.discordapp.com/a.png"),
+      "https://cdn.discordapp.com/a.png"
+    );
+    assert_eq!(icon_url(""), "");
+    assert_eq!(icon_url("assets/a.png"), "");
+    assert_eq!(icon_url("data:image/png;base64,AAAA"), "");
+  }
 }
