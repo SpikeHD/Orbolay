@@ -19,6 +19,7 @@ pub struct AppHandle {
   shared: SharedAppState,
   redraw_tx: flume::Sender<()>,
   open_config_tx: flume::Sender<()>,
+  grace_tx: flume::Sender<(String, Instant)>,
 }
 
 impl AppHandle {
@@ -27,11 +28,28 @@ impl AppHandle {
     redraw_tx: flume::Sender<()>,
     open_config_tx: flume::Sender<()>,
   ) -> Self {
-    Self {
+    let (grace_tx, grace_rx) = flume::unbounded::<(String, Instant)>();
+    let app = Self {
       shared,
       redraw_tx,
       open_config_tx,
-    }
+      grace_tx,
+    };
+
+    // One long-lived thread ends every grace period. Spawning a thread per period made memory
+    // grow on Windows with the OpenGL renderer. Deadlines arrive in order since they all use the
+    // same grace length, so waiting on each one in turn is enough.
+    let grace_app = app.clone();
+    std::thread::spawn(move || {
+      for (user_id, until) in grace_rx.iter() {
+        if let Some(wait) = until.checked_duration_since(Instant::now()) {
+          std::thread::sleep(wait);
+        }
+        grace_app.end_grace(&user_id, until);
+      }
+    });
+
+    app
   }
 
   pub fn shared(&self) -> &SharedAppState {
@@ -88,28 +106,25 @@ impl AppHandle {
       return;
     }
 
-    let grace = Duration::from_millis(u64::from(grace_ms));
-    let until = Instant::now() + grace;
+    let until = Instant::now() + Duration::from_millis(u64::from(grace_ms));
     user.grace_until = Some(until);
+    let _ = self.grace_tx.send((user.id.clone(), until));
+  }
 
-    let user_id = user.id.clone();
-    let app = self.clone();
-    std::thread::spawn(move || {
-      std::thread::sleep(grace);
-      app.update_if_changed(|state| {
-        let Some(user) = state
-          .voice_users
-          .iter_mut()
-          .find(|user| user.id == user_id && user.grace_until == Some(until))
-        else {
-          return false;
-        };
-        user.grace_until = None;
-        if user.voice_state == UserVoiceState::Speaking {
-          user.voice_state = UserVoiceState::NotSpeaking;
-        }
-        true
-      });
+  fn end_grace(&self, user_id: &str, until: Instant) {
+    self.update_if_changed(|state| {
+      let Some(user) = state
+        .voice_users
+        .iter_mut()
+        .find(|user| user.id == user_id && user.grace_until == Some(until))
+      else {
+        return false;
+      };
+      user.grace_until = None;
+      if user.voice_state == UserVoiceState::Speaking {
+        user.voice_state = UserVoiceState::NotSpeaking;
+      }
+      true
     });
   }
 }
