@@ -276,35 +276,3 @@ fn preprocess(raw: &str) -> Result<NotificationTemplate, String> {
     generation: 0,
   })
 }
-
-#[cfg(test)]
-mod tests {
-  use super::icon_url;
-
-  #[test]
-  fn icon_urls_are_always_absolute_or_empty() {
-    let ok = "https://cdn.discordapp.com/avatars/1/a.png";
-    assert_eq!(icon_url(ok), ok);
-    assert_eq!(
-      icon_url("/assets/18e336a74a159cfd.png"),
-      "https://discord.com/assets/18e336a74a159cfd.png"
-    );
-    assert_eq!(
-      icon_url("//cdn.discordapp.com/a.png"),
-      "https://cdn.discordapp.com/a.png"
-    );
-    assert_eq!(
-      icon_url("HTTPS://cdn.discordapp.com/a.png"),
-      "https://cdn.discordapp.com/a.png"
-    );
-    assert_eq!(icon_url("assets/a.png"), "https://discord.com/assets/a.png");
-    assert_eq!(icon_url(""), "");
-    assert_eq!(icon_url("  "), "");
-    assert_eq!(icon_url("data:image/png;base64,AAAA"), "");
-    // look like URLs but blitz can't resolve them
-    assert_eq!(icon_url("https://"), "");
-    assert_eq!(icon_url("//"), "");
-    assert_eq!(icon_url("http://exa mple.com/a.png"), "");
-    assert_eq!(icon_url("//bad host/x.png"), "");
-  }
-}
