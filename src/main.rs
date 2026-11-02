@@ -86,6 +86,19 @@ pub struct Args {
   target: Vec<String>,
 }
 
+/// On Windows the OpenGL renderer keeps growing private memory on every redraw (measured on
+/// NVIDIA, independent of Skia's GPU cache), while Vulkan stays flat. Prefer Vulkan there unless
+/// `FREYA_RENDERER` is set; Freya falls back to OpenGL when Vulkan can't be initialized.
+fn renderer_preference() -> RendererPreference {
+  if cfg!(target_os = "windows") && std::env::var_os("FREYA_RENDERER").is_none() {
+    RendererPreference::Vulkan {
+      gpu_preference: GpuPreference::Auto,
+    }
+  } else {
+    RendererPreference::Auto
+  }
+}
+
 fn main() {
   let args = Args::parse_args_default_or_exit();
 
@@ -186,6 +199,7 @@ fn main() {
       .with_fallback_font("Twemoji")
       .with_window(
         WindowConfig::new(app)
+          .with_renderer(renderer_preference())
           .with_title("orbolay")
           .with_decorations(false)
           .with_transparency(true)
