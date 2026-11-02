@@ -17,6 +17,7 @@ scraper = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 ureq = { workspace = true }
+url = { workspace = true }
 
 [target.'cfg(not(target_os = "macos"))'.dependencies]
 rdev = { workspace = true }

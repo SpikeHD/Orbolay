@@ -178,16 +178,19 @@ impl NotificationTemplate {
 
 /// Discord hands out default assets as site-relative paths (`/assets/<hash>.png`), and blitz
 /// panics on image URLs it cannot resolve, taking the whole overlay down. Only ever pass it
-/// absolute http(s) URLs; anything else renders without an icon.
+/// URLs that parse as absolute http(s) with a host; anything else renders without an icon.
 fn icon_url(icon: &str) -> String {
-  if is_network_url(icon) {
-    icon.to_string()
-  } else if icon.starts_with("//") {
+  let absolute = if icon.starts_with("//") {
     format!("https:{icon}")
   } else if icon.starts_with('/') {
     format!("https://discord.com{icon}")
   } else {
-    String::new()
+    icon.to_string()
+  };
+
+  match url::Url::parse(&absolute) {
+    Ok(url) if matches!(url.scheme(), "http" | "https") && url.host().is_some() => url.into(),
+    _ => String::new(),
   }
 }
 
@@ -294,8 +297,17 @@ mod tests {
       icon_url("//cdn.discordapp.com/a.png"),
       "https://cdn.discordapp.com/a.png"
     );
+    assert_eq!(
+      icon_url("HTTPS://cdn.discordapp.com/a.png"),
+      "https://cdn.discordapp.com/a.png"
+    );
     assert_eq!(icon_url(""), "");
     assert_eq!(icon_url("assets/a.png"), "");
     assert_eq!(icon_url("data:image/png;base64,AAAA"), "");
+    // look like URLs but blitz can't resolve them
+    assert_eq!(icon_url("https://"), "");
+    assert_eq!(icon_url("//"), "");
+    assert_eq!(icon_url("http://exa mple.com/a.png"), "");
+    assert_eq!(icon_url("//bad host/x.png"), "");
   }
 }
