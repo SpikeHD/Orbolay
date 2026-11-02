@@ -148,8 +148,9 @@ pub fn load_notification_template(name: Option<&str>) -> NotificationTemplate {
 impl NotificationTemplate {
   pub fn render(&self, notification: &Notification, theme: &Theme) -> String {
     let root_tag = render_tag(&self.root_name, &self.root_attrs);
+    let icon = icon_url(&notification.icon);
     let mut classes = Vec::new();
-    if notification.icon.is_empty() {
+    if icon.is_empty() {
       classes.push("no-icon");
     }
     if notification
@@ -169,10 +170,24 @@ impl NotificationTemplate {
     );
     html = html.replace(TITLE_TOKEN, &escape_html(&notification.title));
     html = html.replace(BODY_TOKEN, &escape_html(&strip(&notification.body)));
-    html = html.replace(ICON_TOKEN, &notification.icon);
+    html = html.replace(ICON_TOKEN, &escape_html(&icon));
     html = html.replace(ACTIONS_TOKEN, &actions_html(notification));
     html
   }
+}
+
+/// Discord gives us both full URLs and relative URLs, this handles those
+fn icon_url(icon: &str) -> String {
+  if icon.trim().is_empty() {
+    return String::new();
+  }
+
+  url::Url::parse("https://discord.com")
+    .and_then(|base| base.join(icon))
+    .ok()
+    .filter(|url| matches!(url.scheme(), "http" | "https") && url.has_host())
+    .map(String::from)
+    .unwrap_or_default()
 }
 
 fn actions_html(notification: &Notification) -> String {
