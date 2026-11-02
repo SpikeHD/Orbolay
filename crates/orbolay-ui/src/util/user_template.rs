@@ -26,15 +26,14 @@ const ROOT_ID: &str = "user";
 const NAME_TOKEN: &str = "{{name}}";
 const AVATAR_TOKEN: &str = "{{avatar}}";
 const VOLUME_PERCENT_TOKEN: &str = "{{volume-percent}}";
+const STREAMING_TOKEN: &str = "{{streaming}}";
 
 const MUTED_ICON_TOKEN: &str = "{{muted-icon}}";
 const DEAFENED_ICON_TOKEN: &str = "{{deafened-icon}}";
-const STREAMING_ICON_TOKEN: &str = "{{streaming-icon}}";
 const CAMERA_ICON_TOKEN: &str = "{{camera-icon}}";
 
 const MUTED_ICON: &str = include_str!("../../../../assets/muted.svg");
 const DEAFENED_ICON: &str = include_str!("../../../../assets/deafened.svg");
-const STREAMING_ICON: &str = include_str!("../../../../assets/streaming.svg");
 const CAMERA_ICON: &str = include_str!("../../../../assets/camera.svg");
 
 const DEFAULT_TEMPLATE: &[u8] = include_bytes!("../../../../templates/user/index.html");
@@ -196,12 +195,12 @@ impl UserTemplate {
       ),
     );
     html = html.replace(
-      STREAMING_ICON_TOKEN,
-      &status_icon(user.streaming, "streaming", STREAMING_ICON),
-    );
-    html = html.replace(
       CAMERA_ICON_TOKEN,
       &status_icon(user.camera, "camera", CAMERA_ICON),
+    );
+    html = html.replace(
+      STREAMING_TOKEN,
+      &live_indicator(user.streaming),
     );
     html
   }
@@ -210,6 +209,14 @@ impl UserTemplate {
 fn status_icon(active: bool, state: &str, svg: &str) -> String {
   if active {
     format!("<span class=\"status-icon {state}\">{svg}</span>")
+  } else {
+    String::new()
+  }
+}
+
+fn live_indicator(active: bool) -> String {
+  if active {
+    "<span class=\"live-indicator\">LIVE</span>".to_string()
   } else {
     String::new()
   }
