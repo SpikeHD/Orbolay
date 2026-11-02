@@ -95,21 +95,21 @@
 
 # Features
 
-* Voice channel member list and status (who is speaking/muted/deafened/etc)
+* Works with any official or modded client (including web!)
+* Voice channel member list and status (who is speaking/muted/deafened/live/etc)
 * Custom notifications
 * Mute/deafen/disconnect controls
 * User volume control
 * Soundboard
-* Customizable layout, colors, border radius, etc.
-* Works with any official or modded client (including web!)
+* Fully customizable using HTML and CSS (with no webview!)
 
 # Compatibility
 
 * **Windows** - 10 and 11 both work, Windows 7 might work with kernel extensions
-* **MacOS** - works, but cannot watch for keybinds (which means no voice controls)
+* **MacOS** - works, but you will need to set a custom keybind that runs `orbolay --toggle-overlay`
 * **Linux**
   * **X11** - should work fine, you may need to add your user to the `input` group
-  * **Wayland** - technically works, you will want to use XWayland though (via `WAYLAND_DISPLAY="" orbolay`) and you may need to add your user to the `input` group
+  * **Wayland** - should work fine, you will want to use XWayland though (via `WAYLAND_DISPLAY="" orbolay`) and you may need to add your user to the `input` group
 
 # Installation
 
@@ -195,7 +195,7 @@ orbolay -- %command%
 
 # Configuration
 
-On first run, Orbolay should open the configurator automatically. In the future, it can be opened by clicking the settings cog in the
+On first run, Orbolay should open the configuration window automatically. In the future, it can be opened by clicking the settings cog in the
 overlay, or by running `orbolay --config` in any terminal.
 
 # Custom Templates
@@ -206,7 +206,7 @@ Components within Orbolay can be customized with HTML and CSS! See [./TEMPLATES.
 
 ## Hyprland
 
-To use Orbolay with Hyprland, you will need to manually set some window rules (taken from [#28](https://github.com/SpikeHD/Orbolay/issues/28)). Note that this prevents the keybind and clickable controls from working:
+To use Orbolay with Hyprland, you will need to manually set some window rules (taken from [#28](https://github.com/SpikeHD/Orbolay/issues/28)). Note that this prevents the clickable controls from working:
 
 ```
 hl.window_rule({
