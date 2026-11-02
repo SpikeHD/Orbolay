@@ -176,10 +176,7 @@ impl NotificationTemplate {
   }
 }
 
-/// Discord hands out default assets as site-relative paths (`/assets/<hash>.png`), and blitz
-/// panics on image URLs it cannot resolve, taking the whole overlay down. Only ever pass it
-/// URLs that resolve (against discord.com) to absolute http(s) with a host; anything else
-/// renders without an icon.
+/// Discord gives us both full URLs and relative URLs, this handles those
 fn icon_url(icon: &str) -> String {
   if icon.trim().is_empty() {
     return String::new();
