@@ -243,6 +243,7 @@ pub fn handle_ipc_message(
           .unwrap_or_default()
           .replace(".webp", ".png"),
         url: None,
+        channel_name: None,
         actions,
       };
       state.notify(notification);

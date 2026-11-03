@@ -134,3 +134,12 @@ impl From<&RpcVoiceState> for UserVoiceState {
     }
   }
 }
+
+pub fn avatar_url(user_id: &str, avatar: &str) -> String {
+  if avatar.is_empty() {
+    let index = user_id.parse::<u64>().map_or(0, |id| (id >> 22) % 6);
+    return format!("https://cdn.discordapp.com/embed/avatars/{index}.png");
+  }
+
+  format!("https://cdn.discordapp.com/avatars/{user_id}/{avatar}.png?size=160")
+}

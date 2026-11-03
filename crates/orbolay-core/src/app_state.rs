@@ -141,6 +141,7 @@ pub struct AppState {
   pub is_censor: bool, // Used in modded clients but not IPC
   pub voice_users: Vec<User>,
   pub messages: Vec<Notification>,
+  pub chat_messages: Vec<Notification>,
   pub soundboard_cache: HashMap<String, Vec<SoundboardSoundPayload>>,
 
   // Name caches
@@ -174,6 +175,7 @@ impl AppState {
       is_censor: false,
       voice_users: vec![],
       messages: vec![],
+      chat_messages: vec![],
       soundboard_cache: HashMap::new(),
 
       guild_names: default_guild_names,
@@ -191,6 +193,15 @@ impl AppState {
   }
 
   pub fn notify(&mut self, notification: Notification) {
+    if notification.message_id.is_some()
+      && self
+        .chat_messages
+        .iter()
+        .any(|chat| chat.message_id == notification.message_id)
+    {
+      return;
+    }
+
     let messages_len = self.messages.len();
 
     // Keep the last 3 elements
@@ -199,5 +210,16 @@ impl AppState {
     }
 
     self.messages.push(notification);
+  }
+
+  pub fn push_chat(&mut self, chat: Notification) {
+    let len = self.chat_messages.len();
+    if len >= crate::chat::MAX_CHAT_ROWS {
+      self
+        .chat_messages
+        .drain(0..=len - crate::chat::MAX_CHAT_ROWS);
+    }
+
+    self.chat_messages.push(chat);
   }
 }
