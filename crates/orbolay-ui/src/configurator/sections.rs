@@ -512,6 +512,13 @@ impl Settings {
         config.show_voice_chat,
         |cfg, value| cfg.show_voice_chat = value,
       ),
+      self.number(
+        "Maximum Notifications",
+        Some("How many notifications and voice channel chat messages to show at once, in total. The rest wait their turn, notifications first."),
+        config.max_notifications,
+        false,
+        |cfg, n: u32| cfg.max_notifications = n.clamp(1, 10),
+      ),
       self.toggle(
         "Semi-Transparent Notifications",
         "Fade notifications when the overlay is closed",
