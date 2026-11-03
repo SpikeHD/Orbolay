@@ -371,6 +371,7 @@ fn app() -> impl IntoElement {
   let state = app_state.read();
   let voice_users = state.voice_users.clone();
   let messages = state.messages.clone();
+  let chat_messages = state.chat_messages.clone();
   let messages_enabled = state.config.enable_message_notifications;
   let is_open = state.is_open;
   let is_censor = state.is_censor;
@@ -442,6 +443,7 @@ fn app() -> impl IntoElement {
     // Messages
     .maybe(messages_enabled, |el| el.child(MessagesSection {
       messages,
+      chat_messages,
       is_open,
       is_censor,
       message_alignment: config

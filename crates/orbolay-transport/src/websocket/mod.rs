@@ -2,10 +2,11 @@ use orbolay_logging::{error, log, success, warn};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::net::{TcpListener, TcpStream};
-use tungstenite::{Message, Utf8Bytes, accept};
+use tungstenite::{Message, Utf8Bytes, WebSocket, accept};
 
 use orbolay_core::{
   app_state::AppHandle,
+  chat::ChatMessagePayload,
   payloads::{ChannelJoinPayload, NotificationPayload, SoundboardSoundPayload, UpdatePayload},
   user::UserVoiceState,
   util::bridge::BridgeMessage,
@@ -57,6 +58,8 @@ fn ws_stream(
 
   log!("Stream connected");
 
+  let mut chat_enabled = false;
+
   'outer: loop {
     loop {
       match websocket.read() {
@@ -83,15 +86,17 @@ fn ws_stream(
       }
     }
 
+    let want_chat = app.read(|state| state.config.voice_chat_enabled());
+    if want_chat != chat_enabled {
+      chat_enabled = want_chat;
+      let msg = serde_json::json!({ "cmd": "SET_VOICE_CHANNEL_CHAT", "enabled": want_chat });
+      send_text(&mut websocket, msg.to_string());
+    }
+
     if let Ok(msg) = transport_recv.try_recv() {
       let msg = serde_json::to_string(&msg)?;
       log!("Sending message to websocket: {:?}", msg);
-      websocket
-        .write(Message::Text(Utf8Bytes::from(msg)))
-        .unwrap_or_else(|_| error!("Failed to send message to websocket, socket closed?"));
-      websocket
-        .flush()
-        .unwrap_or_else(|_| error!("Failed to flush message to websocket, socket closed?"));
+      send_text(&mut websocket, msg);
     }
 
     std::thread::sleep(std::time::Duration::from_millis(10));
@@ -99,11 +104,24 @@ fn ws_stream(
   Ok(())
 }
 
+fn send_text(websocket: &mut WebSocket<TcpStream>, text: String) {
+  websocket
+    .write(Message::Text(Utf8Bytes::from(text)))
+    .unwrap_or_else(|_| error!("Failed to send message to websocket, socket closed?"));
+  websocket
+    .flush()
+    .unwrap_or_else(|_| error!("Failed to flush message to websocket, socket closed?"));
+}
+
 pub fn handle_ws_message(
   msg: &BridgeMessage,
   app: AppHandle,
 ) -> Result<(), Box<dyn std::error::Error>> {
-  log!("Received message: {:?}", msg);
+  if msg.cmd == "VOICE_CHANNEL_MESSAGE" {
+    log!("Received message: {}", msg.cmd);
+  } else {
+    log!("Received message: {:?}", msg);
+  }
 
   let data = msg.data.clone();
 
@@ -214,6 +232,10 @@ pub fn handle_ws_message(
       data.message.timestamp = Some(chrono::Utc::now().timestamp());
       data.message.icon = data.message.icon.replace(".webp", ".png");
       app.notify(data.message);
+    }
+    "VOICE_CHANNEL_MESSAGE" => {
+      let payload = serde_json::from_value::<ChatMessagePayload>(data)?;
+      app.update_if_changed(|state| state.receive_chat(&payload));
     }
     "STREAMER_MODE" => {
       let is_censor = msg

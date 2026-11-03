@@ -21,7 +21,7 @@ use crate::ipc::{
   OP_CLOSE, OP_FRAME, OP_HANDSHAKE, SharedStream, handle_ipc_message, handle_ui_message, ipc_read,
   ipc_write,
   setters::{get_channel, get_guild},
-  subscribe_voice_channel, subscribe_voice_global,
+  subscribe_voice_channel, subscribe_voice_global, sync_voice_chat,
 };
 use orbolay_logging::{error, log, success};
 
@@ -110,10 +110,23 @@ pub fn create_ipc_connection(
     let ui_app = app.clone();
 
     std::thread::spawn(move || {
+      let mut chat_channel: Option<String> = None;
+
       loop {
         if let Err(e) = drain_ui_messages(&ui_stream, &ui_receiver, ui_app.clone()) {
           error!("UI message handler failed: {}", e);
           continue;
+        }
+
+        let want = ui_app.read(|state| {
+          let want = (state.config.voice_chat_enabled() && !state.current_channel.is_empty())
+            .then_some(state.current_channel.as_str());
+          (want != chat_channel.as_deref()).then(|| want.map(str::to_string))
+        });
+        if let Some(want) = want
+          && let Err(e) = sync_voice_chat(&ui_stream, &mut chat_channel, want)
+        {
+          error!("Failed to update voice channel chat subscription: {}", e);
         }
 
         if let Ok(()) = rx.try_recv() {
@@ -135,17 +148,20 @@ pub fn create_ipc_connection(
         }
         Ok((OP_CLOSE, payload)) => {
           log!("Stream closed: {}", payload);
-          app.update(|state| state.voice_users = vec![]);
           break;
         }
         Err(e) => {
           error!("IPC read error: {}", e);
-          app.update(|state| state.voice_users = vec![]);
           break;
         }
         _ => {}
       }
     }
+
+    app.update(|state| {
+      state.voice_users = vec![];
+      state.current_channel = String::new();
+    });
 
     tx.send(())?;
 
