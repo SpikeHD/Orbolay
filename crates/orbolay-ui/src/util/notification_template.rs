@@ -12,7 +12,7 @@ use orbolay_core::{
   config::config_dir,
   dirs::{NOTIFICATION_TEMPLATES, TEMPLATES_DIR},
   payloads::{Notification, NotificationKind},
-  util::text::strip,
+  util::text::{strip, truncate_to_lines},
 };
 use orbolay_logging::warn;
 use scraper::{Html, Selector};
@@ -23,6 +23,9 @@ use crate::util::html_template::{
 use crate::util::theme::Theme;
 
 pub const ACTION_ATTR: &str = "data-action";
+
+pub const FULL_TEXT_LINES: u32 = 3;
+pub const BODY_WIDTH_PX: f32 = 324.0;
 
 const ROOT_ID: &str = "notification";
 
@@ -147,7 +150,17 @@ pub fn load_notification_template(name: Option<&str>) -> NotificationTemplate {
 }
 
 impl NotificationTemplate {
-  pub fn render(&self, notification: &Notification, theme: &Theme) -> String {
+  pub fn is_builtin(&self) -> bool {
+    self.generation == 0
+  }
+
+  pub fn render(
+    &self,
+    notification: &Notification,
+    theme: &Theme,
+    full_text: bool,
+    builtin: bool,
+  ) -> String {
     let root_tag = render_tag(&self.root_name, &self.root_attrs);
     let icon = icon_url(&notification.icon);
     let mut classes = Vec::new();
@@ -161,6 +174,9 @@ impl NotificationTemplate {
     {
       classes.push("has-actions");
     }
+    if full_text && builtin {
+      classes.push("full-text");
+    }
     let new_attrs = merge_classes(&self.root_attrs, &classes);
     let new_root_tag = render_tag(&self.root_name, &new_attrs);
     let mut html = self.html.replace(&root_tag, &new_root_tag);
@@ -169,11 +185,18 @@ impl NotificationTemplate {
       "</head>",
       &format!("<style>:root{{{}}}</style></head>", theme_decls(theme)),
     );
+    let body = if builtin {
+      let lines = if full_text { FULL_TEXT_LINES } else { 1 };
+      truncate_to_lines(&notification.body, BODY_WIDTH_PX, lines)
+    } else {
+      strip(&notification.body)
+    };
+
     fill_tokens(
       &html,
       &[
         (TITLE_TOKEN, &escape_html(&notification.title)),
-        (BODY_TOKEN, &escape_html(&strip(&notification.body))),
+        (BODY_TOKEN, &escape_html(&body)),
         (ICON_TOKEN, &escape_html(&icon)),
         (ACTIONS_TOKEN, &actions_html(notification)),
         (

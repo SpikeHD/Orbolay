@@ -136,6 +136,8 @@ pub struct Config {
   #[serde(default = "default_max_notifications")]
   pub max_notifications: u32,
   #[serde(default)]
+  pub notification_full_text: bool,
+  #[serde(default)]
   pub message_alignment: Option<String>,
   #[serde(default)]
   pub user_alignment: Option<String>,
@@ -187,6 +189,7 @@ impl Default for Config {
       enable_message_notifications: true,
       show_voice_chat: false,
       max_notifications: default_max_notifications(),
+      notification_full_text: false,
       message_alignment: None,
       user_alignment: None,
       message_offset_x: 0,

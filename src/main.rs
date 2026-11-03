@@ -454,6 +454,7 @@ fn app() -> impl IntoElement {
       message_offset_y: config.message_offset_y,
       messages_semitransparent: config.messages_semitransparent,
       notification_template: config.notification_template.clone(),
+      full_text: config.notification_full_text,
       app_state,
       theme,
       ui_scale,
