@@ -172,7 +172,10 @@ impl UserTemplate {
       "</head>",
       &format!("<style>:root{{{}}}</style></head>", theme_decls(theme)),
     );
-    html = html.replace(AVATAR_TOKEN, &avatar_url(user));
+    html = html.replace(
+      AVATAR_TOKEN,
+      &orbolay_core::user::avatar_url(&user.id, &user.avatar),
+    );
     html = html.replace(NAME_TOKEN, &escape_html(&user.name));
     html = html.replace(
       VOLUME_PERCENT_TOKEN,
@@ -309,16 +312,4 @@ pub fn user_template_classes(user: &User, is_self: bool) -> Vec<&'static str> {
   }
 
   classes
-}
-
-fn avatar_url(user: &User) -> String {
-  if user.avatar.is_empty() {
-    let index = user.id.parse::<u64>().map_or(0, |id| (id >> 22) % 6);
-    return format!("https://cdn.discordapp.com/embed/avatars/{index}.png");
-  }
-
-  format!(
-    "https://cdn.discordapp.com/avatars/{}/{}.png?size=160",
-    user.id, user.avatar
-  )
 }

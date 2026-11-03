@@ -507,6 +507,25 @@ impl Settings {
         |cfg, value| cfg.enable_message_notifications = value,
       ),
       self.toggle(
+        "Show Voice Channel Chat",
+        "Show new messages from your voice channel's text chat. In IPC mode, Streamer Mode can't hide them.",
+        config.show_voice_chat,
+        |cfg, value| cfg.show_voice_chat = value,
+      ),
+      self.number(
+        "Maximum Notifications",
+        Some("How many notifications and voice channel chat messages to show at once, in total. The rest wait their turn, notifications first."),
+        config.max_notifications,
+        false,
+        |cfg, n: u32| cfg.max_notifications = n.clamp(1, 10),
+      ),
+      self.toggle(
+        "Show Full Message Text",
+        "Wrap long messages onto up to 3 lines instead of cutting them off with \u{2026}",
+        config.notification_full_text,
+        |cfg, value| cfg.notification_full_text = value,
+      ),
+      self.toggle(
         "Semi-Transparent Notifications",
         "Fade notifications when the overlay is closed",
         config.messages_semitransparent,
