@@ -30,6 +30,7 @@ const TITLE_TOKEN: &str = "{{title}}";
 const BODY_TOKEN: &str = "{{body}}";
 const ICON_TOKEN: &str = "{{icon}}";
 const ACTIONS_TOKEN: &str = "{{actions}}";
+const CHANNEL_TOKEN: &str = "{{channel}}";
 
 const DEFAULT_TEMPLATE: &[u8] = include_bytes!("../../../../templates/notification/index.html");
 
@@ -168,12 +169,43 @@ impl NotificationTemplate {
       "</head>",
       &format!("<style>:root{{{}}}</style></head>", theme_decls(theme)),
     );
-    html = html.replace(TITLE_TOKEN, &escape_html(&notification.title));
-    html = html.replace(BODY_TOKEN, &escape_html(&strip(&notification.body)));
-    html = html.replace(ICON_TOKEN, &escape_html(&icon));
-    html = html.replace(ACTIONS_TOKEN, &actions_html(notification));
-    html
+    fill_tokens(
+      &html,
+      &[
+        (TITLE_TOKEN, &escape_html(&notification.title)),
+        (BODY_TOKEN, &escape_html(&strip(&notification.body))),
+        (ICON_TOKEN, &escape_html(&icon)),
+        (ACTIONS_TOKEN, &actions_html(notification)),
+        (
+          CHANNEL_TOKEN,
+          &escape_html(notification.channel_name.as_deref().unwrap_or_default()),
+        ),
+      ],
+    )
   }
+}
+
+fn fill_tokens(html: &str, tokens: &[(&str, &str)]) -> String {
+  let mut out = String::with_capacity(html.len());
+  let mut rest = html;
+
+  while let Some(start) = rest.find("{{") {
+    out.push_str(&rest[..start]);
+    rest = &rest[start..];
+    match tokens.iter().find(|(token, _)| rest.starts_with(token)) {
+      Some((token, value)) => {
+        out.push_str(value);
+        rest = &rest[token.len()..];
+      }
+      None => {
+        out.push_str("{{");
+        rest = &rest[2..];
+      }
+    }
+  }
+
+  out.push_str(rest);
+  out
 }
 
 /// Discord gives us both full URLs and relative URLs, this handles those

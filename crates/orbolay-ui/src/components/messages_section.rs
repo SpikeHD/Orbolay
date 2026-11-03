@@ -6,13 +6,14 @@ use orbolay_core::{app_state::AppState, payloads::Notification};
 
 use crate::{
   components::MessageRow,
-  config::CornerAlignment,
+  config::{AxisAlignment, CornerAlignment},
   util::{scale::UiScale, theme::Theme},
 };
 
 #[derive(PartialEq)]
 pub struct MessagesSection {
   pub messages: Vec<Notification>,
+  pub chat_messages: Vec<Notification>,
   pub is_open: bool,
   pub is_censor: bool,
   pub message_alignment: String,
@@ -40,7 +41,13 @@ impl Component for MessagesSection {
       1.0_f32
     };
 
-    self.messages.iter().fold(
+    let rows: Vec<&Notification> = if alignment.y == AxisAlignment::End {
+      self.chat_messages.iter().chain(&self.messages).collect()
+    } else {
+      self.messages.iter().chain(&self.chat_messages).collect()
+    };
+
+    rows.into_iter().fold(
       rect()
         .direction(Direction::Vertical)
         .cross_align(alignment.x.to_freya())
