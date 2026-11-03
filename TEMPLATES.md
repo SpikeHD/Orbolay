@@ -54,6 +54,8 @@ you want the icon to appear. The icon is only present when the corresponding sta
 <button class="action secondary" data-action="1">Reject</button>
 ```
 
+"Show Full Message Text" and the "…" for cut-off text only apply to the built-in template. Custom templates are rendered as before, with the whole body text.
+
 > [!NOTE]
 > Orbolay routes a click on an element carrying a `data-action` attribute to the matching action. Any other click
 on the notification navigates to the source message.

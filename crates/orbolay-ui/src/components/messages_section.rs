@@ -2,11 +2,12 @@ use std::str::FromStr;
 
 use freya::prelude::*;
 
-use orbolay_core::{app_state::AppState, payloads::Notification};
+use orbolay_core::{app_state::AppState, payloads::Notification, util::text::estimate_lines};
 
 use crate::{
   components::MessageRow,
   config::{AxisAlignment, CornerAlignment},
+  util::notification_template::{BODY_WIDTH_PX, FULL_TEXT_LINES, load_notification_template},
   util::{scale::UiScale, theme::Theme},
 };
 
@@ -21,6 +22,7 @@ pub struct MessagesSection {
   pub message_offset_y: i32,
   pub messages_semitransparent: bool,
   pub notification_template: Option<String>,
+  pub full_text: bool,
   pub app_state: State<AppState>,
   pub theme: Theme,
   pub ui_scale: f32,
@@ -40,6 +42,8 @@ impl Component for MessagesSection {
     } else {
       1.0_f32
     };
+
+    let builtin = load_notification_template(self.notification_template.as_deref()).is_builtin();
 
     let rows: Vec<&Notification> = if alignment.y == AxisAlignment::End {
       self.chat_messages.iter().chain(&self.messages).collect()
@@ -69,12 +73,26 @@ impl Component for MessagesSection {
             app_state: self.app_state,
             message: message.clone(),
             theme: self.theme,
-            box_size: if has_actions { (400, 100) } else { (400, 66) },
+            box_size: (
+              400,
+              row_height(message, has_actions, self.full_text && builtin),
+            ),
             notification_template: self.notification_template.clone(),
+            full_text: self.full_text,
             ui_scale: scale.factor(),
           })
         }
       },
     )
   }
+}
+
+fn row_height(message: &Notification, has_actions: bool, full_text: bool) -> u32 {
+  let base = if has_actions { 100 } else { 66 };
+  if !full_text {
+    return base;
+  }
+
+  let lines = estimate_lines(&message.body, BODY_WIDTH_PX, FULL_TEXT_LINES);
+  base + (lines - 1) * 18
 }
