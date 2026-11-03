@@ -1,6 +1,10 @@
 use serde::Deserialize;
 
-use crate::{app_state::AppState, payloads::Notification, user::avatar_url};
+use crate::{
+  app_state::AppState,
+  payloads::Notification,
+  user::{avatar_url, display_name},
+};
 
 pub const MAX_CHAT_ROWS: usize = 3;
 
@@ -50,17 +54,6 @@ pub struct ChatMention {
   pub global_name: Option<String>,
 }
 
-impl ChatMessage {
-  fn display_name(&self) -> String {
-    [&self.nick, &self.author.global_name, &self.author.username]
-      .into_iter()
-      .flatten()
-      .find(|name| !name.is_empty())
-      .cloned()
-      .unwrap_or_default()
-  }
-}
-
 impl AppState {
   pub fn receive_chat(&mut self, payload: &ChatMessagePayload) -> bool {
     let Some(row) = chat_row(self, payload) else {
@@ -101,7 +94,11 @@ fn chat_row(state: &AppState, payload: &ChatMessagePayload) -> Option<Notificati
   }
 
   Some(Notification {
-    title: message.display_name(),
+    title: display_name(
+      message.nick.as_deref(),
+      message.author.global_name.as_deref(),
+      message.author.username.as_deref().unwrap_or_default(),
+    ),
     body,
     icon: avatar_url(
       &message.author.id,

@@ -9,7 +9,7 @@ use orbolay_core::{
       VoiceSettingsUpdatePayload,
     },
   },
-  user::UserVoiceState,
+  user::{UserVoiceState, display_name},
   util::bridge::BridgeMessage,
 };
 
@@ -89,12 +89,11 @@ pub fn handle_ipc_message(
       let user_id = data.user.id.clone();
 
       if let Some(user) = state.voice_users.iter_mut().find(|user| user.id == user_id) {
-        user.name = data
-          .nick
-          .as_ref()
-          .or(data.user.global_name.as_ref())
-          .cloned()
-          .unwrap_or_else(|| data.user.username.clone());
+        user.name = display_name(
+          data.nick.as_deref(),
+          data.user.global_name.as_deref(),
+          &data.user.username,
+        );
         user.avatar = data.user.avatar.clone().unwrap_or_default();
         let voice_state = UserVoiceState::from(&data);
         if !(voice_state == UserVoiceState::NotSpeaking
