@@ -8,8 +8,6 @@ use crate::{
   user::{avatar_url, display_name},
 };
 
-pub const MAX_CHAT_ROWS: usize = 3;
-
 #[derive(Debug, Clone, Deserialize)]
 pub struct ChatMessagePayload {
   pub channel_id: String,
@@ -64,8 +62,7 @@ impl AppState {
       return false;
     };
 
-    self.push_chat(row);
-    true
+    self.push_chat(row)
   }
 }
 
@@ -76,6 +73,8 @@ fn chat_row(state: &AppState, payload: &ChatMessagePayload) -> Option<Notificati
     .messages
     .iter()
     .chain(&state.chat_messages)
+    .chain(&state.pending_messages)
+    .chain(&state.pending_chat)
     .any(|row| row.message_id.as_deref() == Some(message.id.as_str()));
 
   if !state.config.voice_chat_enabled()

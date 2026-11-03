@@ -1,5 +1,5 @@
 use std::{
-  collections::HashMap,
+  collections::{HashMap, VecDeque},
   sync::{Arc, RwLock, atomic::AtomicBool},
   time::{Duration, Instant},
 };
@@ -10,6 +10,8 @@ use crate::{
   user::{PremiumType, User, UserVoiceState},
   util::bridge::BridgeMessage,
 };
+
+const MAX_PENDING_CHAT: usize = 100;
 
 /// Thread-safe shared state for background threads.
 pub type SharedAppState = Arc<RwLock<AppState>>;
@@ -142,6 +144,8 @@ pub struct AppState {
   pub voice_users: Vec<User>,
   pub messages: Vec<Notification>,
   pub chat_messages: Vec<Notification>,
+  pub pending_messages: VecDeque<Notification>,
+  pub pending_chat: VecDeque<Notification>,
   pub soundboard_cache: HashMap<String, Vec<SoundboardSoundPayload>>,
 
   // Name caches
@@ -176,6 +180,8 @@ impl AppState {
       voice_users: vec![],
       messages: vec![],
       chat_messages: vec![],
+      pending_messages: VecDeque::new(),
+      pending_chat: VecDeque::new(),
       soundboard_cache: HashMap::new(),
 
       guild_names: default_guild_names,
@@ -197,29 +203,49 @@ impl AppState {
       && self
         .chat_messages
         .iter()
+        .chain(&self.pending_chat)
         .any(|chat| chat.message_id == notification.message_id)
     {
       return;
     }
 
-    let messages_len = self.messages.len();
-
-    // Keep the last 3 elements
-    if messages_len > 3 {
-      self.messages.drain(0..messages_len - 3);
-    }
-
-    self.messages.push(notification);
+    self.pending_messages.push_back(notification);
+    self.show_pending();
   }
 
-  pub fn push_chat(&mut self, chat: Notification) {
-    let len = self.chat_messages.len();
-    if len >= crate::chat::MAX_CHAT_ROWS {
-      self
-        .chat_messages
-        .drain(0..=len - crate::chat::MAX_CHAT_ROWS);
+  pub fn push_chat(&mut self, chat: Notification) -> bool {
+    if self.pending_chat.len() >= MAX_PENDING_CHAT {
+      self.pending_chat.pop_front();
+    }
+    self.pending_chat.push_back(chat);
+    self.show_pending()
+  }
+
+  pub fn show_pending(&mut self) -> bool {
+    let max = self.max_rows();
+    let now = chrono::Utc::now().timestamp();
+    let mut shown = false;
+
+    while self.messages.len() + self.chat_messages.len() < max {
+      let (mut row, rows) = if let Some(row) = self.pending_messages.pop_front() {
+        (row, &mut self.messages)
+      } else if let Some(row) = self.pending_chat.pop_front() {
+        (row, &mut self.chat_messages)
+      } else {
+        break;
+      };
+
+      if row.timestamp.is_some() {
+        row.timestamp = Some(now);
+      }
+      rows.push(row);
+      shown = true;
     }
 
-    self.chat_messages.push(chat);
+    shown
+  }
+
+  pub fn max_rows(&self) -> usize {
+    self.config.max_notifications.clamp(1, 10) as usize
   }
 }
