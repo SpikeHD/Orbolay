@@ -1,3 +1,4 @@
+use orbolay_logging::log;
 use serde_json::Value;
 
 use crate::ipc::{OP_FRAME, SharedStream, ipc_write};
@@ -81,5 +82,27 @@ pub fn unsubscribe_voice_channel(
   unsubscribe_channel(stream, "SCREENSHARE_STATE_UPDATE", channel_id)?;
   unsubscribe_channel(stream, "SPEAKING_START", channel_id)?;
   unsubscribe_channel(stream, "SPEAKING_STOP", channel_id)?;
+  Ok(())
+}
+
+pub fn sync_voice_chat(
+  stream: &SharedStream,
+  subscribed: &mut Option<String>,
+  want: Option<String>,
+) -> Result<(), Box<dyn std::error::Error>> {
+  if *subscribed == want {
+    return Ok(());
+  }
+
+  if let Some(old) = std::mem::replace(subscribed, want.clone()) {
+    unsubscribe_channel(stream, "MESSAGE_CREATE", &old)?;
+    log!("Voice channel chat: unsubscribed");
+  }
+
+  if let Some(new) = want {
+    subscribe_channel(stream, "MESSAGE_CREATE", &new)?;
+    log!("Voice channel chat: subscribed");
+  }
+
   Ok(())
 }

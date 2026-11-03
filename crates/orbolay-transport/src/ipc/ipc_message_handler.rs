@@ -1,5 +1,6 @@
 use orbolay_core::{
   app_state::AppHandle,
+  chat::ChatMessagePayload,
   payloads::{
     Notification, NotificationAction, NotificationKind,
     ipc::{
@@ -37,7 +38,11 @@ pub fn handle_ipc_message(
     .unwrap_or_default();
   let data = msg.data.get("data").cloned().unwrap_or_default();
 
-  log!("Handling event: {} - {:?}", evt, msg);
+  if evt == "MESSAGE_CREATE" {
+    log!("Handling event: {}", evt);
+  } else {
+    log!("Handling event: {} - {:?}", evt, msg);
+  }
 
   let mut changed = true;
   let mut auth_after = false;
@@ -177,6 +182,10 @@ pub fn handle_ipc_message(
       let data = serde_json::from_value::<VoiceConnectionStatusPayload>(data)?;
       log!("Avg ping: {}ms", data.average_ping.unwrap_or_default());
       changed = false;
+    }
+    "MESSAGE_CREATE" => {
+      let payload = serde_json::from_value::<ChatMessagePayload>(data)?;
+      changed = state.receive_chat(&payload);
     }
     "NOTIFICATION_CREATE" => {
       let data = serde_json::from_value::<NotificationCreatePayload>(data)?;
