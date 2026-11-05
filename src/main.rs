@@ -180,6 +180,9 @@ fn main() {
     target::launch_target(args.target, Some(env));
   }
 
+  let display_name = config.display_name.clone();
+  let display_idx = config.display_idx;
+
   launch(
     LaunchConfig::new()
       .with_font("Twemoji", TWEMOJI_FONT)
@@ -199,7 +202,12 @@ fn main() {
 
             populate_monitor_cache(primary.as_ref(), &monitors);
 
-            if let Some(monitor) = select_monitor(primary.as_ref(), &monitors) {
+            if let Some(monitor) = select_monitor(
+              primary.as_ref(),
+              &monitors,
+              display_name.as_deref(),
+              display_idx,
+            ) {
               // Compute the initial window size for the chosen display.
               w = w
                 .with_inner_size(window_size_for_display(monitor))
@@ -252,6 +260,7 @@ fn app() -> impl IntoElement {
     if let Some(saved) = load_config() {
       initial.config = saved;
     }
+    app_state.write().config = initial.config.clone();
 
     let shared: SharedAppState = std::sync::Arc::new(std::sync::RwLock::new(initial));
     let app = AppHandle::new(shared.clone(), redraw_tx.clone(), open_config_tx);
@@ -332,12 +341,7 @@ fn app() -> impl IntoElement {
       warn!("config.json could not be parsed, using the default config without overwriting it");
     }
 
-    start_config_watcher(app.clone(), |old_config, new_config| {
-      // Reposition the window when the target monitor changes
-      if old_config.display_idx != new_config.display_idx {
-        update_monitor();
-      }
-    });
+    start_config_watcher(app.clone());
     maybe_notify_update(app.clone());
 
     spawn_in_window(async move {
@@ -368,7 +372,18 @@ fn app() -> impl IntoElement {
     window::set_clickable(is_open);
   });
 
+  let platform_window = use_hook(|| Platform::get().current_window());
   let state = app_state.read();
+  let fit_deps = (
+    state.config.display_name.clone(),
+    state.config.display_idx,
+    *platform_window.root_size.read(),
+    *platform_window.scale_factor.read(),
+  );
+  use_side_effect_with_deps(&fit_deps, |(display_name, display_idx, _, _)| {
+    update_monitor(display_name.clone(), *display_idx)
+  });
+
   let voice_users = state.voice_users.clone();
   let messages = state.messages.clone();
   let messages_enabled = state.config.enable_message_notifications;
