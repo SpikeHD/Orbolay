@@ -7,7 +7,7 @@ use orbolay_core::{
   app_state::AppHandle,
   config::{Config, DisplayVoiceMembers, TransportMode, config_dir, save_config},
   dirs::{TEMPLATES_DIR, ensure_config_dirs},
-  monitors::{MonitorInfo, monitors_list},
+  monitors::{MonitorInfo, monitors_list, pick_display},
   payloads::Notification,
 };
 use orbolay_logging::warn;
@@ -80,21 +80,39 @@ fn open_templates_folder() {
 }
 
 fn available_displays() -> Vec<MonitorInfo> {
-  let cached = monitors_list();
-  if !cached.is_empty() {
-    return cached;
+  let mut displays = monitors_list();
+  if cfg!(target_os = "linux") && !displays.is_empty() {
+    return displays;
   }
 
-  DisplayInfo::all()
-    .unwrap_or_default()
-    .into_iter()
-    .map(|d| MonitorInfo {
-      name: d.friendly_name,
-      is_primary: d.is_primary,
-      width: d.width,
-      height: d.height,
-    })
-    .collect()
+  let info = DisplayInfo::all().unwrap_or_default();
+  if displays.is_empty() {
+    displays = info
+      .iter()
+      .map(|d| MonitorInfo {
+        id: d.name.clone(),
+        name: d.name.clone(),
+        is_primary: d.is_primary,
+        width: d.width,
+        height: d.height,
+      })
+      .collect();
+  }
+
+  for display in &mut displays {
+    if let Some(d) = info.iter().find(|d| d.name == display.id) {
+      display.name = d.friendly_name.clone();
+    }
+  }
+
+  let names: Vec<String> = displays.iter().map(|d| d.name.clone()).collect();
+  for display in &mut displays {
+    if names.iter().filter(|name| **name == display.name).count() > 1 {
+      display.name = format!("{} {}", display.name, display.id);
+    }
+  }
+
+  displays
 }
 
 pub fn apply_config(
@@ -379,14 +397,20 @@ impl Settings {
   fn general(&self) -> Vec<Element> {
     let config = &self.config;
 
-    let display_names: Vec<String> = available_displays()
+    let displays = available_displays();
+    let selected_display = pick_display(
+      displays.len(),
+      |idx| Some(displays[idx].id.clone()),
+      displays.iter().position(|d| d.is_primary),
+      config.display_name.as_deref(),
+      config.display_idx,
+    )
+    .unwrap_or(0);
+    let display_names: Vec<String> = displays
       .iter()
       .map(|d| format!("{} ({}x{})", d.name, d.width, d.height))
       .collect();
-    let selected_display = config
-      .display_idx
-      .filter(|idx| *idx < display_names.len())
-      .unwrap_or(0);
+    let display_ids: Vec<String> = displays.into_iter().map(|d| d.id).collect();
     let scale_label = ui_scale_label(config.ui_scale.clamp(0.5, 2.0));
     let selected_scale = UI_SCALE_OPTIONS
       .iter()
@@ -404,7 +428,10 @@ impl Settings {
             "The display to show the overlay on",
             display_names,
             selected_display,
-            |cfg, idx| cfg.display_idx = Some(idx),
+            move |cfg, idx| {
+              cfg.display_idx = Some(idx);
+              cfg.display_name = display_ids.get(idx).cloned();
+            },
           ),
           self.dropdown(
             "UI Scale",
