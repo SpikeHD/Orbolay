@@ -45,7 +45,7 @@ you want the icon to appear. The icon is only present when the corresponding sta
 ### Notifications
 
 * `{{title}}` - the notification title, example usage: `<span>{{title}}</span>`
-* `{{body}}` - the notification body (markdown stripped), example usage: `<span>{{body}}</span>`. For voice channel chat messages, only mentions, custom emoji and spoilers are converted; other markdown is shown as is.
+* `{{body}}` - the notification body text (no markdown), example usage: `<span>{{body}}</span>`.
 * `{{icon}}` - the icon image link, example usage: `<img src="{{icon}}" />`
 * `{{channel}}` - the voice channel name for messages from the voice channel's text chat, empty for other notifications, example usage: `<span>{{channel}}</span>`
 * `{{actions}}` - a set of clickable `<button>` elements, one per action, each with a `data-action="<index>"` attribute. Example output:
