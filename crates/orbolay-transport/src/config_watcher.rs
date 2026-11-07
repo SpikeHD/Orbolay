@@ -5,13 +5,10 @@ use orbolay_logging::{error, log, warn};
 
 use orbolay_core::{
   app_state::AppHandle,
-  config::{Config, config_dir, load_config},
+  config::{config_dir, load_config},
 };
 
-pub fn start_config_watcher(
-  app: AppHandle,
-  on_config_change: impl Fn(&Config, &Config) + Send + 'static,
-) {
+pub fn start_config_watcher(app: AppHandle) {
   log!("Starting config file notification thread");
   std::thread::spawn(move || {
     let (tx, rx) = mpsc::channel::<Result<Event>>();
@@ -55,12 +52,7 @@ pub fn start_config_watcher(
           if event.paths.iter().any(|p| p == &config_path) {
             log!("Config file changed, reloading...");
             if let Some(new_config) = load_config() {
-              let old_config = app.read(|state| state.config.clone());
-
-              app.update(|state| state.config = new_config.clone());
-
-              on_config_change(&old_config, &new_config);
-
+              app.update(|state| state.config = new_config);
               log!("Config reloaded successfully");
             } else {
               warn!("Failed to reload config file");
