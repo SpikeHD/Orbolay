@@ -30,7 +30,6 @@ const TITLE_TOKEN: &str = "{{title}}";
 const BODY_TOKEN: &str = "{{body}}";
 const ICON_TOKEN: &str = "{{icon}}";
 const ACTIONS_TOKEN: &str = "{{actions}}";
-const CHANNEL_TOKEN: &str = "{{channel}}";
 
 const DEFAULT_TEMPLATE: &[u8] = include_bytes!("../../../../templates/notification/index.html");
 
@@ -176,10 +175,6 @@ impl NotificationTemplate {
         (BODY_TOKEN, &escape_html(&strip(&notification.body))),
         (ICON_TOKEN, &escape_html(&icon)),
         (ACTIONS_TOKEN, &actions_html(notification)),
-        (
-          CHANNEL_TOKEN,
-          &escape_html(notification.channel_name.as_deref().unwrap_or_default()),
-        ),
       ],
     )
   }

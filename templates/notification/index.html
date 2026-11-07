@@ -66,29 +66,6 @@
         text-overflow: ellipsis;
       }
 
-      .title-row {
-        display: flex;
-        align-items: baseline;
-        gap: 6px;
-        min-width: 0;
-      }
-
-      .title-row .title {
-        flex: 0 1 auto;
-        min-width: 0;
-      }
-
-      .channel {
-        flex: 0 1 auto;
-        min-width: 0;
-        font-size: 12px;
-        color: var(--superlight-gray);
-        line-height: 18px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
       .body {
         font-size: 14px;
         color: var(--superlight-gray);
@@ -136,10 +113,7 @@
         <img class="icon" src="{{icon}}" />
       </div>
       <div class="text">
-        <div class="title-row">
-          <div class="title">{{title}}</div>
-          <div class="channel">{{channel}}</div>
-        </div>
+        <div class="title">{{title}}</div>
         <div class="body">{{body}}</div>
         <div class="actions">{{actions}}</div>
       </div>

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use serde::Deserialize;
 
 use crate::{
@@ -13,6 +15,8 @@ pub struct ChatMessagePayload {
   pub channel_id: String,
   #[serde(default)]
   pub channel_name: Option<String>,
+  #[serde(default)]
+  pub guild_name: Option<String>,
   pub message: ChatMessage,
 }
 
@@ -93,12 +97,30 @@ fn chat_row(state: &AppState, payload: &ChatMessagePayload) -> Option<Notificati
     return None;
   }
 
+  let name = display_name(
+    message.nick.as_deref(),
+    message.author.global_name.as_deref(),
+    message.author.username.as_deref().unwrap_or_default(),
+  );
+  let known = |sent: &Option<String>, cache: &HashMap<String, String>, id: &str| {
+    sent
+      .clone()
+      .filter(|name| !name.is_empty())
+      .or_else(|| cache.get(id).cloned())
+  };
+  let channel = known(
+    &payload.channel_name,
+    &state.channel_names,
+    &payload.channel_id,
+  );
+  let guild = known(&payload.guild_name, &state.guild_names, &guild_id);
+
   Some(Notification {
-    title: display_name(
-      message.nick.as_deref(),
-      message.author.global_name.as_deref(),
-      message.author.username.as_deref().unwrap_or_default(),
-    ),
+    title: match (channel, guild) {
+      (Some(channel), Some(guild)) => format!("{name} (#{channel}, {guild})"),
+      (Some(channel), None) => format!("{name} (#{channel})"),
+      _ => name,
+    },
     body,
     icon: avatar_url(
       &message.author.id,
@@ -107,11 +129,6 @@ fn chat_row(state: &AppState, payload: &ChatMessagePayload) -> Option<Notificati
     guild_id: Some(guild_id),
     channel_id: Some(payload.channel_id.clone()),
     message_id: Some(message.id.clone()),
-    channel_name: payload
-      .channel_name
-      .clone()
-      .filter(|name| !name.is_empty())
-      .or_else(|| state.channel_names.get(&payload.channel_id).cloned()),
     ..Default::default()
   })
 }
