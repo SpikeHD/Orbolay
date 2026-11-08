@@ -541,7 +541,7 @@ impl Settings {
       ),
       self.number(
         "Maximum Notifications",
-        Some("How many notifications and voice channel chat messages to show at once, in total. The rest wait their turn, notifications first."),
+        Some("How many total notifications and voice channel chat messages to show at one time."),
         config.max_notifications,
         false,
         |cfg, n: u32| cfg.max_notifications = n.clamp(1, 10),
