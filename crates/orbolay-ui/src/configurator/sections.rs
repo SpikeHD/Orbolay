@@ -547,10 +547,10 @@ impl Settings {
         |cfg, n: u32| cfg.max_notifications = n.clamp(1, 10),
       ),
       self.toggle(
-        "Show Full Message Text",
+        "Multiline Message Text",
         "Wrap long messages onto up to 3 lines instead of cutting them off with \u{2026}",
-        config.notification_full_text,
-        |cfg, value| cfg.notification_full_text = value,
+        config.multiline_notification_bodies,
+        |cfg, value| cfg.multiline_notification_bodies = value,
       ),
       self.toggle(
         "Semi-Transparent Notifications",

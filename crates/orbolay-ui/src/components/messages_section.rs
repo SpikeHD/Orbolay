@@ -7,7 +7,7 @@ use orbolay_core::{app_state::AppState, payloads::Notification, util::text::esti
 use crate::{
   components::MessageRow,
   config::{AxisAlignment, CornerAlignment},
-  util::notification_template::{BODY_WIDTH_PX, FULL_TEXT_LINES, load_notification_template},
+  util::notification_template::{BODY_WIDTH_PX, MULTILINE_LINES, load_notification_template},
   util::{scale::UiScale, theme::Theme},
 };
 
@@ -22,7 +22,7 @@ pub struct MessagesSection {
   pub message_offset_y: i32,
   pub messages_semitransparent: bool,
   pub notification_template: Option<String>,
-  pub full_text: bool,
+  pub multiline: bool,
   pub app_state: State<AppState>,
   pub theme: Theme,
   pub ui_scale: f32,
@@ -75,10 +75,10 @@ impl Component for MessagesSection {
             theme: self.theme,
             box_size: (
               400,
-              row_height(message, has_actions, self.full_text && builtin),
+              row_height(message, has_actions, self.multiline && builtin),
             ),
             notification_template: self.notification_template.clone(),
-            full_text: self.full_text,
+            multiline: self.multiline,
             ui_scale: scale.factor(),
           })
         }
@@ -87,12 +87,12 @@ impl Component for MessagesSection {
   }
 }
 
-fn row_height(message: &Notification, has_actions: bool, full_text: bool) -> u32 {
+fn row_height(message: &Notification, has_actions: bool, multiline: bool) -> u32 {
   let base = if has_actions { 100 } else { 66 };
-  if !full_text {
+  if !multiline {
     return base;
   }
 
-  let lines = estimate_lines(&message.body, BODY_WIDTH_PX, FULL_TEXT_LINES);
+  let lines = estimate_lines(&message.body, BODY_WIDTH_PX, MULTILINE_LINES);
   base + (lines - 1) * 18
 }

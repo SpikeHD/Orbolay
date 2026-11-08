@@ -1,5 +1,5 @@
 use std::{
-  collections::{HashMap, VecDeque},
+  collections::HashMap,
   sync::{Arc, RwLock, atomic::AtomicBool},
   time::{Duration, Instant},
 };
@@ -10,8 +10,6 @@ use crate::{
   user::{PremiumType, User, UserVoiceState},
   util::bridge::BridgeMessage,
 };
-
-const MAX_PENDING_CHAT: usize = 100;
 
 /// Thread-safe shared state for background threads.
 pub type SharedAppState = Arc<RwLock<AppState>>;
@@ -144,8 +142,6 @@ pub struct AppState {
   pub voice_users: Vec<User>,
   pub messages: Vec<Notification>,
   pub chat_messages: Vec<Notification>,
-  pub pending_messages: VecDeque<Notification>,
-  pub pending_chat: VecDeque<Notification>,
   pub soundboard_cache: HashMap<String, Vec<SoundboardSoundPayload>>,
 
   // Name caches
@@ -180,8 +176,6 @@ impl AppState {
       voice_users: vec![],
       messages: vec![],
       chat_messages: vec![],
-      pending_messages: VecDeque::new(),
-      pending_chat: VecDeque::new(),
       soundboard_cache: HashMap::new(),
 
       guild_names: default_guild_names,
@@ -203,46 +197,33 @@ impl AppState {
       && self
         .chat_messages
         .iter()
-        .chain(&self.pending_chat)
         .any(|chat| chat.message_id == notification.message_id)
     {
       return;
     }
 
-    self.pending_messages.push_back(notification);
-    self.show_pending();
+    self.trim_rows(self.max_rows() - 1);
+    self.messages.push(notification);
   }
 
-  pub fn push_chat(&mut self, chat: Notification) -> bool {
-    if self.pending_chat.len() >= MAX_PENDING_CHAT {
-      self.pending_chat.pop_front();
-    }
-    self.pending_chat.push_back(chat);
-    self.show_pending()
+  pub fn push_chat(&mut self, chat: Notification) {
+    self.trim_rows(self.max_rows() - 1);
+    self.chat_messages.push(chat);
   }
 
-  pub fn show_pending(&mut self) -> bool {
-    let max = self.max_rows();
-    let now = chrono::Utc::now().timestamp();
-    let mut shown = false;
-
-    while self.messages.len() + self.chat_messages.len() < max {
-      let (mut row, rows) = if let Some(row) = self.pending_messages.pop_front() {
-        (row, &mut self.messages)
-      } else if let Some(row) = self.pending_chat.pop_front() {
-        (row, &mut self.chat_messages)
-      } else {
-        break;
+  pub fn trim_rows(&mut self, max: usize) {
+    while self.messages.len() + self.chat_messages.len() > max {
+      let chat_is_older = match (self.messages.first(), self.chat_messages.first()) {
+        (Some(message), Some(chat)) => chat.timestamp < message.timestamp,
+        (message, _) => message.is_none(),
       };
 
-      if row.timestamp.is_some() {
-        row.timestamp = Some(now);
+      if chat_is_older {
+        self.chat_messages.remove(0);
+      } else {
+        self.messages.remove(0);
       }
-      rows.push(row);
-      shown = true;
     }
-
-    shown
   }
 
   pub fn max_rows(&self) -> usize {

@@ -24,7 +24,7 @@ use crate::util::theme::Theme;
 
 pub const ACTION_ATTR: &str = "data-action";
 
-pub const FULL_TEXT_LINES: u32 = 3;
+pub const MULTILINE_LINES: u32 = 3;
 pub const BODY_WIDTH_PX: f32 = 324.0;
 
 const ROOT_ID: &str = "notification";
@@ -157,7 +157,7 @@ impl NotificationTemplate {
     &self,
     notification: &Notification,
     theme: &Theme,
-    full_text: bool,
+    multiline: bool,
     builtin: bool,
   ) -> String {
     let root_tag = render_tag(&self.root_name, &self.root_attrs);
@@ -173,8 +173,8 @@ impl NotificationTemplate {
     {
       classes.push("has-actions");
     }
-    if full_text && builtin {
-      classes.push("full-text");
+    if multiline && builtin {
+      classes.push("multiline");
     }
     let new_attrs = merge_classes(&self.root_attrs, &classes);
     let new_root_tag = render_tag(&self.root_name, &new_attrs);
@@ -185,7 +185,7 @@ impl NotificationTemplate {
       &format!("<style>:root{{{}}}</style></head>", theme_decls(theme)),
     );
     let body = if builtin {
-      let lines = if full_text { FULL_TEXT_LINES } else { 1 };
+      let lines = if multiline { MULTILINE_LINES } else { 1 };
       truncate_to_lines(&notification.body, BODY_WIDTH_PX, lines)
     } else {
       strip(&notification.body)
