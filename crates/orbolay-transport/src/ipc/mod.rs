@@ -9,7 +9,7 @@ pub use commands::create_ipc_connection;
 pub use ipc_message_handler::handle_ipc_message;
 
 pub use subscription::{
-  subscribe_voice_channel, subscribe_voice_global, unsubscribe_voice_channel,
+  subscribe_voice_channel, subscribe_voice_global, sync_voice_chat, unsubscribe_voice_channel,
 };
 pub use ui_message_handler::handle_ui_message;
 

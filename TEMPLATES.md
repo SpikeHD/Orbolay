@@ -45,7 +45,7 @@ you want the icon to appear. The icon is only present when the corresponding sta
 ### Notifications
 
 * `{{title}}` - the notification title, example usage: `<span>{{title}}</span>`
-* `{{body}}` - the notification body (markdown stripped), example usage: `<span>{{body}}</span>`
+* `{{body}}` - the notification body text (no markdown), example usage: `<span>{{body}}</span>`.
 * `{{icon}}` - the icon image link, example usage: `<img src="{{icon}}" />`
 * `{{actions}}` - a set of clickable `<button>` elements, one per action, each with a `data-action="<index>"` attribute. Example output:
 

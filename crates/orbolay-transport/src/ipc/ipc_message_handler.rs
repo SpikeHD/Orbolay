@@ -1,5 +1,6 @@
 use orbolay_core::{
   app_state::AppHandle,
+  chat::ChatMessagePayload,
   payloads::{
     Notification, NotificationAction, NotificationKind,
     ipc::{
@@ -8,7 +9,7 @@ use orbolay_core::{
       VoiceSettingsUpdatePayload,
     },
   },
-  user::UserVoiceState,
+  user::{UserVoiceState, display_name},
   util::bridge::BridgeMessage,
 };
 
@@ -37,7 +38,11 @@ pub fn handle_ipc_message(
     .unwrap_or_default();
   let data = msg.data.get("data").cloned().unwrap_or_default();
 
-  log!("Handling event: {} - {:?}", evt, msg);
+  if evt == "MESSAGE_CREATE" {
+    log!("Handling event: {}", evt);
+  } else {
+    log!("Handling event: {} - {:?}", evt, msg);
+  }
 
   let mut changed = true;
   let mut auth_after = false;
@@ -84,12 +89,11 @@ pub fn handle_ipc_message(
       let user_id = data.user.id.clone();
 
       if let Some(user) = state.voice_users.iter_mut().find(|user| user.id == user_id) {
-        user.name = data
-          .nick
-          .as_ref()
-          .or(data.user.global_name.as_ref())
-          .cloned()
-          .unwrap_or_else(|| data.user.username.clone());
+        user.name = display_name(
+          data.nick.as_deref(),
+          data.user.global_name.as_deref(),
+          &data.user.username,
+        );
         user.avatar = data.user.avatar.clone().unwrap_or_default();
         let voice_state = UserVoiceState::from(&data);
         if !(voice_state == UserVoiceState::NotSpeaking
@@ -177,6 +181,10 @@ pub fn handle_ipc_message(
       let data = serde_json::from_value::<VoiceConnectionStatusPayload>(data)?;
       log!("Avg ping: {}ms", data.average_ping.unwrap_or_default());
       changed = false;
+    }
+    "MESSAGE_CREATE" => {
+      let payload = serde_json::from_value::<ChatMessagePayload>(data)?;
+      changed = state.receive_chat(&payload);
     }
     "NOTIFICATION_CREATE" => {
       let data = serde_json::from_value::<NotificationCreatePayload>(data)?;

@@ -130,6 +130,8 @@ pub struct Config {
   #[serde(default = "default_true")]
   pub enable_message_notifications: bool,
   #[serde(default)]
+  pub show_voice_chat: bool,
+  #[serde(default)]
   pub message_alignment: Option<String>,
   #[serde(default)]
   pub user_alignment: Option<String>,
@@ -180,6 +182,7 @@ impl Default for Config {
       display_name: None,
       port: Some(6888),
       enable_message_notifications: true,
+      show_voice_chat: false,
       message_alignment: None,
       user_alignment: None,
       message_offset_x: 0,
@@ -201,6 +204,12 @@ impl Default for Config {
       user_template: None,
       notification_template: None,
     }
+  }
+}
+
+impl Config {
+  pub fn voice_chat_enabled(&self) -> bool {
+    self.show_voice_chat && self.enable_message_notifications
   }
 }
 

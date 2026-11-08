@@ -534,6 +534,12 @@ impl Settings {
         |cfg, value| cfg.enable_message_notifications = value,
       ),
       self.toggle(
+        "Show Voice Channel Chat",
+        "Show new messages from your voice channel's text chat. In IPC mode, Streamer Mode can't hide them.",
+        config.show_voice_chat,
+        |cfg, value| cfg.show_voice_chat = value,
+      ),
+      self.toggle(
         "Semi-Transparent Notifications",
         "Fade notifications when the overlay is closed",
         config.messages_semitransparent,
