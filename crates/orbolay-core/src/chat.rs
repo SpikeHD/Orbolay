@@ -117,8 +117,8 @@ fn chat_row(state: &AppState, payload: &ChatMessagePayload) -> Option<Notificati
 
   Some(Notification {
     title: match (channel, guild) {
-      (Some(channel), Some(guild)) => format!("{name} (#{channel}, {guild})"),
-      (Some(channel), None) => format!("{name} (#{channel})"),
+      (Some(channel), Some(guild)) => format!("{name} ({channel}, {guild})"),
+      (Some(channel), None) => format!("{name} ({channel})"),
       _ => name,
     },
     body,
