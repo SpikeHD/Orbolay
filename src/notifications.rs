@@ -21,6 +21,7 @@ pub fn create_notification_thread(app: AppHandle) {
         state
           .chat_messages
           .retain(|m| chat_on && m.channel_id.as_deref() == Some(channel.as_str()) && alive(m));
+        state.trim_rows(state.max_rows());
 
         before != state.messages.len() + state.chat_messages.len()
       });

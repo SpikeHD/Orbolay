@@ -469,6 +469,7 @@ fn app() -> impl IntoElement {
       message_offset_y: config.message_offset_y,
       messages_semitransparent: config.messages_semitransparent,
       notification_template: config.notification_template.clone(),
+      multiline: config.multiline_notification_bodies,
       app_state,
       theme,
       ui_scale,

@@ -202,24 +202,31 @@ impl AppState {
       return;
     }
 
-    let messages_len = self.messages.len();
-
-    // Keep the last 3 elements
-    if messages_len > 3 {
-      self.messages.drain(0..messages_len - 3);
-    }
-
+    self.trim_rows(self.max_rows() - 1);
     self.messages.push(notification);
   }
 
   pub fn push_chat(&mut self, chat: Notification) {
-    let len = self.chat_messages.len();
-    if len >= crate::chat::MAX_CHAT_ROWS {
-      self
-        .chat_messages
-        .drain(0..=len - crate::chat::MAX_CHAT_ROWS);
-    }
-
+    self.trim_rows(self.max_rows() - 1);
     self.chat_messages.push(chat);
+  }
+
+  pub fn trim_rows(&mut self, max: usize) {
+    while self.messages.len() + self.chat_messages.len() > max {
+      let chat_is_older = match (self.messages.first(), self.chat_messages.first()) {
+        (Some(message), Some(chat)) => chat.timestamp < message.timestamp,
+        (message, _) => message.is_none(),
+      };
+
+      if chat_is_older {
+        self.chat_messages.remove(0);
+      } else {
+        self.messages.remove(0);
+      }
+    }
+  }
+
+  pub fn max_rows(&self) -> usize {
+    self.config.max_notifications.clamp(1, 10) as usize
   }
 }

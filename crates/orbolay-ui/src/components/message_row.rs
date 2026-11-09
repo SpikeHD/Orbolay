@@ -19,6 +19,7 @@ pub struct MessageRow {
   pub theme: Theme,
   pub box_size: (u32, u32),
   pub notification_template: Option<String>,
+  pub multiline: bool,
   pub ui_scale: f32,
 }
 
@@ -44,13 +45,14 @@ impl Component for MessageRow {
       self.message.clone(),
       self.theme,
       self.notification_template.clone(),
+      self.multiline,
     );
 
     use_side_effect_with_deps(&deps, move |deps| {
-      let (message, theme, notification_template) = deps.clone();
+      let (message, theme, notification_template, multiline) = deps.clone();
       let template = load_notification_template(notification_template.as_deref());
       let mut handle = handle;
-      handle.replace_html(template.render(&message, &theme));
+      handle.replace_html(template.render(&message, &theme, multiline, template.is_builtin()));
     });
 
     rect()

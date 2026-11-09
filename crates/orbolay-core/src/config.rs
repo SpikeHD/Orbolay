@@ -115,6 +115,10 @@ fn default_true() -> bool {
   true
 }
 
+fn default_max_notifications() -> u32 {
+  3
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Config {
@@ -131,6 +135,10 @@ pub struct Config {
   pub enable_message_notifications: bool,
   #[serde(default)]
   pub show_voice_chat: bool,
+  #[serde(default = "default_max_notifications")]
+  pub max_notifications: u32,
+  #[serde(default)]
+  pub multiline_notification_bodies: bool,
   #[serde(default)]
   pub message_alignment: Option<String>,
   #[serde(default)]
@@ -183,6 +191,8 @@ impl Default for Config {
       port: Some(6888),
       enable_message_notifications: true,
       show_voice_chat: false,
+      max_notifications: default_max_notifications(),
+      multiline_notification_bodies: false,
       message_alignment: None,
       user_alignment: None,
       message_offset_x: 0,

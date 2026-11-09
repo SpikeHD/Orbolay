@@ -8,8 +8,6 @@ use crate::{
   user::{avatar_url, display_name},
 };
 
-pub const MAX_CHAT_ROWS: usize = 3;
-
 #[derive(Debug, Clone, Deserialize)]
 pub struct ChatMessagePayload {
   pub channel_id: String,
